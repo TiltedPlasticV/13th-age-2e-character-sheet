@@ -1,0 +1,3922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>13th Age Character Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=MedievalSharp&family=Pirata+One&family=UnifrakturMaguntia&family=Almendra:ital,wght@0,400;0,700;1,400&family=Fondamento:ital@0;1&family=Grenze+Gotisch:wght@400;700&family=Metamorphous&family=Uncial+Antiqua&family=IM+Fell+English:ital@0;1&family=IM+Fell+DW+Pica:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  /* ═══════════════════════════════════════════
+     THEME SYSTEM
+     ═══════════════════════════════════════════ */
+
+  /* ── NECROMANCER — toxic green headers, necrotic violet highlights ── */
+  :root, [data-theme="necromancer"] {
+    --bg:             #040804;
+    --bg-card:        #1a2c1a;
+    --bg-card-alt:    #1e1a2c;
+    --ink:            #ffffff;
+    --ink-dim:        #d8e8c0;
+    --ink-faint:      #a0c080;
+    --accent:         #78e830;
+    --accent-glow:    #a0ff50;
+    --accent-dim:     #2a4a10;
+    --highlight:      #d0a0ff;
+    --highlight-dim:  #b080e0;
+    --bone:           #ffffff;
+    --field-bg:       rgba(100,180,60,0.18);
+    --field-border:   rgba(120,200,70,0.45);
+    --field-focus:    rgba(111,191,48,0.50);
+    --check-active-bg:   #2a4a10;
+    --check-active-bdr:  #70b830;
+    --check-active-col:  #90e840;
+    --header-ornament: '☠';
+    --display-font:   'UnifrakturMaguntia', cursive;
+    --heading-font:   'Almendra', serif;
+    --body-font:      'Crimson Text', Georgia, serif;
+    --print-accent:   #4a7a20;
+    --print-card-bg:  #f2f7ec;
+    --card-glow:      inset 0 0 20px -8px rgba(120, 232, 48, 0.1), inset 0 0 16px -8px rgba(208, 160, 255, 0.08);
+  }
+
+  /* ── WIZARD — deep indigo, arcane blue headers, conjured gold highlights ── */
+  [data-theme="wizard"] {
+    --bg:             #04040e;
+    --bg-card:        #1a2050;
+    --bg-card-alt:    #2a1848;
+    --ink:            #ffffff;
+    --ink-dim:        #d0d8f0;
+    --ink-faint:      #8898c8;
+    --accent:         #80a8ff;
+    --accent-glow:    #a8c8ff;
+    --accent-dim:     #1e2868;
+    --highlight:      #ffc840;
+    --highlight-dim:  #e0a820;
+    --bone:           #ffffff;
+    --field-bg:       rgba(80,100,240,0.20);
+    --field-border:   rgba(100,130,255,0.50);
+    --field-focus:    rgba(96,128,255,0.55);
+    --check-active-bg:   #1e2868;
+    --check-active-bdr:  #6078f0;
+    --check-active-col:  #90b0ff;
+    --header-ornament: '✦';
+    --display-font:   'MedievalSharp', cursive;
+    --heading-font:   'Cinzel', serif;
+    --body-font:      'Fondamento', cursive;
+    --print-accent:   #3040a0;
+    --print-card-bg:  #eef0fa;
+    --card-glow:      inset 0 0 16px -8px rgba(128, 168, 255, 0.1), inset 0 0 16px -8px rgba(255, 200, 64, 0.06);
+  }
+
+  /* ── ROGUE — blood crimson headers, tarnished gold highlights ── */
+  [data-theme="rogue"] {
+    --bg:             #060404;
+    --bg-card:        #2e1a1a;
+    --bg-card-alt:    #2a2418;
+    --ink:            #ffffff;
+    --ink-dim:        #e0d4c8;
+    --ink-faint:      #b8a898;
+    --accent:         #ff6070;
+    --accent-glow:    #ff8898;
+    --accent-dim:     #4a0c14;
+    --highlight:      #e8c050;
+    --highlight-dim:  #c8a030;
+    --bone:           #ffffff;
+    --field-bg:       rgba(200,80,80,0.20);
+    --field-border:   rgba(220,100,100,0.50);
+    --field-focus:    rgba(240,70,80,0.50);
+    --check-active-bg:   #4a0c14;
+    --check-active-bdr:  #d83848;
+    --check-active-col:  #f05868;
+    --header-ornament: '🗡';
+    --display-font:   'Pirata One', cursive;
+    --heading-font:   'Almendra', serif;
+    --body-font:      'Crimson Text', Georgia, serif;
+    --print-accent:   #8a1828;
+    --print-card-bg:  #faf4f0;
+    --card-glow:      2px 2px 10px -3px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ── BARBARIAN — fiery orange headers, blood red highlights ── */
+  [data-theme="barbarian"] {
+    --bg:             #080402;
+    --bg-card:        #302010;
+    --bg-card-alt:    #301418;
+    --ink:            #ffffff;
+    --ink-dim:        #e0d8c8;
+    --ink-faint:      #b8a890;
+    --accent:         #ff9830;
+    --accent-glow:    #ffb860;
+    --accent-dim:     #683010;
+    --highlight:      #ff4040;
+    --highlight-dim:  #d82020;
+    --bone:           #ffffff;
+    --field-bg:       rgba(230,130,40,0.22);
+    --field-border:   rgba(240,150,60,0.55);
+    --field-focus:    rgba(250,140,50,0.55);
+    --check-active-bg:   #501010;
+    --check-active-bdr:  #e83020;
+    --check-active-col:  #ff5040;
+    --header-ornament: '⚔';
+    --display-font:   'Metamorphous', cursive;
+    --heading-font:   'Cinzel', serif;
+    --body-font:      'Almendra', serif;
+    --print-accent:   #a04810;
+    --print-card-bg:  #faf4ec;
+    --card-glow:      inset 0 0 20px -8px rgba(255, 64, 64, 0.1), inset 0 0 20px -8px rgba(255, 152, 48, 0.1);
+  }
+
+  /* ── BARD — vivid violet headers, rose-pink & warm gold highlights ── */
+  [data-theme="bard"] {
+    --bg:             #08040c;
+    --bg-card:        #281838;
+    --bg-card-alt:    #381828;
+    --ink:            #ffffff;
+    --ink-dim:        #e0d0f0;
+    --ink-faint:      #b8a0d0;
+    --accent:         #c070ff;
+    --accent-glow:    #d8a0ff;
+    --accent-dim:     #3c1860;
+    --highlight:      #ff9080;
+    --highlight-dim:  #e07060;
+    --bone:           #ffffff;
+    --field-bg:       rgba(160,80,220,0.18);
+    --field-border:   rgba(180,100,240,0.45);
+    --field-focus:    rgba(200,120,255,0.50);
+    --check-active-bg:   #3c1860;
+    --check-active-bdr:  #a060d8;
+    --check-active-col:  #c888ff;
+    --header-ornament: '♪';
+    --display-font:   'MedievalSharp', cursive;
+    --heading-font:   'Almendra', serif;
+    --body-font:      'Fondamento', cursive;
+    --print-accent:   #6a2ca0;
+    --print-card-bg:  #f6f0fa;
+    --card-glow:      inset 0 0 16px -6px rgba(192, 112, 255, 0.1), inset 0 0 16px -6px rgba(255, 144, 128, 0.08);
+  }
+
+  /* ── CLERIC — divine gold headers, sacred blue highlights ── */
+  [data-theme="cleric"] {
+    --bg:             #06050a;
+    --bg-card:        #1c1830;
+    --bg-card-alt:    #1c2838;
+    --ink:            #ffffff;
+    --ink-dim:        #e8e0d0;
+    --ink-faint:      #c0b8a0;
+    --accent:         #f0c848;
+    --accent-glow:    #ffe070;
+    --accent-dim:     #4a3810;
+    --highlight:      #68b8ff;
+    --highlight-dim:  #4898e0;
+    --bone:           #ffffff;
+    --field-bg:       rgba(200,180,100,0.16);
+    --field-border:   rgba(220,200,120,0.45);
+    --field-focus:    rgba(240,216,136,0.50);
+    --check-active-bg:   #182848;
+    --check-active-bdr:  #4888d0;
+    --check-active-col:  #68b0ff;
+    --header-ornament: '✙';
+    --display-font:   'Uncial Antiqua', cursive;
+    --heading-font:   'IM Fell English', serif;
+    --body-font:      'IM Fell DW Pica', serif;
+    --print-accent:   #8a6a10;
+    --print-card-bg:  #faf8f0;
+    --card-glow:      inset 0 -4px 16px -8px rgba(240, 200, 72, 0.1), inset 0 4px 16px -8px rgba(104, 184, 255, 0.06);
+  }
+
+  /* ── FIGHTER — cold steel headers, war-banner crimson highlights ── */
+  [data-theme="fighter"] {
+    --bg:             #050608;
+    --bg-card:        #1a1c24;
+    --bg-card-alt:    #241a1c;
+    --ink:            #ffffff;
+    --ink-dim:        #d0d4dc;
+    --ink-faint:      #90949c;
+    --accent:         #90b0d8;
+    --accent-glow:    #b0d0f0;
+    --accent-dim:     #283040;
+    --highlight:      #e84040;
+    --highlight-dim:  #c82828;
+    --bone:           #ffffff;
+    --field-bg:       rgba(120,140,180,0.16);
+    --field-border:   rgba(140,160,200,0.40);
+    --field-focus:    rgba(160,180,220,0.50);
+    --check-active-bg:   #401418;
+    --check-active-bdr:  #c83030;
+    --check-active-col:  #f05050;
+    --header-ornament: '⚔';
+    --display-font:   'Cinzel', serif;
+    --heading-font:   'Cinzel', serif;
+    --body-font:      'Crimson Text', Georgia, serif;
+    --print-accent:   #404860;
+    --print-card-bg:  #f0f2f6;
+    --card-glow:      inset 0 1px 0 rgba(200, 216, 240, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.25), inset 0 0 16px -8px rgba(232, 64, 64, 0.06);
+  }
+
+  /* ── PALADIN — celestial blue-white headers, sanctified gold highlights ── */
+  [data-theme="paladin"] {
+    --bg:             #04050a;
+    --bg-card:        #141828;
+    --bg-card-alt:    #1c2018;
+    --ink:            #ffffff;
+    --ink-dim:        #d8e0f0;
+    --ink-faint:      #98a8c8;
+    --accent:         #a8c8ff;
+    --accent-glow:    #c8e0ff;
+    --accent-dim:     #1c2448;
+    --highlight:      #ffc840;
+    --highlight-dim:  #e0a820;
+    --bone:           #ffffff;
+    --field-bg:       rgba(180,200,255,0.14);
+    --field-border:   rgba(200,216,255,0.40);
+    --field-focus:    rgba(220,230,255,0.50);
+    --check-active-bg:   #1c2448;
+    --check-active-bdr:  #8090c0;
+    --check-active-col:  #b0c0f0;
+    --header-ornament: '⛨';
+    --display-font:   'Uncial Antiqua', cursive;
+    --heading-font:   'Cinzel', serif;
+    --body-font:      'Almendra', serif;
+    --print-accent:   #3848a0;
+    --print-card-bg:  #f0f2fa;
+    --card-glow:      inset 0 0 16px -8px rgba(168, 200, 255, 0.1), inset 0 0 16px -8px rgba(255, 200, 64, 0.06);
+  }
+
+  /* ═══════════════════════════════════════════
+     TYPOGRAPHIC SCALE — edit these to resize
+     all text of each role in one place
+     ═══════════════════════════════════════════ */
+  :root {
+    --fs-display:   32px;   /* character name                        */
+    --fs-title:     15px;   /* page-level heading                    */
+    --fs-section:   16px;   /* section headings (e.g. "Basic Attacks") */
+    --fs-value-lg:  26px;   /* big numbers: stat scores, defenses    */
+    --fs-value-md:  20px;   /* medium numbers: stat mods, HP values  */
+    --fs-field:     15px;   /* standard input / textarea text        */
+    --fs-field-sm:  13px;   /* compact inputs (power action / usage) */
+    --fs-label:     14px;   /* prominent labels (attack rows, subtitle) */
+    --fs-label-sm:  12px;   /* compact labels, stat names, buttons   */
+    --fs-body:      16px;   /* base body text                        */
+  }
+
+  /* ═══════════════════════════════════════════
+     CORE STYLES
+     ═══════════════════════════════════════════ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body-font);
+    font-size: var(--fs-body);
+    line-height: 1.45;
+    min-height: 100vh;
+    transition: background 0.5s, color 0.4s;
+  }
+
+
+  .sheet-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0px 20px 20px;
+  }
+
+  /* ── TOOLBAR CONTROLS ── */
+  .toolbar select {
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-label-sm);
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    border: 1px solid var(--field-border);
+    border-radius: 4px;
+    background: var(--bg-card);
+    color: var(--ink);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.4s, color 0.4s;
+  }
+
+  .toolbar select:hover,
+  .toolbar select:focus { border-color: var(--accent); }
+
+  /* ── HEADER ── */
+  .sheet-header {
+    text-align: center;
+    padding: 0px 0 14px;
+    border-bottom: 2px solid var(--accent);
+    margin-bottom: 16px;
+    position: relative;
+    transition: border-color 0.4s;
+  }
+
+  .sheet-header::after {
+    content: var(--header-ornament);
+    position: absolute;
+    bottom: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg);
+    padding: 0 12px;
+    color: var(--accent);
+    font-size: 18px;
+    transition: background 0.5s, color 0.4s;
+  }
+
+  /* 3-column grid (1fr / auto / 1fr) keeps the name visually centered in the
+     row regardless of whether the tier badge is present. The badge sits in
+     the right column with `justify-self: start` so it floats next to the name
+     instead of being pushed to the far edge. */
+  .char-name-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+    margin-top: 8px;
+    margin-bottom: 6px;
+  }
+
+  .char-name-row .field-inline {
+    grid-column: 2;
+    justify-self: center;
+    font-family: var(--display-font);
+    font-size: var(--fs-display);
+    color: var(--bone);
+    text-align: center;
+    max-width: 300px;
+  }
+
+  .char-name-row .tier-badge {
+    grid-column: 3;
+    justify-self: start;
+  }
+
+  /* Tier badge sits beside the character name. Empty until a valid level
+     is typed, hidden via `:empty` so it doesn't leave a stray pill. */
+  .tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 12px 4px;
+    border: 1.5px solid var(--highlight);
+    border-radius: 999px;
+    background: var(--accent-dim);
+    color: var(--highlight);
+    font-family: var(--heading-font);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 0 8px -2px var(--highlight-dim);
+    transition: background 0.4s, border-color 0.4s, color 0.4s, box-shadow 0.4s;
+  }
+  .tier-badge:empty { display: none; }
+  .tier-badge-icon {
+    font-size: 14px;
+    line-height: 1;
+    letter-spacing: 0;
+    filter: drop-shadow(0 0 3px var(--highlight-dim));
+  }
+
+  .char-subtitle {
+    font-family: var(--heading-font);
+    font-size: var(--fs-label);
+    letter-spacing: 3px;
+    color: var(--highlight-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .char-subtitle .field-inline {
+    font-family: var(--heading-font);
+    font-size: var(--fs-label);
+    letter-spacing: 2px;
+    color: var(--highlight);
+    text-align: center;
+    min-width: 40px;
+  }
+
+  /* A <select>'s intrinsic width is computed without letter-spacing in most
+     browsers, so the spaced-out selected text ("Necromancer") gets clipped.
+     Auto width + reduced spacing + room for the native arrow lets it grow
+     to fit the chosen class. */
+  .char-subtitle select.field-inline {
+    width: auto;
+    letter-spacing: 1px;
+    padding-right: 18px;
+  }
+
+  .desc-row { margin-top: 6px; }
+
+  .desc-row .field-inline {
+    font-style: italic;
+    color: var(--ink-dim);
+    text-align: center;
+    width: 100%;
+    font-size: var(--fs-field);
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    margin-bottom: 8px;
+    border: 1px solid var(--field-border);
+    border-radius: 4px;
+    transition: border-color 0.4s;
+  }
+
+  .section-head {
+    font-family: var(--heading-font);
+    font-weight: 700;
+    font-size: var(--fs-section);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding: 1px 10px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--field-border);
+    cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.4s, color 0.4s;
+  }
+
+  .section-head .icon { font-size: 1em; opacity: 0.7; }
+
+  .section-body {
+    display: flex;
+    flex-direction: column;
+	gap: 4px;
+	margin: 4px 4px;
+  }
+
+  /* ── FIELDS ── */
+  .field-inline,
+  textarea.field-block {
+    background: var(--field-bg);
+    border: 1px solid var(--field-border);
+    border-radius: 3px;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: inherit;
+    padding: 1px 3px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s;
+  }
+
+  .field-inline:focus,
+  textarea.field-block:focus {
+    border-color: var(--highlight-dim);
+    box-shadow: 0 0 0 2px var(--field-focus);
+  }
+
+  .field-inline { display: inline-block; min-width: 20px; }
+
+  textarea.field-block {
+    display: block;
+    width: 100%;
+    min-height: calc(1.6em + 6px);
+    resize: none;
+    line-height: 1.6;
+    overflow-y: hidden;
+  }
+
+  /* ── STAT GRID ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+
+  .stat-card {
+    text-align: center; padding: 6px 4px;
+    background: var(--bg-card); border: 1px solid var(--field-border);
+    border-radius: 4px; transition: background 0.4s;
+  }
+
+  .stat-label {
+    font-family: var(--heading-font); font-size: var(--fs-label-sm);
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--ink-dim); margin-bottom: 2px;
+  }
+
+  .stat-mod .field-inline {
+    font-size: var(--fs-value-lg); font-weight: 700; color: var(--bone);
+    width: 48px; text-align: center; font-family: var(--heading-font);
+  }
+
+  .stat-score .field-inline {
+    font-size: var(--fs-value-md); color: var(--highlight); width: 44px;
+    text-align: center; font-family: var(--heading-font);
+  }
+
+  /* ── DEFENSE ROW ── */
+  .defense-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+
+  .defense-card {
+    text-align: center; padding: 6px 4px;
+    background: var(--bg-card-alt); border: 1px solid var(--field-border);
+    border-radius: 4px; transition: background 0.4s;
+  }
+
+  .defense-card .stat-label { margin-bottom: 2px; }
+
+  .defense-card .field-inline {
+    font-family: var(--heading-font); font-size: var(--fs-value-lg);
+    font-weight: 700; color: var(--highlight); width: 48px; text-align: center;
+  }
+
+  /* ── HP SECTION ── */
+  .hp-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  /* ── SIDE-BY-SIDE SECTION COMBO (e.g. ability scores + defenses) ── */
+  .combo-row {
+    display: grid; grid-template-columns: 3fr 2fr;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .combo-row > .section {
+    margin-bottom: 0;
+    display: flex; flex-direction: column;
+  }
+  .combo-row > .section > .section-body {
+    flex: 1; display: flex; flex-direction: column;
+  }
+  .combo-row .stat-grid    { grid-template-columns: repeat(3, 1fr); flex: 1; grid-auto-rows: 1fr; }
+  .combo-row .defense-row  { grid-template-columns: repeat(2, 1fr); flex: 1; grid-auto-rows: 1fr; }
+  .combo-row .stat-card,
+  .combo-row .defense-card {
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+  }
+  .combo-row .stat-card    { padding: 4px 4px; gap: 2px; }
+  .combo-row .defense-card { padding: 6px 4px; gap: 4px; }
+  .combo-row .defense-card .field-inline {
+    font-size: calc(var(--fs-value-lg) * 1.4);
+    padding: 4px 0;
+  }
+
+  /* ── COMPACT LIST GRIDS (backgrounds / icons / feats wrap multi-column) ──
+     Flexbox-with-wrap (rather than CSS Grid) so each row can size to its
+     content. Combined with `field-sizing: content` on the name inputs, a long
+     entry stretches its row and pushes neighbouring rows to a new line.
+     `min-width: min(100%, Npx)` keeps each row reasonably sized on wide
+     screens but lets it shrink to a single column on narrow ones. */
+  #backgrounds-list,
+  #feats-list {
+    display: flex; flex-wrap: wrap;
+    gap: 6px 18px;
+  }
+  #icons-list { display: block; }
+  #backgrounds-list .row {
+    flex: 1 1 auto;
+    min-width: min(100%, 220px);
+  }
+  /* Feats-list isn't a `.table-section`, so its rows don't inherit the shared
+     flex layout — apply it here. `flex: 1 1 auto` is for the parent flex
+     wrap (#feats-list); the inner `display: flex` arranges the name input
+     and remove button on a single baseline. */
+  #feats-list .row {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: min(100%, 260px);
+  }
+  #backgrounds-list .row,
+  #feats-list .row,
+  #icons-list .icon-rel-row {
+    border-bottom: none;
+  }
+  /* Auto-grow the name inputs to fit their text. Supported in Chrome/Edge 123+
+     and Safari 18.1+. Firefox does not support this property in any released
+     version (including 150) — those users will see the input cap at the row's
+     allocated width via plain flex behaviour. */
+  #backgrounds-list .row .field-flex,
+  #feats-list .row .field-flex {
+    field-sizing: content;
+    min-width: 0;
+  }
+
+  .hp-item { display: flex; align-items: center; gap: 6px; }
+
+  .hp-label {
+    font-family: var(--heading-font); font-size: var(--fs-label-sm);
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink-dim); white-space: nowrap;
+  }
+
+  .hp-item .field-inline {
+    width: 60px; text-align: center;
+    font-family: var(--heading-font); font-weight: 700; font-size: var(--fs-value-lg);
+  }
+
+  /* heart-shaped max HP display + current/temp HP all inline */
+  .hp-top-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px; flex-wrap: wrap; margin-bottom: 0;
+  }
+  .hp-heart-block {
+    display: flex; align-items: center;
+  }
+  .hp-mid-row {
+    display: flex; align-items: center; gap: 6px 6px;
+    flex-wrap: wrap; justify-content: center;
+  }
+
+  .hp-heart {
+    position: relative; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    width: 85px; height: 80px; z-index: 2;
+    --heart-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 29S1 20.5 1 9.5C1 4.25 5.25 1 9.5 1 12.7 1 15 2.8 16 5.3 17 2.8 19.3 1 22.5 1 26.75 1 31 4.25 31 9.5 31 20.5 16 29 16 29Z'/%3E%3C/svg%3E");
+  }
+  .hp-heart::before {
+    /* Heart drawn as a fixed-size SVG MASK, not a font glyph. A glyph's size
+       and metrics depend on the device's fonts (and mobile emoji presentation
+       / text auto-inflation), so it rendered larger and clipped on phones
+       while a narrow desktop window — using a different font — looked right.
+       A masked vector is pixel-identical on every device. */
+    content: ''; position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 88px; height: 88px;
+    background-color: var(--accent); opacity: 0.35;
+    -webkit-mask: var(--heart-svg) center / contain no-repeat;
+    mask: var(--heart-svg) center / contain no-repeat;
+    filter: drop-shadow(0 0 6px var(--accent));
+    pointer-events: none;
+  }
+  .hp-heart .hp-heart-value {
+    position: relative; z-index: 1; width: 80px; text-align: center;
+    font-family: var(--heading-font); font-weight: 700;
+    font-size: 36px; color: var(--bone);
+    background: transparent; border: none; outline: none;
+    padding: 0; margin-top: 6px;
+  }
+  .hp-heart .hp-heart-label {
+    position: relative; z-index: 1;
+    font-family: var(--heading-font); font-size: 9px;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink-dim); margin-top: -2px;
+  }
+
+  .hp-heart-side {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    z-index: 1;
+  }
+  .hp-heart-side .field-inline {
+    width: 48px; text-align: center;
+    font-family: var(--heading-font); font-weight: 700;
+    font-size: var(--fs-value-md); color: var(--ink-dim);
+    padding: 0;
+  }
+  .hp-heart-side .hp-label { font-size: 9px; letter-spacing: 1px; }
+
+  /* current / temp HP - prominent */
+  .hp-current-card {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .hp-current-card .field-inline {
+    width: 80px; height: 56px; text-align: center;
+    font-family: var(--heading-font); font-weight: 700;
+    font-size: 34px; color: var(--bone);
+    border: 2px solid var(--highlight); border-radius: 6px;
+    padding: 0;
+  }
+  .hp-current-card .hp-label {
+    font-size: var(--fs-label-sm); color: var(--highlight-dim);
+  }
+
+  .hp-current-card.hp-temp .field-inline {
+    width: 64px; height: 44px; font-size: var(--fs-value-lg);
+  }
+
+  .hp-divider {
+    border: none; border-top: 1px solid var(--field-border);
+  }
+
+  .gear-grid .hp-item .field-inline {
+    font-size: var(--fs-field); font-weight: 400;
+  }
+
+  /* Gear's top row sizes to what's in it. Armour and weapon names are text of
+     unpredictable length, so the equal-width grid track this row used to sit
+     in just cut them off. Same idiom as the backgrounds/feats rows: wrap on
+     flex, so a long name widens its own item and pushes the next one onto a
+     new line rather than being clipped. Browser support for `field-sizing` is
+     as noted on those rows; without it these fall back to the input default
+     width, which is still wider than the old track. */
+  .gear-row {
+    display: flex; flex-wrap: wrap;
+    gap: 6px 18px;
+  }
+  .gear-row .hp-item { min-width: 0; max-width: 100%; }
+  /* Everything except the two numeric boxes, which read better at a fixed
+     size and can't overflow anyway. Beats `.hp-item .field-inline`'s 60px on
+     specificity, so `width` has to be handed back explicitly. */
+  .gear-row .field-inline:not(.field-sm) {
+    field-sizing: content;
+    width: auto;
+    min-width: 90px;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  /* ── SKULLS TRACKER ── */
+  .skulls-row {
+    display: flex; align-items: center; gap: 2px;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .skull-box {
+    width: 30px; height: 30px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 24px; user-select: none;
+    opacity: 0.25; transition: all 0.2s;
+  }
+  .skull-box:hover { opacity: 0.5; }
+  .skull-box.checked {
+    opacity: 1;
+    filter: drop-shadow(0 0 4px var(--accent));
+  }
+  /* Sequential-tracker rules (see applySequentialState): only the boundary
+     boxes are clickable. Unchecked-disabled is pushed fainter than the default
+     unchecked state so the single "next available" skull stands out by being
+     relatively brighter. Checked-disabled keeps full opacity (seeing it isn't
+     blocked, clicking it is) — the cursor cue is enough. */
+  .skull-box.disabled { cursor: not-allowed; }
+  .skull-box.disabled:not(.checked) { opacity: 0.08; }
+  .skull-box.disabled:not(.checked):hover { opacity: 0.08; }
+  .track-annotation {
+    font-family: var(--heading-font); font-size: 16px;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink-faint); display: flex; align-items: center;
+  }
+  .skull-bracket {
+    font-size: 22px; color: var(--ink-faint); font-weight: 300;
+    display: flex; align-items: center; opacity: 0.4;
+  }
+  .skulls-config {
+    margin-left: 8px;
+  }
+  .skulls-config .field-inline {
+    width: 30px; font-size: 10px; text-align: center;
+  }
+
+  /* ── LOCK TOGGLE (auto-calculated fields) ── */
+  .has-lock {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+  }
+  .lock-toggle {
+    position: absolute;
+    top: -7px; right: -7px;
+    width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.4;
+    user-select: none;
+    transition: opacity 0.15s, color 0.15s;
+    z-index: 3;
+    color: var(--ink-faint);
+    background: var(--bg-card);
+    border-radius: 50%;
+  }
+  .lock-toggle:hover { opacity: 1; }
+  .lock-toggle.locked {
+    opacity: 0.9;
+    color: var(--highlight);
+  }
+
+  /* Utility classes have moved further down — see "UTILITY CLASSES" below
+     the theme-specific effects. They must come after every context rule
+     like `.hp-item .field-inline` so they win on equal specificity. */
+
+  /* ── CHECKBOXES ── */
+  .check-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .check-row .hp-label { margin-right: 4px; }
+
+  .check-box {
+    width: 18px; height: 18px; border: 1.5px solid var(--ink-dim);
+    border-radius: 3px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    transition: all 0.15s; user-select: none;
+    font-size: 13px; color: transparent;
+    background: var(--field-bg); flex-shrink: 0;
+  }
+
+  .check-box:hover { border-color: var(--highlight); }
+
+  .check-box.checked {
+    background: var(--check-active-bg);
+    border-color: var(--check-active-bdr);
+    color: var(--check-active-col);
+  }
+  /* Icon-relationship third state: "available, but with a guaranteed twist".
+     Reuses .checked's filled shape but recolors to the highlight tone and
+     slashes the tick so it reads as distinct at a glance. Declared after
+     .checked (equal specificity) so its colors win. */
+  .check-box.twist {
+    background: var(--accent-dim);
+    border-color: var(--highlight);
+    color: var(--highlight);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+  }
+
+  /* Sequential-tracker rules — see corresponding .skull-box.disabled block. */
+  .check-box.disabled { cursor: not-allowed; }
+  .check-box.disabled:not(.checked) {
+    opacity: 0.3;
+    border-color: var(--ink-faint);
+  }
+  .check-box.disabled:not(.checked):hover { border-color: var(--ink-faint); }
+
+  /* Visible focus ring for keyboard users on custom checkbox-style controls.
+     `:focus-visible` keeps mouse clicks from leaving a ring behind. */
+  .check-box:focus-visible,
+  .skull-box:focus-visible,
+  .prep-btn:focus-visible,
+  .advance-item:focus-visible,
+  .lock-toggle:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* ── ATTACK CARDS ── */
+  .attack-cards { display: flex; flex-direction: column; gap: 4px; }
+
+  .attack-card {
+    padding: 4px 4px; background: var(--bg-card);
+    border: 1px solid var(--field-border); border-radius: 4px;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.4s;
+  }
+
+  .attack-card-body { flex: 1; min-width: 0; }
+
+  .attack-title {
+    font-family: var(--heading-font); font-size: var(--fs-label-sm);
+    letter-spacing: 2px; text-transform: uppercase; color: var(--highlight);
+    margin-bottom: 4px;
+  }
+
+  .attack-weapon { margin-bottom: 4px; }
+  .attack-weapon .field-inline { width: 100%; font-size: var(--fs-field); }
+
+  .attack-stats {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .attack-label {
+    font-family: var(--heading-font); font-size: 10px;
+    letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim);
+  }
+  .attack-stats .field-inline { width: 70px; font-size: var(--fs-value-md); font-weight: 700; text-align: center; }
+  .attack-stats .attack-sep { color: var(--ink-faint); font-size: var(--fs-field); }
+
+  .attack-ac-group { display: flex; gap: 8px; flex-shrink: 0; }
+
+  .attack-ac-badge {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .attack-ac-badge .attack-ac-label {
+    font-family: var(--heading-font); font-size: 9px;
+    letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim);
+  }
+  .attack-ac-badge .field-inline {
+    width: 52px; height: 52px; border-radius: 50%;
+    text-align: center; font-family: var(--heading-font);
+    font-size: var(--fs-value-lg); font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--highlight-dim); color: var(--bone);
+    padding: 0;
+  }
+
+  /* ── TABLE ROWS ── */
+  .table-section .row {
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .table-section .row:last-child { border-bottom: none; }
+
+  /* ── ICON RELATIONSHIPS ──
+     ONE grid owns the column tracks (.icon-rel-grid). The header and each
+     row use `grid-template-columns: subgrid` so they all share the *same*
+     `auto`-sized columns — meaning a column is sized to the widest cell
+     across the whole table, not just within an individual row. This way:
+       • column widths adapt to theme-font metrics (no hard-coded pixels);
+       • headers always line up with the data underneath them.
+     `#icons-list` uses `display: contents` so the rows it contains
+     participate directly in the parent grid even though renderIcons() still
+     appends them inside that wrapper. */
+  .icon-rel-grid {
+    display: grid;
+    /* Cols 1, 2, 4, 5 (dice / bonus / available / used) size to whichever
+       cell is widest — header or row. The dice and bonus inputs are given
+       explicit widths below so they don't inflate the column to an
+       <input>'s ~150px UA default. The icon column is `minmax(0, 1fr)` so
+       it absorbs leftover space, but can also shrink past its content
+       (the long name just scrolls inside the input) instead of pushing
+       everything else around. */
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
+    column-gap: 4px;
+  }
+  #icons-list { display: contents; }
+  .icon-rel-header,
+  .icon-rel-row {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+    align-items: center;
+  }
+  .icon-rel-header {
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-family: var(--heading-font); font-size: 10px;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 400;
+  }
+  .icon-rel-header > span { text-align: center; }
+  .icon-rel-header > span.icon-name-col { text-align: center; }
+  /* Inline the arc-refresh glyph after "Available"/"Used" instead of letting
+     its default display: flex break onto its own line. */
+  .icon-rel-header .track-annotation { display: inline; font-size: inherit; }
+  .icon-rel-row {
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .icon-rel-row:last-child { border-bottom: none; }
+  .icon-rel-row .field-inline { text-align: center; }
+  /* Constrain the input UA defaults so they don't inflate auto columns. */
+  .icon-rel-row > input.icon-dice,
+  .icon-rel-row > input.icon-mod { width: 50px; }
+  /* Icon name fills the flex column and can shrink with it. */
+  .icon-rel-row > input.icon-name {
+    width: 100%; min-width: 0; text-align: left;
+  }
+  .icon-track { display: flex; align-items: center; justify-content: center; gap: 4px; }
+
+  /* ── BUTTONS ── */
+  .add-row-btn {
+    display: inline-flex; align-self: flex-start;
+    align-items: center; gap: 4px; margin-top: 0px;
+    padding: 4px 10px; font-family: var(--heading-font); font-size: var(--fs-label-sm);
+    letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim);
+    background: var(--field-bg); border: 1px dashed var(--field-border);
+    border-radius: 3px; cursor: pointer; transition: all 0.2s;
+  }
+  .add-row-btn:hover { color: var(--highlight); border-color: var(--highlight-dim); }
+
+  /* In-section action buttons (Quick Rest, Full Heal-Up). Heavier than
+     `.add-row-btn` (these mutate real state, not just add a list row) but
+     subtler than the toolbar's primary button (these are routine, not
+     sheet-wide). */
+  .action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    font-family: var(--heading-font);
+    font-size: var(--fs-label-sm);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    background: var(--bg-card);
+    border: 1px solid var(--highlight-dim);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .action-btn:hover {
+    color: var(--highlight);
+    border-color: var(--highlight);
+    background: var(--accent-dim);
+  }
+  .action-btn:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+  /* Thin divider inside .action-row separating the damage/heal group (which
+     consumes the typed amount) from the rest/recovery buttons (which don't). */
+  .action-sep {
+    width: 1px;
+    align-self: stretch;
+    background: var(--field-border);
+    margin: 0 4px;
+  }
+
+  .remove-btn {
+    width: 20px; height: 20px; border: none; background: none;
+    color: var(--ink-faint); cursor: pointer; font-size: var(--fs-label);
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; transition: all 0.15s; flex-shrink: 0;
+  }
+  .remove-btn:hover { color: var(--accent-glow); background: rgba(100,40,0,0.2); }
+
+  /* ── POWERS ── */
+  .powers-list {
+	display: flex;
+    flex-direction: column;
+	gap: 4px;
+  }
+  
+  .power-block {
+    padding: 4px; background: var(--bg-card);
+    border: 1px solid var(--field-border); border-radius: 4px;
+    transition: background 0.4s;
+  }
+
+  .power-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px; flex-wrap: wrap;
+  }
+
+  .power-header .field-inline.power-name {
+    font-family: var(--heading-font); font-size: var(--fs-field); font-weight: 700;
+    color: var(--highlight); min-width: 140px; flex: 1;
+  }
+
+  .power-header .field-inline.power-action {
+    font-size: var(--fs-field-sm); color: var(--highlight); min-width: 60px; text-align: center;
+  }
+
+  .power-header .field-inline.power-usage {
+    font-size: var(--fs-field-sm); color: var(--accent-glow); min-width: 70px; text-align: center;
+  }
+  /* "Uses" input sits among the action/usage fields, so match their font-size
+     (otherwise field-sm inherits the larger default and renders a taller box). */
+  .power-header .field-inline.field-sm { font-size: var(--fs-field-sm); }
+
+  .power-block textarea.field-block { font-size: var(--fs-field); }
+
+  .power-block.unprepared { opacity: 0.4; }
+
+  .prep-btn {
+    width: 22px; height: 22px; border-radius: 3px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0; transition: all 0.15s;
+    user-select: none; border: 1.5px solid var(--ink-faint);
+    background: var(--field-bg); color: transparent;
+  }
+  .prep-btn:hover { border-color: var(--highlight); }
+  .prep-btn.active {
+    background: var(--check-active-bg); border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .use-checks { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+
+  /* Drag handle for reordering power/spell blocks */
+  .drag-handle {
+    cursor: grab; user-select: none; flex-shrink: 0;
+    width: 14px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-faint); font-size: 14px; line-height: 1;
+    letter-spacing: -2px; transition: color 0.15s;
+  }
+  .drag-handle:hover { color: var(--highlight); }
+  .drag-handle:active { cursor: grabbing; }
+  .power-block.dragging { opacity: 0.4; }
+  .power-block.drag-over-top { box-shadow: 0 -2px 0 0 var(--accent-glow); }
+  .power-block.drag-over-bottom { box-shadow: 0 2px 0 0 var(--accent-glow); }
+
+  /* ── INCREMENTAL ADVANCES ── */
+  .advances-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+  }
+  .advance-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .advance-label {
+    font-family: var(--heading-font);
+    font-size: calc(var(--fs-label-sm) + 2px);
+    color: var(--ink-dim);
+    white-space: nowrap;
+  }
+  .advance-note {
+    font-family: var(--heading-font);
+    font-size: 10px;
+    color: var(--ink-faint);
+    margin-left: 2px;
+  }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    padding: 10px 12px;
+    display: flex; justify-content: center; gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar button {
+    font-family: 'Cinzel', serif; font-size: var(--fs-label-sm); letter-spacing: 2px;
+    text-transform: uppercase; padding: 8px 18px;
+    border: 1px solid var(--accent); border-radius: 4px;
+    cursor: pointer; transition: all 0.2s;
+    color: var(--ink); background: var(--bg-card);
+  }
+  .toolbar button:hover { background: var(--accent-dim); border-color: var(--accent-glow); }
+  .toolbar button.primary { background: var(--accent); color: var(--bone); }
+  .toolbar button.primary:hover { background: var(--accent-glow); }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent); color: var(--bone);
+    padding: 8px 20px; border-radius: 4px;
+    font-family: 'Cinzel', serif; font-size: var(--fs-label-sm); letter-spacing: 2px;
+    opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ═══════════════════════════════════════════
+     THEME-SPECIFIC EFFECTS
+     ═══════════════════════════════════════════ */
+
+  /* ── NECROMANCER — toxic glow, torn parchment edges, decay ── */
+  body[data-theme="necromancer"] {
+    background: radial-gradient(ellipse at center, #080c08 40%, #030503 100%);
+  }
+
+  [data-theme="necromancer"] .section {
+    position: relative;
+    overflow: visible;
+    background: var(--bg-card);
+    box-shadow: 0 0 12px -4px rgba(120, 232, 48, 0.2), 0 0 8px -4px rgba(208, 160, 255, 0.1);
+    border: none;
+    border-radius: 0;
+    margin-bottom: 14px;
+  }
+
+  [data-theme="necromancer"] .section-head {
+    border-bottom: 1px solid var(--field-border);
+    background: linear-gradient(90deg, rgba(120, 232, 48, 0.1) 0%, var(--bg-card) 40%, var(--bg-card) 60%, rgba(208, 160, 255, 0.08) 100%);
+  }
+
+  [data-theme="necromancer"] .section::before {
+    content: '';
+    position: absolute;
+    top: -6px; left: 0; right: 0;
+    height: 6px;
+    background: var(--bg-card);
+    pointer-events: none;
+    z-index: 2;
+    clip-path: polygon(
+      0% 100%,
+      3% 35%, 5% 100%, 8% 20%, 11% 85%, 14% 45%, 16% 100%,
+      19% 30%, 22% 90%, 25% 50%, 27% 100%, 30% 25%, 33% 80%,
+      36% 100%, 38% 35%, 41% 90%, 44% 20%, 47% 100%, 49% 45%,
+      52% 85%, 55% 100%, 58% 30%, 61% 80%, 63% 100%, 66% 25%,
+      69% 90%, 72% 100%, 74% 45%, 77% 85%, 80% 100%, 82% 30%,
+      85% 75%, 88% 100%, 91% 50%, 93% 100%, 96% 20%, 100% 100%
+    );
+  }
+
+  [data-theme="necromancer"] .section::after {
+    content: '';
+    position: absolute;
+    bottom: -6px; left: 0; right: 0;
+    height: 6px;
+    background: var(--bg-card);
+    pointer-events: none;
+    z-index: 2;
+    clip-path: polygon(
+      0% 0%,
+      2% 55%, 5% 0%, 7% 70%, 10% 5%, 13% 85%, 15% 10%,
+      18% 65%, 21% 0%, 24% 80%, 26% 15%, 29% 60%, 32% 0%,
+      35% 75%, 37% 10%, 40% 55%, 43% 0%, 46% 80%, 48% 20%,
+      51% 65%, 54% 0%, 57% 70%, 59% 5%, 62% 85%, 65% 0%,
+      68% 55%, 71% 10%, 74% 80%, 76% 0%, 79% 65%, 82% 15%,
+      85% 75%, 87% 0%, 90% 60%, 93% 10%, 96% 80%, 98% 5%,
+      100% 0%
+    );
+  }
+
+  /* ── WIZARD — arcane shimmer, gentle pulsing glow ── */
+  body[data-theme="wizard"] {
+    background: radial-gradient(ellipse at center, #06061a 40%, #020208 100%);
+  }
+
+  @keyframes arcane-pulse {
+    0%, 100% { box-shadow: 0 0 12px -2px rgba(128, 168, 255, 0.25), 0 0 4px -1px rgba(255, 200, 64, 0.05); }
+    50%      { box-shadow: 0 0 6px -2px rgba(128, 168, 255, 0.08), 0 0 14px -2px rgba(255, 200, 64, 0.2); }
+  }
+
+  [data-theme="wizard"] .section {
+    animation: arcane-pulse 16s ease-in-out infinite;
+    border-color: rgba(96, 128, 255, 0.25);
+  }
+
+  [data-theme="wizard"] .section-head {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, rgba(128, 168, 255, 0.10) 0%, var(--bg-card) 35%, var(--bg-card) 65%, rgba(255, 200, 64, 0.08) 100%);
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  [data-theme="wizard"] .section-head::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+      transparent 0%, rgba(255, 200, 64, 0.04) 40%,
+      rgba(255, 200, 64, 0.10) 50%, rgba(255, 200, 64, 0.04) 60%,
+      transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 24s linear infinite;
+    pointer-events: none;
+  }
+
+  /* ── ROGUE — deep asymmetric shadows, dagger slash, emerging from darkness ── */
+  body[data-theme="rogue"] {
+    background: radial-gradient(ellipse at center, #0a0606 35%, #020101 100%);
+  }
+
+  [data-theme="rogue"] .section {
+    box-shadow:
+      -1px -1px 3px rgba(200, 180, 160, 0.04),
+      4px 5px 16px -4px rgba(0, 0, 0, 0.6);
+    border-color: rgba(160, 60, 60, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  @keyframes dagger-slash {
+    0%, 85%, 100% { opacity: 0; transform: translateX(-200%) skewX(-20deg); }
+    90% { opacity: 1; transform: translateX(0%) skewX(-20deg); }
+    95% { opacity: 0; transform: translateX(200%) skewX(-20deg); }
+  }
+
+  [data-theme="rogue"] .section::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+      transparent 30%, rgba(232, 192, 80, 0.06) 48%,
+      rgba(255, 96, 112, 0.08) 52%, transparent 70%);
+    animation: dagger-slash 16s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  [data-theme="rogue"] .section-head {
+    background: linear-gradient(90deg, rgba(255, 96, 112, 0.12) 0%, var(--bg-card) 40%, rgba(232, 192, 80, 0.06) 100%);
+  }
+
+  /* ── BARBARIAN — rage pulse between fire and blood, smoldering borders ── */
+  body[data-theme="barbarian"] {
+    background: radial-gradient(ellipse at center, #0c0804 40%, #040201 100%);
+  }
+
+  @keyframes rage-pulse {
+    0%, 100% { box-shadow: 0 0 8px -3px rgba(255, 152, 48, 0.25); border-color: rgba(255, 152, 48, 0.25); }
+    50%      { box-shadow: 0 0 14px -2px rgba(255, 64, 64, 0.4); border-color: rgba(255, 64, 64, 0.3); }
+  }
+
+  [data-theme="barbarian"] .section {
+    animation: rage-pulse 6s ease-in-out infinite;
+  }
+
+  [data-theme="barbarian"] .section-head {
+    background: linear-gradient(90deg, rgba(255, 64, 64, 0.12) 0%, var(--bg-card) 30%, var(--bg-card) 70%, rgba(255, 152, 48, 0.12) 100%);
+  }
+
+  /* ── BARD — traveling spotlight, theatrical curtain gradient ── */
+  body[data-theme="bard"] {
+    background: radial-gradient(ellipse at center, #0e0618 40%, #040208 100%);
+  }
+
+  @keyframes spotlight-sweep {
+    0%   { background-position: -100% center; }
+    100% { background-position: 200% center; }
+  }
+
+  [data-theme="bard"] .section {
+    border-color: rgba(180, 100, 240, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  [data-theme="bard"] .section::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+      transparent 0%, rgba(192, 112, 255, 0.05) 30%,
+      rgba(255, 144, 128, 0.07) 50%, rgba(192, 112, 255, 0.05) 70%,
+      transparent 100%);
+    background-size: 200% 100%;
+    animation: spotlight-sweep 20s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  [data-theme="bard"] .section-head {
+    background: linear-gradient(90deg, rgba(192, 112, 255, 0.14) 0%, var(--bg-card) 35%, var(--bg-card) 65%, rgba(255, 144, 128, 0.10) 100%);
+  }
+
+  /* ── CLERIC — divine radiance, stained-glass light, halo glow ── */
+  body[data-theme="cleric"] {
+    background: radial-gradient(ellipse at center top, #0c0a16 30%, #040308 100%);
+  }
+
+  @keyframes divine-radiance {
+    0%, 100% { box-shadow: 0 -2px 14px -4px rgba(240, 200, 72, 0.25), 0 0 6px -2px rgba(104, 184, 255, 0.06); }
+    50%      { box-shadow: 0 -2px 8px -4px rgba(240, 200, 72, 0.08), 0 0 14px -2px rgba(104, 184, 255, 0.25); }
+  }
+
+  [data-theme="cleric"] .section {
+    animation: divine-radiance 12s ease-in-out infinite;
+    border-color: rgba(220, 200, 120, 0.2);
+  }
+
+  [data-theme="cleric"] .section-head {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, rgba(240, 200, 72, 0.10) 0%, var(--bg-card) 35%, var(--bg-card) 65%, rgba(104, 184, 255, 0.08) 100%);
+  }
+
+  @keyframes stained-glass {
+    0%, 100% { opacity: 0.4; }
+    33%      { opacity: 0.7; }
+    66%      { opacity: 0.5; }
+  }
+
+  [data-theme="cleric"] .section-head::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+      rgba(255, 100, 80, 0.03) 0%, rgba(255, 220, 100, 0.04) 20%,
+      rgba(100, 200, 100, 0.03) 40%, rgba(100, 160, 255, 0.04) 60%,
+      rgba(180, 100, 255, 0.03) 80%, rgba(255, 100, 80, 0.03) 100%);
+    animation: stained-glass 18s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* ── FIGHTER — steel rivets, forged border, weapon-rack discipline ── */
+  body[data-theme="fighter"] {
+    background: radial-gradient(ellipse at center, #08090c 40%, #030406 100%);
+  }
+
+  [data-theme="fighter"] .section {
+    border-color: rgba(140, 160, 200, 0.25);
+    border-width: 2px;
+    position: relative;
+  }
+
+  [data-theme="fighter"] .section-head {
+    background: linear-gradient(90deg, rgba(144, 176, 216, 0.10) 0%, var(--bg-card) 35%, var(--bg-card) 65%, rgba(232, 64, 64, 0.08) 100%);
+    border-bottom: 2px solid rgba(140, 160, 200, 0.2);
+    position: relative;
+  }
+
+  [data-theme="fighter"] .section-head::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent 5%, rgba(200, 216, 240, 0.3) 20%,
+      rgba(200, 216, 240, 0.5) 50%,
+      rgba(200, 216, 240, 0.3) 80%, transparent 95%);
+    pointer-events: none;
+  }
+
+  @keyframes steel-glint {
+    0%, 90%, 100% { opacity: 0; transform: translateX(-100%); }
+    95% { opacity: 1; transform: translateX(100%); }
+  }
+
+  [data-theme="fighter"] .section-head::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+      transparent 40%, rgba(220, 230, 255, 0.08) 50%, transparent 60%);
+    animation: steel-glint 12s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* ── PALADIN — holy aura, ascending light, sanctified shield ── */
+  body[data-theme="paladin"] {
+    background: radial-gradient(ellipse at center bottom, #0a0c1a 30%, #030408 100%);
+  }
+
+  @keyframes holy-aura {
+    0%, 100% { box-shadow: 0 0 12px -3px rgba(168, 200, 255, 0.25), 0 0 4px -1px rgba(255, 200, 64, 0.05); }
+    50%      { box-shadow: 0 0 8px -3px rgba(168, 200, 255, 0.08), 0 0 14px -1px rgba(255, 200, 64, 0.25); }
+  }
+
+  [data-theme="paladin"] .section {
+    animation: holy-aura 10s ease-in-out infinite;
+    border-color: rgba(200, 216, 255, 0.2);
+  }
+
+  [data-theme="paladin"] .section-head {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, rgba(168, 200, 255, 0.10) 0%, var(--bg-card) 40%, var(--bg-card) 60%, rgba(255, 200, 64, 0.08) 100%);
+  }
+
+  @keyframes ascending-light {
+    0%   { background-position: center 100%; }
+    100% { background-position: center -100%; }
+  }
+
+  [data-theme="paladin"] .section-head::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center,
+      rgba(255, 240, 200, 0.06) 0%, transparent 70%);
+    background-size: 100% 200%;
+    animation: ascending-light 30s linear infinite;
+    pointer-events: none;
+  }
+
+  /* Shared rule consuming the per-theme `--card-glow` variable. Each theme's
+     :root block sets its own value; this single rule replaces what used to
+     be 8 near-identical selectors. */
+  .stat-card,
+  .defense-card,
+  .attack-card,
+  .power-block {
+    box-shadow: var(--card-glow);
+  }
+
+  /* ── UTILITY CLASSES ──
+     Compound `.field-inline.field-XX` (specificity 0,2,0) + placement after
+     every context rule (e.g. `.hp-item .field-inline`, `.attack-stats
+     .field-inline`) means these utilities always win on width. */
+  /* ── NOTE TEXT ──
+     One style for every small explanatory line on the sheet: the rules
+     reminders in a class panel, the footnote under an attack card, the
+     skill-check hint under Backgrounds. A `b` inside a note is the part
+     carrying the emphasis, usually a lead-in label.
+     `.note-row` adds inline layout for notes that sit alongside small
+     controls. `.field-inline` inherits its font-size, so an input dropped
+     into a note picks up the smaller text without needing its own rule. */
+  .note {
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--ink-faint);
+  }
+  .note b { color: var(--ink-dim); font-weight: 700; }
+  .note-row {
+    display: flex; align-items: center; flex-wrap: wrap;
+    gap: 4px; margin-top: 3px;
+  }
+
+  .field-inline.field-xs   { width: 30px; text-align: center; }
+  .field-inline.field-sm   { width: 40px; text-align: center; }
+  .field-inline.field-md   { width: 50px; text-align: center; }
+  .field-inline.field-wide { width: 140px; }
+  .field-flex { flex: 1; }
+  .field-inline.field-tiny { font-size: 10px; text-align: center; }
+
+  /* ── HP STATUS BADGE (staggered / down / dead) ── */
+  .hp-status-badge {
+    display: none;
+    font-family: var(--heading-font);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 999px;
+    border: 1.5px solid currentColor;
+    align-self: center;
+    white-space: nowrap;
+  }
+  .hp-status-badge.staggered {
+    display: inline-block; color: var(--highlight);
+    animation: status-pulse 2s ease-in-out infinite;
+  }
+  .hp-status-badge.down {
+    display: inline-block; color: var(--accent);
+    animation: status-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes status-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.45; }
+  }
+
+  /* ── HP ADJUST (damage / heal quick-apply) ── */
+  .hp-adjust { display: inline-flex; align-items: center; gap: 6px; }
+  .hp-adjust .field-inline {
+    width: 56px; text-align: center;
+    font-family: var(--heading-font); font-weight: 700;
+    font-size: var(--fs-value-md);
+  }
+
+  /* ── CLASS MODULES (per-class add-on UI) ──
+     Everything here is injected into a `[data-class-slot]` host by the
+     class-module framework. The `class-*` names are deliberately generic so
+     any future class can reuse them; only the `.rage-*` rules are barbarian
+     specific. An empty slot collapses so non-class sheets look untouched. */
+  /* ── THE EMPTY-SLOT INVARIANT ──
+     A slot with no content must leave NO trace: no gap, no flex track, no
+     margin. A class the player isn't playing must never change the layout
+     of the sheet in front of them.
+     Two things enforce this, because `display: none` on its own loses to
+     any equally-specific contextual rule that comes later in the file:
+       1. every contextual rule that gives a slot layout is written
+          `:not(:empty)`, so it simply doesn't apply to an empty slot;
+       2. the `:empty` rule below sits last in this block so source order
+          backs that up.
+     Keep both when adding a slot. Class CSS shipped in a `classes/*.js`
+     file must likewise only ever target that class's own elements. */
+
+  /* Lower half of the HP section: recoveries + skulls on the left, the
+     active class's inline panel (if any) on the right; it wraps to its own
+     row on narrow screens. With no panel, `.hp-lower-main` spans the full
+     width exactly as it did before class slots existed. */
+  .hp-lower { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+  .hp-lower-main {
+    flex: 1 1 340px; min-width: 0;
+    display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  }
+  .hp-lower > .class-slot:not(:empty) { flex: 1 1 250px; display: flex; }
+
+  .class-slot:empty { display: none; }
+
+  .class-panel {
+    flex: 1;
+    display: flex; flex-direction: column; gap: 5px;
+    padding: 5px 7px;
+    background: var(--bg-card-alt);
+    border: 1px solid var(--field-border);
+    border-radius: 4px;
+    transition: border-color 0.3s, box-shadow 0.3s, background 0.4s;
+  }
+  .class-panel-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    font-family: var(--heading-font); font-size: var(--fs-label-sm);
+    letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+  }
+  .class-panel .action-btn { padding: 3px 8px; font-size: 11px; }
+
+  /* Generic on/off switch for class state (raging, stance, form, …) */
+  .class-switch {
+    display: inline-flex; align-items: center; gap: 6px;
+    cursor: pointer; user-select: none; border-radius: 4px;
+  }
+  .class-switch-track {
+    position: relative; width: 40px; height: 21px; border-radius: 999px;
+    background: var(--field-bg); border: 1px solid var(--field-border);
+    flex-shrink: 0; transition: all 0.2s;
+  }
+  .class-switch-knob {
+    position: absolute; top: 2px; left: 2px; width: 15px; height: 15px;
+    border-radius: 50%; background: var(--ink-faint); transition: all 0.2s;
+  }
+  .class-switch.on .class-switch-track {
+    background: var(--check-active-bg); border-color: var(--check-active-bdr);
+  }
+  .class-switch.on .class-switch-knob {
+    left: 21px; background: var(--check-active-col);
+    box-shadow: 0 0 6px var(--check-active-col);
+  }
+  .class-switch-label {
+    font-family: var(--heading-font); font-size: 11px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--ink-dim);
+  }
+  .class-switch.on .class-switch-label { color: var(--highlight); }
+  .class-switch:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+
+  /* Compact one-box use trackers inside a class panel */
+  .class-track-row { display: flex; flex-wrap: wrap; gap: 5px 12px; align-items: center; }
+  .class-track { display: inline-flex; align-items: center; gap: 4px; }
+  .class-track-label {
+    font-family: var(--heading-font); font-size: 10px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--ink-dim);
+  }
+  .class-track .check-box { width: 15px; height: 15px; font-size: 11px; }
+  .class-track .track-annotation { font-size: 12px; }
+
+  /* Class-specific styling (e.g. the barbarian rage glow) ships inside that
+     class's own file and is injected on load — see injectClassCss. */
+
+  .attack-tag {
+    font-family: var(--heading-font); font-size: 9px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--ink-faint);
+    border: 1px solid var(--field-border); border-radius: 999px;
+    padding: 0 6px 1px; margin-left: 6px; white-space: nowrap;
+  }
+  /* ── CONDITION PILLS ── */
+  .cond-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cond-pill {
+    padding: 2px 10px 3px; border-radius: 999px;
+    border: 1px solid var(--field-border); background: var(--field-bg);
+    font-family: var(--heading-font); font-size: 12px; letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-dim); cursor: pointer; user-select: none;
+    transition: all 0.15s;
+  }
+  .cond-pill:hover { border-color: var(--highlight); color: var(--highlight); }
+  .cond-pill.active {
+    background: var(--check-active-bg);
+    border-color: var(--check-active-bdr);
+    color: var(--check-active-col);
+  }
+  .cond-pill:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+
+  /* ── IN-SHEET ROLL BUTTONS ── */
+  .roll-btn {
+    width: 24px; height: 24px; border: none; background: none;
+    color: var(--ink-faint); cursor: pointer; font-size: 15px; line-height: 1;
+    border-radius: 50%; display: inline-flex; align-items: center;
+    justify-content: center; transition: all 0.15s; flex-shrink: 0;
+    padding: 0;
+  }
+  .roll-btn:hover { color: var(--highlight); transform: rotate(-20deg) scale(1.2); }
+  .roll-btn:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+
+  /* ── DICE TRAY (floating roller + escalation die + roll log) ── */
+  .dice-tray {
+    position: fixed; bottom: 14px; right: 14px; z-index: 150;
+    width: 272px;
+    background: var(--bg-card);
+    border: 1px solid var(--field-border);
+    border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.55);
+    font-family: var(--body-font);
+    transition: background 0.4s, border-color 0.4s;
+  }
+  .dice-tray.collapsed { width: auto; }
+  .dice-tray-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px; cursor: pointer; user-select: none;
+    font-family: var(--heading-font); font-size: var(--fs-label-sm);
+    letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+  }
+  .dice-tray-head .esc-mini {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--highlight); letter-spacing: 1px;
+  }
+  .dice-tray-caret { color: var(--ink-faint); font-size: 11px; }
+  .dice-tray-body { border-top: 1px solid var(--field-border); }
+  .dice-tray.collapsed .dice-tray-body { display: none; }
+
+  .esc-row {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 10px 6px;
+  }
+  .esc-label {
+    font-family: var(--heading-font); font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--ink-dim);
+  }
+  .esc-controls { display: flex; align-items: center; gap: 8px; }
+  .esc-die {
+    width: 46px; height: 46px; border: 2px solid var(--highlight);
+    border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    font-family: var(--heading-font); font-size: 26px; font-weight: 700;
+    color: var(--highlight); background: var(--accent-dim);
+    box-shadow: 0 0 10px -3px var(--highlight-dim);
+    transition: background 0.4s, border-color 0.4s, color 0.4s;
+  }
+  .esc-btn {
+    width: 28px; height: 28px; border: 1px solid var(--field-border);
+    border-radius: 50%; background: var(--field-bg); color: var(--ink-dim);
+    font-size: 16px; line-height: 1; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .esc-btn:hover { color: var(--highlight); border-color: var(--highlight); }
+  .esc-btn:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+
+  .dice-quick {
+    display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 10px 8px;
+    justify-content: center;
+  }
+  .dice-quick button {
+    font-family: var(--heading-font); font-size: 11px; letter-spacing: 1px;
+    text-transform: uppercase; padding: 3px 9px;
+    border: 1px solid var(--field-border); border-radius: 3px;
+    background: var(--field-bg); color: var(--ink-dim); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .dice-quick button:hover { color: var(--highlight); border-color: var(--highlight-dim); }
+
+  .roll-log {
+    max-height: 220px; overflow-y: auto;
+    border-top: 1px solid var(--field-border);
+  }
+  .roll-log:empty::before {
+    content: 'Rolls and automated actions appear here.';
+    display: block; padding: 8px 12px;
+    font-size: 12px; color: var(--ink-faint); font-style: italic;
+  }
+  .roll-entry {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    animation: roll-in 0.25s ease-out;
+  }
+  @keyframes roll-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .roll-entry-main { flex: 1; min-width: 0; }
+  .roll-entry-title {
+    font-family: var(--heading-font); font-size: 11px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--ink-dim);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .roll-entry-detail { font-size: 12px; color: var(--ink-faint); }
+  .roll-entry-total {
+    font-family: var(--heading-font); font-size: 22px; font-weight: 700;
+    color: var(--bone); flex-shrink: 0;
+  }
+  .roll-entry.crit .roll-entry-total,
+  .roll-entry.crit .roll-entry-title { color: var(--accent-glow); }
+  .roll-entry.fumble .roll-entry-total,
+  .roll-entry.fumble .roll-entry-title { color: var(--highlight); }
+  /* Action summaries (damage applied, rests, …) share the log with dice
+     rolls; the left bar marks them as sheet automation rather than a roll. */
+  .roll-entry.action { border-left: 3px solid var(--highlight-dim); padding-left: 9px; }
+  .roll-entry.action .roll-entry-total { font-size: 15px; color: var(--ink-dim); }
+
+  /* ── RESPONSIVE ── */
+  @media (min-width: 1200px) {
+    .sheet-container {
+      max-width: 1600px;
+      padding: 0px 48px 20px;
+    }
+    .sheet-header {
+      column-span: all;
+    }
+    .sheet-columns {
+      column-count: 2;
+      column-gap: 18px;
+    }
+    .sheet-columns > .section,
+    .sheet-columns > .combo-row {
+      break-inside: avoid;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .stat-grid { grid-template-columns: repeat(3, 1fr); }
+    .defense-row { grid-template-columns: repeat(2, 1fr); }
+    .combo-row { grid-template-columns: 1fr; }
+    .combo-row > .section { margin-bottom: 8px; }
+    .sheet-container { padding: 12px 12px 12px; }
+    .char-name-row .field-inline { font-size: 24px; }
+    .dice-tray { right: 8px; bottom: 8px; width: min(272px, calc(100vw - 16px)); }
+  }
+
+  /* ── REDUCED MOTION ──
+     Each theme animates whole sections (gradients, glows, box-shadows), which
+     repaints large areas continuously — on a slow machine that competes with
+     typing for the same main thread. Honour the OS "reduce motion" setting and
+     the sheet goes still; nothing but the animation is lost. Last in the
+     stylesheet, and !important, so it beats every theme rule above. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    #utilities-section { display: none; }
+    .dice-tray { display: none; }
+    .roll-btn, .hp-adjust, .action-row { display: none; }
+    body::before { display: none; }
+    body { background: #fff; color: #1a1510; }
+    .field-inline, textarea.field-block {
+      border: 1px solid #ccc; background: #fafafa; color: #1a1510;
+    }
+    .section { border-color: #ccc; }
+    .section-head { background: var(--print-card-bg); color: var(--print-accent); }
+    .stat-card, .defense-card, .attack-card, .power-block {
+      background: var(--print-card-bg); border-color: #ddd;
+    }
+    .check-box { border-color: #999; }
+    .check-box.checked { background: var(--print-accent); border-color: var(--print-accent); }
+    .cond-pill { border-color: #999; background: #fafafa; color: #1a1510; }
+    .cond-pill.active { background: var(--print-accent); border-color: var(--print-accent); color: #fff; }
+    .class-panel { background: var(--print-card-bg); border-color: #ddd; }
+    .sheet-header::after { background: #fff; }
+  }
+</style>
+</head>
+<body data-theme="necromancer">
+
+<div class="sheet-container" id="sheet">
+
+  <!-- HEADER -->
+  <div class="sheet-header">
+    <div class="char-name-row">
+      <input class="field-inline" data-field="name" placeholder="Character Name">
+      <span id="tier-badge" class="tier-badge"></span>
+    </div>
+    <div class="char-subtitle">
+      <span>Level</span>
+      <input class="field-inline field-xs" data-field="level" aria-label="Level">
+      <span>·</span>
+      <select class="field-inline" data-field="class" aria-label="Class"></select>
+      <span>·</span>
+      <input class="field-inline" data-field="kin" placeholder="Kin">
+    </div>
+    <div class="desc-row">
+      <input class="field-inline" data-field="description" placeholder="Physical description, personality…">
+    </div>
+  </div>
+
+  <div class="sheet-columns">
+
+  <!-- ONE UNIQUE THING -->
+  <div class="section">
+    <div class="section-head"><span class="icon">✦</span> One Unique Thing</div>
+    <div class="section-body">
+      <textarea rows="1" class="field-block" data-field="unique_thing" placeholder="What makes your character singular in the world?"></textarea>
+    </div>
+  </div>
+
+  <!-- ABILITY SCORES + DEFENSES (side by side) -->
+  <div class="combo-row">
+    <div class="section">
+      <div class="section-head"><span class="icon">⬡</span> Ability Scores</div>
+      <div class="section-body">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-label">Strength</div><div class="stat-mod"><input class="field-inline" data-field="str_mod" placeholder="±0" aria-label="Strength modifier"></div><div class="stat-score"><input class="field-inline" data-field="str_score" placeholder="—" aria-label="Strength score"></div></div>
+          <div class="stat-card"><div class="stat-label">Dexterity</div><div class="stat-mod"><input class="field-inline" data-field="dex_mod" placeholder="±0" aria-label="Dexterity modifier"></div><div class="stat-score"><input class="field-inline" data-field="dex_score" placeholder="—" aria-label="Dexterity score"></div></div>
+          <div class="stat-card"><div class="stat-label">Constitution</div><div class="stat-mod"><input class="field-inline" data-field="con_mod" placeholder="±0" aria-label="Constitution modifier"></div><div class="stat-score"><input class="field-inline" data-field="con_score" placeholder="—" aria-label="Constitution score"></div></div>
+          <div class="stat-card"><div class="stat-label">Wisdom</div><div class="stat-mod"><input class="field-inline" data-field="wis_mod" placeholder="±0" aria-label="Wisdom modifier"></div><div class="stat-score"><input class="field-inline" data-field="wis_score" placeholder="—" aria-label="Wisdom score"></div></div>
+          <div class="stat-card"><div class="stat-label">Intelligence</div><div class="stat-mod"><input class="field-inline" data-field="int_mod" placeholder="±0" aria-label="Intelligence modifier"></div><div class="stat-score"><input class="field-inline" data-field="int_score" placeholder="—" aria-label="Intelligence score"></div></div>
+          <div class="stat-card"><div class="stat-label">Charisma</div><div class="stat-mod"><input class="field-inline" data-field="cha_mod" placeholder="±0" aria-label="Charisma modifier"></div><div class="stat-score"><input class="field-inline" data-field="cha_score" placeholder="—" aria-label="Charisma score"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><span class="icon">⛊</span> Defenses & Initiative</div>
+      <div class="section-body">
+        <div class="defense-row">
+          <div class="defense-card"><div class="stat-label">Armor Class</div><input class="field-inline" data-field="ac" placeholder="—" aria-label="Armor Class"></div>
+          <div class="defense-card"><div class="stat-label">Physical Def</div><input class="field-inline" data-field="pd" placeholder="—" aria-label="Physical Defense"></div>
+          <div class="defense-card"><div class="stat-label">Mental Def</div><input class="field-inline" data-field="md" placeholder="—" aria-label="Mental Defense"></div>
+          <div class="defense-card"><div class="stat-label">Initiative</div><input class="field-inline" data-field="initiative" placeholder="—" aria-label="Initiative"><button class="roll-btn" data-roll="init" title="Roll initiative: d20 + bonus" aria-label="Roll initiative">🎲</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIT POINTS & RECOVERIES -->
+  <div class="section">
+    <div class="section-head"><span class="icon">♥</span> Hit Points & Recoveries</div>
+    <div class="section-body">
+      <!-- Heart (Staggered/MaxHP/Dead) + Current + Temp HP all inline -->
+      <div class="hp-top-row">
+        <div class="hp-heart-block">
+          <div class="hp-heart-side">
+            <input class="field-inline" data-field="staggered" placeholder="—" aria-label="Staggered threshold">
+            <span class="hp-label">Staggered</span>
+          </div>
+          <div class="hp-heart">
+            <input class="hp-heart-value" data-field="max_hp" placeholder="—" aria-label="Maximum hit points">
+            <span class="hp-heart-label">Max HP</span>
+          </div>
+          <div class="hp-heart-side">
+            <input class="field-inline" data-field="dead" placeholder="0" aria-label="Death threshold">
+            <span class="hp-label">Dead</span>
+          </div>
+        </div>
+        <div class="hp-current-card">
+          <input class="field-inline" data-field="current_hp" placeholder="—" aria-label="Current hit points">
+          <span class="hp-label">Current HP</span>
+        </div>
+        <div class="hp-current-card hp-temp">
+          <input class="field-inline" data-field="temp_hp" placeholder="0" aria-label="Temporary hit points">
+          <span class="hp-label">Temp HP</span>
+        </div>
+        <span class="hp-status-badge" id="hp-status" aria-live="polite"></span>
+      </div>
+      <hr class="hp-divider">
+      <!-- Lower half: recovery info + recoveries + skulls on the left, the
+           active class's inline panel (e.g. barbarian Rage) on the right. -->
+      <div class="hp-lower">
+        <div class="hp-lower-main">
+          <div class="hp-mid-row">
+            <div class="hp-item"><span class="hp-label">Recovery Dice</span><input class="field-inline field-wide" data-field="recovery_dice" aria-label="Recovery dice"></div>
+            <div class="hp-item"><span class="hp-label">Avg</span><input class="field-inline field-md" data-field="recovery_avg" aria-label="Average recovery"></div>
+            <div class="hp-item"><span class="hp-label">Max Recoveries</span><input class="field-inline field-md" data-field="max_recoveries" aria-label="Maximum recoveries"></div>
+            <div class="check-row" id="recoveries-row"><span class="hp-label">Recoveries</span></div>
+          </div>
+          <div class="skulls-row" id="skulls-row"></div>
+          <div class="class-slot" data-class-slot="skulls-under"></div>
+        </div>
+        <div class="class-slot" data-class-slot="hp-side"></div>
+      </div>
+      <hr class="hp-divider">
+      <div class="action-row">
+        <div class="hp-adjust">
+          <input class="field-inline" id="hp-adjust-amt" placeholder="#" inputmode="numeric" aria-label="Damage or healing amount">
+          <button class="action-btn" data-action="hp-damage" title="Apply damage: subtracts from temp HP first, then current HP">🗡 Damage</button>
+          <button class="action-btn" data-action="hp-heal" title="Apply healing to current HP, capped at max HP">✚ Heal</button>
+        </div>
+        <span class="action-sep" aria-hidden="true"></span>
+        <button class="action-btn" data-action="roll-recovery" title="Spend the next recovery: rolls your recovery dice and adds the result to current HP">🎲 Recovery</button>
+        <button class="action-btn" data-action="quick-rest" title="Clear all death-save skulls except the 1st">⛺ Quick Rest</button>
+        <button class="action-btn" data-action="full-heal" title="Clear all skulls, conditions and temp HP, restore all recoveries, set current HP to max">☀ Full Heal-Up</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATTACKS -->
+  <div class="section">
+    <div class="section-head"><span class="icon">⚔</span> Basic Attacks</div>
+    <div class="section-body">
+      <div class="attack-cards">
+        <div class="attack-card">
+          <div class="attack-card-body">
+            <div class="attack-title">Melee</div>
+            <div class="attack-weapon"><input class="field-inline" data-field="melee_weapon" placeholder="Weapon" aria-label="Melee weapon"></div>
+            <div class="attack-stats">
+              <span class="attack-label">Hit Dmg</span>
+              <input class="field-inline" data-field="melee_damage" placeholder="1d8+4" aria-label="Melee hit damage">
+              <button class="roll-btn" data-roll="melee_dmg" title="Roll melee damage" aria-label="Roll melee damage">🎲</button>
+              <span class="attack-sep">/</span>
+              <span class="attack-label">Avg</span>
+              <input class="field-inline field-sm" data-field="melee_avg" placeholder="—" aria-label="Melee average damage">
+              <span class="attack-sep">/</span>
+              <span class="attack-label">Miss</span>
+              <input class="field-inline field-sm" data-field="melee_miss" placeholder="—" aria-label="Melee miss damage">
+            </div>
+          </div>
+          <div class="attack-ac-group">
+            <div class="attack-ac-badge">
+              <span class="attack-ac-label">vs AC</span>
+              <input class="field-inline" data-field="melee_vs_ac" placeholder="±" aria-label="Melee attack bonus vs AC">
+              <button class="roll-btn" data-roll="melee_atk" title="Roll melee attack: d20 + bonus + escalation die" aria-label="Roll melee attack">🎲</button>
+            </div>
+          </div>
+        </div>
+        <div class="attack-card">
+          <div class="attack-card-body">
+            <div class="attack-title">Ranged</div>
+            <div class="attack-weapon"><input class="field-inline" data-field="ranged_weapon" placeholder="Weapon" aria-label="Ranged weapon"></div>
+            <div class="attack-stats">
+              <span class="attack-label">Hit Dmg</span>
+              <input class="field-inline" data-field="ranged_damage" placeholder="1d6+2" aria-label="Ranged hit damage">
+              <button class="roll-btn" data-roll="ranged_dmg" title="Roll ranged damage" aria-label="Roll ranged damage">🎲</button>
+              <span class="attack-sep">/</span>
+              <span class="attack-label">Avg</span>
+              <input class="field-inline field-sm" data-field="ranged_avg" placeholder="—" aria-label="Ranged average damage">
+              <span class="attack-sep">/</span>
+              <span class="attack-label">Miss</span>
+              <input class="field-inline field-sm" data-field="ranged_miss" placeholder="—" aria-label="Ranged miss damage">
+            </div>
+          </div>
+          <div class="attack-ac-group">
+            <div class="attack-ac-badge">
+              <span class="attack-ac-label">Near</span>
+              <input class="field-inline" data-field="ranged_vs_ac_near" placeholder="±" aria-label="Ranged attack bonus vs AC (nearby)">
+              <button class="roll-btn" data-roll="ranged_atk_near" title="Roll ranged attack (nearby): d20 + bonus + escalation die" aria-label="Roll ranged attack against a nearby target">🎲</button>
+            </div>
+            <div class="attack-ac-badge">
+              <span class="attack-ac-label">Far</span>
+              <input class="field-inline" data-field="ranged_vs_ac_far" placeholder="±" aria-label="Ranged attack bonus vs AC (far away)">
+              <button class="roll-btn" data-roll="ranged_atk_far" title="Roll ranged attack (far away): d20 + bonus + escalation die" aria-label="Roll ranged attack against a far away target">🎲</button>
+            </div>
+          </div>
+        </div>
+        <div class="class-slot" data-class-slot="attacks"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Whole extra sections contributed by the active class module -->
+  <div class="class-slot" data-class-slot="sections"></div>
+
+  <!-- BACKGROUNDS -->
+  <div class="section">
+    <div class="section-head"><span class="icon">📜</span> Backgrounds</div>
+    <div class="section-body">
+      <div class="table-section" id="backgrounds-list"></div>
+      <button class="add-row-btn" data-action="add-background">+ Add Background</button>
+      <div class="note">Skill Check = Level + Ability Modifier + Background</div>
+    </div>
+  </div>
+
+  <!-- ICON RELATIONSHIPS -->
+  <div class="section">
+    <div class="section-head"><span class="icon">👁</span> Icon Relationships</div>
+    <div class="section-body">
+      <div class="icon-rel-grid">
+        <div class="icon-rel-header">
+          <span># D6</span>
+          <span>Type</span>
+          <span class="icon-name-col">Icon</span>
+          <span>Available <span class="track-annotation" title="Refreshes per arc">↺</span></span>
+          <span>Used <span class="track-annotation" title="Refreshes per arc">↺</span></span>
+          <span></span>
+        </div>
+        <div id="icons-list"></div>
+      </div>
+      <button class="add-row-btn" data-action="add-icon">+ Add Icon</button>
+    </div>
+  </div>
+
+  <!-- CLASS FEATURES -->
+  <div class="section">
+    <div class="section-head"><span class="icon">🔥</span> Class Features</div>
+    <div class="section-body">
+      <div id="features-list" class="powers-list"></div>
+      <button class="add-row-btn" data-action="add-feature">+ Add Feature</button>
+    </div>
+  </div>
+
+  <!-- TALENTS -->
+  <div class="section">
+    <div class="section-head"><span class="icon">✧</span> Talents</div>
+    <div class="section-body">
+      <div id="talents-list" class="powers-list"></div>
+      <button class="add-row-btn" data-action="add-talent">+ Add Talent</button>
+    </div>
+  </div>
+
+  <!-- CLASS POWERS — the third ability section for classes whose powers
+       aren't spells (rogue Powers, fighter Maneuvers). Heading, button and
+       visibility all come from CLASS_ABILITY_SECTION. -->
+  <div class="section" id="powers-section">
+    <div class="section-head"><span class="icon">✸</span> <span id="powers-heading">Powers</span></div>
+    <div class="section-body">
+      <div id="powers-list" class="powers-list"></div>
+      <button class="add-row-btn" data-action="add-power" id="add-power-btn">+ Add Power</button>
+    </div>
+  </div>
+
+  <!-- SPELLS — the third ability section for casters (bard reads "Spells & Songs") -->
+  <div class="section" id="spells-section">
+    <div class="section-head"><span class="icon">✦</span> <span id="spells-heading">Spells</span></div>
+    <div class="section-body">
+      <div class="hp-item">
+        <span class="hp-label">Spells Prepared</span>
+        <input class="field-inline field-sm" data-field="max_spells" placeholder="—" aria-label="Spells prepared">
+      </div>
+      <div id="spells-list" class="powers-list"></div>
+      <button class="add-row-btn" data-action="add-spell">+ Add Spell</button>
+    </div>
+  </div>
+
+  <!-- FEATS -->
+  <div class="section">
+    <div class="section-head"><span class="icon">⚜</span> Feats</div>
+    <div class="section-body">
+		<div id="feats-list"></div>
+		<button class="add-row-btn" data-action="add-feat">+ Add Feat</button>
+	</div>
+  </div>
+
+  <!-- GEAR -->
+  <div class="section">
+    <div class="section-head"><span class="icon">🎒</span> Gear & Equipment</div>
+    <div class="section-body gear-grid">
+      <div class="gear-row">
+        <div class="hp-item"><span class="hp-label">Armor</span><input class="field-inline" data-field="armor_type" placeholder="None" aria-label="Armor type"></div>
+        <div class="hp-item"><span class="hp-label">Base AC</span><input class="field-inline field-sm" data-field="base_ac" aria-label="Base AC"></div>
+        <div class="hp-item"><span class="hp-label">Shield</span><input class="field-inline field-sm" data-field="shield" aria-label="Shield bonus"></div>
+        <div class="hp-item"><span class="hp-label">Melee</span><input class="field-inline" data-field="gear_melee" placeholder="Weapon" aria-label="Melee weapon gear"></div>
+        <div class="hp-item"><span class="hp-label">Ranged</span><input class="field-inline" data-field="gear_ranged" placeholder="Weapon" aria-label="Ranged weapon gear"></div>
+        <div class="hp-item"><span class="hp-label">Gold</span><input class="field-inline" data-field="gold" aria-label="Gold"></div>
+      </div>
+      <textarea rows="1" class="field-block" data-field="gear_notes" placeholder="Other gear, equipment, and supplies…"></textarea>
+    </div>
+  </div>
+
+  <!-- MAGIC ITEMS -->
+  <div class="section">
+    <div class="section-head"><span class="icon">💎</span> Magic Items & Potions</div>
+    <div class="section-body">
+      <div class="hp-item"><span class="hp-label">Max Attuned</span><input class="field-inline field-sm" data-field="max_magic" aria-label="Maximum attuned magic items"></div>
+      <textarea rows="1" class="field-block" data-field="magic_items" placeholder="Magic items, potions, runes…"></textarea>
+    </div>
+  </div>
+
+  <!-- CONDITIONS -->
+  <div class="section">
+    <div class="section-head"><span class="icon">⚡</span> Conditions & Ongoing Effects</div>
+    <div class="section-body">
+      <div class="cond-pills" id="cond-pills"></div>
+      <textarea rows="1" class="field-block" data-field="conditions" placeholder="Track ongoing damage, conditions, saves…"></textarea>
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="section">
+    <div class="section-head"><span class="icon">✎</span> Session Notes</div>
+    <div class="section-body">
+      <textarea rows="1" class="field-block" data-field="notes" placeholder="Session notes, plans, reminders…"></textarea>
+    </div>
+  </div>
+
+  <!-- INCREMENTAL ADVANCES -->
+  <div class="section">
+    <div class="section-head"><span class="icon">⬆</span> Incremental Advances</div>
+    <div class="section-body">
+      <div class="advances-grid" id="advances-grid"></div>
+    </div>
+  </div>
+
+  <!-- UTILITIES -->
+  <div class="section" id="utilities-section">
+    <div class="section-head"><span class="icon">⚙</span> Utilities</div>
+    <div class="toolbar">
+      <select id="theme-select">
+        <option value="barbarian">⚔ Barbarian</option>
+        <option value="bard">♪ Bard</option>
+        <option value="cleric">✙ Cleric</option>
+        <option value="fighter">⚔ Fighter</option>
+        <option value="necromancer">☠ Necromancer</option>
+        <option value="paladin">⛨ Paladin</option>
+        <option value="rogue">🗡 Rogue</option>
+        <option value="wizard">✦ Wizard</option>
+      </select>
+      <button class="primary" id="btn-save">⤓ Save to File</button>
+      <button id="btn-load">⤒ Load from File</button>
+      <button id="btn-reset">↺ New Sheet</button>
+      <input type="file" id="load-input" accept=".json" style="display:none;">
+    </div>
+  </div>
+
+  </div><!-- .sheet-columns -->
+
+</div>
+
+<!-- DICE TRAY — floating roller, escalation die, dice & action log -->
+<div class="dice-tray collapsed" id="dice-tray">
+  <div class="dice-tray-head" id="dice-tray-head" role="button" tabindex="0" aria-expanded="false" title="Show or hide the dice & log tray">
+    <span>🎲 Dice & Log</span>
+    <span class="esc-mini" title="Escalation die">⬆ <span id="esc-mini-value">0</span></span>
+    <span class="dice-tray-caret" id="dice-tray-caret">▸</span>
+  </div>
+  <div class="dice-tray-body">
+    <div class="esc-row">
+      <span class="esc-label">Escalation Die</span>
+      <div class="esc-controls">
+        <button class="esc-btn" id="esc-minus" title="Decrease escalation die" aria-label="Decrease escalation die">−</button>
+        <div class="esc-die" id="esc-value" title="Added automatically to attack rolls">0</div>
+        <button class="esc-btn" id="esc-plus" title="Increase escalation die (new round)" aria-label="Increase escalation die">+</button>
+        <button class="esc-btn" id="esc-reset" title="Reset to 0 (new battle)" aria-label="Reset escalation die">↺</button>
+      </div>
+    </div>
+    <div class="dice-quick">
+      <button data-roll="d20">d20</button>
+      <button data-roll="d20esc" title="d20 + escalation die">d20+esc</button>
+      <button data-roll="save" title="Normal save: succeeds on 11+">Save 11+</button>
+      <button data-roll="d6">d6</button>
+      <button data-roll="2d6">2d6</button>
+    </div>
+    <div class="roll-log" id="roll-log"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let state = {
+    fields: {},
+    checkboxes: {},
+    backgrounds: [],
+    icons: [],
+    // The three ability lists, all the same row shape: class features and
+    // talents are always on the sheet; `powers` and `spells` are the
+    // class-dependent third section (see CLASS_ABILITY_SECTION).
+    features: [],
+    talents: [],
+    powers: [],
+    spells: [],
+    feats: [],
+    advances: {},
+    locks: {},
+    activeConditions: {},
+    escalation: 0,
+    // Per-class bucket for class-module state that isn't a `data-field`
+    // input (toggles, class-specific lists). Keyed by class; entries are
+    // never deleted when you switch class, so nothing is lost. See the
+    // CLASS MODULES block for the full data-retention contract.
+    classData: {},
+    theme: 'necromancer'
+  };
+
+  // ── AUTO-DERIVED FIELDS ───────────────────────────────────────────────
+  // Each entry: calc(fields) returns the computed value (string), or ''
+  // if the source is missing. The user can override any of these by typing
+  // into the field (auto-locks) or by clicking the lock icon.
+  function intOrNull(v) {
+    if (v === '' || v === undefined || v === null) return null;
+    const n = parseInt(v, 10);
+    return isNaN(n) ? null : n;
+  }
+  function intOrZero(v) { const n = intOrNull(v); return n === null ? 0 : n; }
+  function signed(n) { return (n >= 0 ? '+' : '') + n; }
+
+  function abilityMod(score) {
+    const s = intOrNull(score);
+    if (s === null) return '';
+    return signed(Math.floor((s - 10) / 2));
+  }
+
+  // Parses "2d10 + 4", "2d10+4", "5d8 - 1", "3d6". Returns null if unparseable.
+  function parseRecoveryDice(str) {
+    if (!str) return null;
+    const m = String(str).replace(/\s+/g, '').match(/^(\d+)d(\d+)([+-]\d+)?$/i);
+    if (!m) return null;
+    return { count: +m[1], sides: +m[2], bonus: m[3] ? +m[3] : 0 };
+  }
+  // Average of "NdX+B": N * (X+1) / 2 + B. Round down for table convenience.
+  // Shared by recovery dice and weapon-damage averages — any "NdX+B" string.
+  function diceAvg(diceStr) {
+    const d = parseRecoveryDice(diceStr);
+    if (!d) return '';
+    return Math.floor(d.count * (d.sides + 1) / 2) + d.bonus;
+  }
+  function recoveryAvg(diceStr) { return diceAvg(diceStr); }
+
+  // ── CLASS ROSTER ──────────────────────────────────────────────────────
+  // Everything class-specific — base defenses, base HP, extra attacks,
+  // panels, sections — lives in its own file under `classes/`, loaded the
+  // first time that class is selected. See the CLASS MODULES block below
+  // for the loader and the module API.
+  //
+  // The sheet itself only needs to know which classes *exist*, so the
+  // dropdown can be built before any class file has loaded. To add a class:
+  // add its name here and drop a `classes/<name>.js` beside this file (copy
+  // `classes/_template.js`). Nothing else needs editing.
+  const CLASS_ROSTER = [
+    'barbarian', 'bard', 'cleric', 'commander', 'druid', 'fighter', 'monk',
+    'necromancer', 'occultist', 'paladin', 'ranger', 'rogue', 'sorcerer', 'wizard',
+  ];
+
+  // ── THIRD ABILITY SECTION ─────────────────────────────────────────────
+  // Every sheet has Class Features and Talents. What comes after them
+  // depends on the class: casters get the Spells list, rogues and fighters
+  // get the same list under their own name, and a class with no third kind
+  // of ability shows no third section at all.
+  //
+  //   list:  which state array / section — 'spells' or 'powers'
+  //   label: the section heading
+  //   noun:  singular, for the add button ('+ Add Maneuver')
+  //
+  // This mapping stays in the base sheet rather than moving into the class
+  // modules: it has to be known before any class file has loaded, and a
+  // player who never received `classes/rogue.js` must still see Powers.
+  // Neither list is ever cleared, so a class switch only hides rows.
+  const CLASS_ABILITY_SECTION = {
+    bard:        { list: 'spells', label: 'Spells & Songs', noun: 'Spell' },
+    cleric:      { list: 'spells', label: 'Spells',         noun: 'Spell' },
+    necromancer: { list: 'spells', label: 'Spells',         noun: 'Spell' },
+    sorcerer:    { list: 'spells', label: 'Spells',         noun: 'Spell' },
+    wizard:      { list: 'spells', label: 'Spells',         noun: 'Spell' },
+    fighter:     { list: 'powers', label: 'Maneuvers',      noun: 'Maneuver' },
+    rogue:       { list: 'powers', label: 'Powers',         noun: 'Power' },
+  };
+
+  // Level → HP multiplier (13th Age 2e). Levels outside 1–10 have no entry,
+  // so max HP stays blank/manual until level is a valid 1–10.
+  const HP_LEVEL_MULT = { 1: 3, 2: 4, 3: 5, 4: 6, 5: 8, 6: 10, 7: 12, 8: 16, 9: 20, 10: 24 };
+
+  // max HP = (class baseHp + Con mod) × level multiplier. Blank (and so
+  // freely editable) until both the class module and a 1–10 level are known.
+  function maxHpCalc(f) {
+    const ci = getClassInfo(f.class);
+    if (!ci || ci.baseHp == null) return '';
+    const mult = HP_LEVEL_MULT[intOrNull(f.level)];
+    if (mult === undefined) return '';
+    return (ci.baseHp + intOrZero(f.con_mod)) * mult;
+  }
+
+  // A class's base numbers (`defenses`, `baseHp`) are ordinary properties of
+  // its module, so they arrive with the rest of the class file. Returns null
+  // until that file has loaded — and every calc reading it already treats
+  // null as "leave the field blank and editable", so a missing class file
+  // degrades to a plain manual sheet rather than breaking anything.
+  function getClassInfo(className) {
+    return CLASS_MODULES[className] || null;
+  }
+
+  // Fill the class <select> from the roster. Labels are the capitalized key.
+  function populateClassOptions() {
+    const sel = document.querySelector('select[data-field="class"]');
+    if (!sel) return;
+    sel.appendChild(el('option', { value: '' }, 'Class…'));
+    CLASS_ROSTER.forEach(key => {
+      sel.appendChild(el('option', { value: key }, key[0].toUpperCase() + key.slice(1)));
+    });
+  }
+
+  // 13A defenses use the *middle* of three ability mods (the median).
+  function middleMod(a, b, c) {
+    return [a, b, c].sort((x, y) => x - y)[1];
+  }
+
+  // Shared shape for AC/PD/MD: class base + middle of three mods + level.
+  // Returns '' (blank, stays editable) when the class is unknown, or when
+  // there's nothing to compute from yet (no level and no relevant mods).
+  function defenseCalc(f, defenseKey, modA, modB, modC) {
+    const ci = getClassInfo(f.class);
+    if (!ci || !ci.defenses) return '';
+    const lvl = intOrNull(f.level);
+    const haveMod = [modA, modB, modC].some(k => intOrNull(f[k]) !== null);
+    if (lvl === null && !haveMod) return '';
+    const mid = middleMod(intOrZero(f[modA]), intOrZero(f[modB]), intOrZero(f[modC]));
+    return ci.defenses[defenseKey] + mid + intOrZero(f.level);
+  }
+
+  // Order matters: dependents come after their sources so a single pass
+  // resolves chains like dex_score → dex_mod → initiative.
+  // `sources` lists the fields each calc reads; DERIVED_SOURCES (below) uses
+  // these to gate recomputeDerived so typing into a free-text field like
+  // `notes` or `gear_notes` doesn't trigger a recompute on every keystroke.
+  // Keep `sources` in sync with `calc` — they're the contract.
+  const DERIVED_FIELDS = {
+    str_mod:      { sources: ['str_score'], calc: f => abilityMod(f.str_score) },
+    dex_mod:      { sources: ['dex_score'], calc: f => abilityMod(f.dex_score) },
+    con_mod:      { sources: ['con_score'], calc: f => abilityMod(f.con_score) },
+    wis_mod:      { sources: ['wis_score'], calc: f => abilityMod(f.wis_score) },
+    int_mod:      { sources: ['int_score'], calc: f => abilityMod(f.int_score) },
+    cha_mod:      { sources: ['cha_score'], calc: f => abilityMod(f.cha_score) },
+    initiative:   { sources: ['dex_mod', 'level'], calc: f => {
+      const dex = intOrNull(f.dex_mod);
+      const lvl = intOrNull(f.level);
+      if (dex === null && lvl === null) return '';
+      return signed(intOrZero(f.dex_mod) + intOrZero(f.level));
+    }},
+    // Per-class base from CLASS_INFO. Defined before staggered/dead so they
+    // resolve off the fresh max_hp in the same recompute pass.
+    max_hp:       { sources: ['class', 'level', 'con_mod'], calc: f => maxHpCalc(f) },
+    staggered:    { sources: ['max_hp'], calc: f => {
+      const hp = intOrNull(f.max_hp);
+      return hp === null ? '' : Math.floor(hp / 2);
+    }},
+    dead:         { sources: ['max_hp'], calc: f => {
+      const hp = intOrNull(f.max_hp);
+      return hp === null ? '' : -Math.floor(hp / 2);
+    }},
+    recovery_avg: { sources: ['recovery_dice'], calc: f => recoveryAvg(f.recovery_dice) },
+    // Average weapon damage from the hit-damage formula (e.g. "1d8+4" → 8).
+    melee_avg:    { sources: ['melee_damage'],  calc: f => diceAvg(f.melee_damage) },
+    ranged_avg:   { sources: ['ranged_damage'], calc: f => diceAvg(f.ranged_damage) },
+    // 13A 2e: a basic *melee* attack misses for damage equal to your level.
+    // Ranged miss damage stays manual — it's usually none, and the classes
+    // that do get it (or a different melee value) override via their module.
+    melee_miss:   { sources: ['level'], calc: f => {
+      const lvl = intOrNull(f.level);
+      return lvl === null ? '' : lvl;
+    }},
+    // Defenses pull a per-class base from the class module. The *_mod sources are
+    // themselves derived but resolve earlier in this same pass (they're
+    // defined above), so state.fields holds fresh mods by the time we read.
+    ac: { sources: ['class', 'level', 'con_mod', 'dex_mod', 'wis_mod'],
+          calc: f => defenseCalc(f, 'ac', 'con_mod', 'dex_mod', 'wis_mod') },
+    pd: { sources: ['class', 'level', 'str_mod', 'con_mod', 'dex_mod'],
+          calc: f => defenseCalc(f, 'pd', 'str_mod', 'con_mod', 'dex_mod') },
+    md: { sources: ['class', 'level', 'int_mod', 'wis_mod', 'cha_mod'],
+          calc: f => defenseCalc(f, 'md', 'int_mod', 'wis_mod', 'cha_mod') },
+    // 13A 2e: attunement limit equals character level.
+    max_magic: { sources: ['level'], calc: f => {
+      const lvl = intOrNull(f.level);
+      return lvl === null ? '' : lvl;
+    }},
+  };
+  // The *active* derived set: DERIVED_FIELDS plus whatever the current class
+  // module contributes (see refreshDerivedIndex). Everything downstream —
+  // recomputeDerived, initLocks, the input listener's source gate — reads
+  // these, so a class field behaves exactly like a built-in one.
+  let DERIVED = DERIVED_FIELDS;
+  let DERIVED_KEYS = Object.keys(DERIVED);
+  // Union of every derived field's source list. `dex_mod` appears here (it's
+  // itself derived but also feeds initiative) — Set dedupes naturally.
+  let DERIVED_SOURCES = new Set(Object.values(DERIVED).flatMap(d => d.sources));
+
+  // Class entries are merged *after* the base ones, so a class calc can read
+  // a base derived value that resolves earlier in the same recompute pass.
+  function refreshDerivedIndex() {
+    const mod = activeClassModule();
+    DERIVED = (mod && mod.derived) ? Object.assign({}, DERIVED_FIELDS, mod.derived) : DERIVED_FIELDS;
+    DERIVED_KEYS = Object.keys(DERIVED);
+    DERIVED_SOURCES = new Set(Object.values(DERIVED).flatMap(d => d.sources));
+  }
+
+  function recomputeDerived() {
+    DERIVED_KEYS.forEach(key => {
+      if (state.locks[key]) return;
+      const newVal = String(DERIVED[key].calc(state.fields));
+      state.fields[key] = newVal;
+      const el = document.querySelector(`[data-field="${key}"]`);
+      if (el && el.value !== newVal) el.value = newVal;
+    });
+    updateTierBadge();
+    updateHpStatus();
+  }
+
+  // Display-only tier label next to the character name.
+  // 13A 2e tiers: 1–4 Adventurer, 5–7 Champion, 8+ Epic. Ordered high → low
+  // so the first matching `min` wins on `.find()`.
+  const TIERS = [
+    { min: 8, label: 'Epic',       icon: '👑' },
+    { min: 5, label: 'Champion',   icon: '⚔' },
+    { min: 1, label: 'Adventurer', icon: '🗡' },
+  ];
+  function updateTierBadge() {
+    const badge = document.getElementById('tier-badge');
+    if (!badge) return;
+    badge.innerHTML = '';
+    const lvl = parseInt(state.fields.level, 10);
+    if (isNaN(lvl)) return;
+    const tier = TIERS.find(t => lvl >= t.min);
+    if (!tier) return;
+    badge.append(
+      el('span', { class: 'tier-badge-icon', 'aria-hidden': 'true' }, tier.icon),
+      el('span', {}, tier.label)
+    );
+  }
+
+  function setLockVisual(toggleEl, inputEl, locked) {
+    toggleEl.textContent = locked ? '🔒' : '🔓';
+    toggleEl.classList.toggle('locked', locked);
+    toggleEl.setAttribute('aria-checked', locked ? 'true' : 'false');
+    toggleEl.title = locked
+      ? 'Manually set — click to use the auto-calculated value'
+      : 'Auto-calculated — typing or clicking here locks it';
+  }
+
+  function initLocks() {
+    DERIVED_KEYS.forEach(key => {
+      const input = document.querySelector(`[data-field="${key}"]`);
+      if (!input || input.parentNode.classList.contains('has-lock')) return;
+      const wrap = document.createElement('span');
+      wrap.className = 'has-lock';
+      input.parentNode.insertBefore(wrap, input);
+      wrap.appendChild(input);
+      const toggle = document.createElement('span');
+      toggle.className = 'lock-toggle';
+      toggle.setAttribute('role', 'switch');
+      toggle.setAttribute('tabindex', '0');
+      toggle.setAttribute('aria-label', `Lock ${key.replace(/_/g, ' ')} to manual value`);
+      wrap.appendChild(toggle);
+      setLockVisual(toggle, input, !!state.locks[key]);
+      toggle.addEventListener('click', () => {
+        if (state.locks[key]) {
+          delete state.locks[key];
+          setLockVisual(toggle, input, false);
+          recomputeDerived();
+        } else {
+          state.locks[key] = true;
+          setLockVisual(toggle, input, true);
+        }
+        saveNow();
+      });
+      // Typing into a derived field auto-locks it.
+      input.addEventListener('input', () => {
+        if (!state.locks[key]) {
+          state.locks[key] = true;
+          setLockVisual(toggle, input, true);
+          saveNow();
+        }
+      });
+    });
+  }
+
+  function setTheme(t) {
+    document.body.setAttribute('data-theme', t);
+    state.theme = t;
+    document.getElementById('theme-select').value = t;
+    saveNow();
+  }
+
+  // Show whichever third ability section the current class calls for, and
+  // name it. Hiding is display-only — the rows stay in state and come back
+  // untouched if the class changes back.
+  function applyAbilitySections() {
+    const spec = CLASS_ABILITY_SECTION[currentClassKey()] || null;
+    const kind = spec ? spec.list : '';
+    document.getElementById('spells-section').style.display = kind === 'spells' ? '' : 'none';
+    document.getElementById('powers-section').style.display = kind === 'powers' ? '' : 'none';
+    if (kind === 'spells') {
+      document.getElementById('spells-heading').textContent = spec.label;
+    } else if (kind === 'powers') {
+      document.getElementById('powers-heading').textContent = spec.label;
+      document.getElementById('add-power-btn').textContent = '+ Add ' + spec.noun;
+    }
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // Textareas grow to fit what's typed in them. Measuring that (`scrollHeight`)
+  // forces a synchronous layout, and the sheet lays out as two balanced CSS
+  // columns — so doing it inline with a keystroke makes the browser re-flow
+  // the whole sheet between the key going down and the letter appearing.
+  //
+  // So nothing measures immediately: every request is queued and flushed on
+  // the next animation frame, in one write→read→write pass. Typing at speed
+  // collapses to a single measurement per frame instead of one per keystroke,
+  // and N textareas cost one layout rather than N.
+  const _growQueue = new Set();
+  let _growFrame = 0;
+  function autoGrow(ta) {
+    if (!ta) return;
+    _growQueue.add(ta);
+    if (!_growFrame) _growFrame = requestAnimationFrame(flushAutoGrow);
+  }
+  function flushAutoGrow() {
+    _growFrame = 0;
+    const list = [..._growQueue];
+    _growQueue.clear();
+    // Release every height first, then read every height, then write them
+    // back. Interleaving these (the obvious per-textarea loop) makes each
+    // read re-run layout for the whole document.
+    list.forEach(ta => { ta.style.height = 'auto'; });
+    const heights = list.map(ta => ta.scrollHeight);
+    list.forEach((ta, i) => { ta.style.height = heights[i] + 'px'; });
+  }
+  function autoGrowAll() {
+    document.querySelectorAll('textarea.field-block').forEach(autoGrow);
+  }
+
+  // Sequential-tracker enforcement for ordered checkbox rows (recoveries,
+  // skulls). Only the boundary boxes are interactive: the first unchecked
+  // box (clickable to check) and the last checked box (clickable to
+  // uncheck). Everything else gets `.disabled` + `aria-disabled` and is
+  // removed from the tab order. Prevents gaps from forming, which would
+  // break Quick Rest's "preserve skull 0, clear the rest" semantics and
+  // generally mismatches how these mechanics work in play (you spend the
+  // next recovery, you fail the next death save).
+  function applySequentialState(boxes, prefix) {
+    let firstUnchecked = -1;
+    for (let i = 0; i < boxes.length; i++) {
+      if (!state.checkboxes[prefix + i]) { firstUnchecked = i; break; }
+    }
+    // If every box is checked, firstUnchecked stays -1 and the final box is
+    // the only interactive one (clickable to uncheck). If nothing is checked,
+    // lastChecked is -1 and only box 0 is interactive (clickable to check).
+    const lastChecked = firstUnchecked === -1 ? boxes.length - 1 : firstUnchecked - 1;
+    boxes.forEach((box, i) => {
+      const checked = !!state.checkboxes[prefix + i];
+      const interactive = (checked && i === lastChecked) || (!checked && i === firstUnchecked);
+      box.classList.toggle('disabled', !interactive);
+      if (interactive) {
+        box.removeAttribute('aria-disabled');
+        box.setAttribute('tabindex', '0');
+      } else {
+        box.setAttribute('aria-disabled', 'true');
+        box.setAttribute('tabindex', '-1');
+      }
+    });
+  }
+
+  // Number of recovery boxes: an explicit 0 is respected (some monsters of
+  // the week have no recoveries!), blank defaults to 8, and a typo like
+  // "888" is capped rather than rendering hundreds of boxes.
+  function maxRecoveries() {
+    const n = intOrNull(state.fields.max_recoveries);
+    if (n === null || n < 0) return 8;
+    return Math.min(n, 30);
+  }
+
+  function renderRecoveries() {
+    const row = document.getElementById('recoveries-row');
+    const label = row.querySelector('.hp-label');
+    row.innerHTML = '';
+    row.appendChild(label);
+    const max = maxRecoveries();
+    const boxes = [];
+    for (let i = 0; i < max; i++) {
+      const box = document.createElement('div');
+      box.className = 'check-box' + (state.checkboxes['rec_' + i] ? ' checked' : '');
+      box.textContent = '✕';
+      box.setAttribute('role', 'checkbox');
+      box.setAttribute('aria-checked', state.checkboxes['rec_' + i] ? 'true' : 'false');
+      box.setAttribute('aria-label', `Recovery ${i + 1}`);
+      box.addEventListener('click', () => {
+        // Disabled state is the authoritative gate — the keyboard handler
+        // also routes through el.click(), so this one check covers both.
+        if (box.classList.contains('disabled')) return;
+        const next = !state.checkboxes['rec_' + i];
+        state.checkboxes['rec_' + i] = next;
+        box.classList.toggle('checked', next);
+        box.setAttribute('aria-checked', next ? 'true' : 'false');
+        // Toggling moves the boundary, so every sibling's state needs reeval.
+        applySequentialState(boxes, 'rec_');
+        saveNow();
+      });
+      boxes.push(box);
+      row.appendChild(box);
+    }
+    applySequentialState(boxes, 'rec_');
+    row.insertAdjacentHTML('beforeend', trackAnnotationHtml('arc'));
+  }
+
+  function renderSkulls() {
+    const row = document.getElementById('skulls-row');
+    row.innerHTML = '';
+    let max = parseInt(state.fields.max_skulls);
+    if (isNaN(max) || max < 5) max = 5;
+    if (max > 8) max = 8;
+    state.fields.max_skulls = max;
+    const skulls = [];
+    for (let i = 0; i < max; i++) {
+      const isFirst = i === 0;
+      const isLast = i === max - 1;
+      const firstMiddle = i === 1;
+      const lastMiddle = i === max - 2;
+      if (isFirst) {
+        row.insertAdjacentHTML('beforeend', trackAnnotationHtml('arc'));
+      }
+      if (firstMiddle) {
+        row.insertAdjacentHTML('beforeend', '<span class="skull-bracket">[</span>');
+      }
+      const skull = document.createElement('div');
+      skull.className = 'skull-box' + (state.checkboxes['skull_' + i] ? ' checked' : '');
+      skull.textContent = '💀';
+      skull.setAttribute('role', 'checkbox');
+      skull.setAttribute('aria-checked', state.checkboxes['skull_' + i] ? 'true' : 'false');
+      skull.setAttribute('aria-label', `Failed death save ${i + 1}`);
+      skull.addEventListener('click', () => {
+        if (skull.classList.contains('disabled')) return;
+        const next = !state.checkboxes['skull_' + i];
+        state.checkboxes['skull_' + i] = next;
+        skull.classList.toggle('checked', next);
+        skull.setAttribute('aria-checked', next ? 'true' : 'false');
+        applySequentialState(skulls, 'skull_');
+        saveNow();
+      });
+      skulls.push(skull);
+      row.appendChild(skull);
+      if (lastMiddle && max > 2) {
+        row.insertAdjacentHTML('beforeend', '<span class="skull-bracket">]</span>' + trackAnnotationHtml('battle', { style: 'margin-right:4px' }));
+      }
+      if (isLast) {
+        row.insertAdjacentHTML('beforeend', '<span class="track-annotation" style="color:var(--accent)">DEAD</span>');
+      }
+    }
+    applySequentialState(skulls, 'skull_');
+    const cfg = el('span', { class: 'skulls-config' },
+      el('input', {
+        class: 'field-inline', value: max,
+        placeholder: '#', title: 'Number of skulls',
+        inputmode: 'numeric',
+        onchange: e => { state.fields.max_skulls = e.target.value; renderSkulls(); saveNow(); }
+      })
+    );
+    row.appendChild(cfg);
+  }
+
+  // Tiny hyperscript-style DOM helper. Attrs starting with `on` become event
+  // listeners; everything else becomes an attribute (with `class`/`value`
+  // shortcuts). Children may be nodes, strings, arrays, or null (skipped).
+  function el(tag, attrs = {}, ...children) {
+    const node = document.createElement(tag);
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (v === null || v === undefined || v === false) return;
+      if (k === 'class') node.className = v;
+      else if (k === 'value') node.value = v;
+      else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
+      else node.setAttribute(k, v === true ? '' : v);
+    });
+    children.flat().forEach(c => {
+      if (c === null || c === undefined || c === false) return;
+      node.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return node;
+  }
+
+  // Refresh-cadence annotations rendered next to a use-tracker.
+  // Add new types here (e.g. arc, recharge) and use trackAnnotationHtml(type) anywhere.
+  const TRACK_TYPES = {
+    arc:    { symbol: '↺', title: 'Refreshes per arc' },
+    battle: { symbol: '⚔', title: 'Refreshes per battle' },
+  };
+  function trackAnnotation(type, opts = {}) {
+    const t = TRACK_TYPES[type];
+    return el('span', { class: 'track-annotation', style: opts.style || null, title: t.title }, t.symbol);
+  }
+  // String form for the renderers that build their rows with insertAdjacentHTML.
+  function trackAnnotationHtml(type, opts = {}) {
+    return trackAnnotation(type, opts).outerHTML;
+  }
+
+  // Shared "use" tracker: appends N check-boxes backed by
+  // state[stateKey][idx][prop][u]. Used by powers, spells, and icon
+  // relationships. `prop` defaults to 'used'; icon relationships pass
+  // 'available' for their second tracker.
+  //
+  // `states` is how many levels each box cycles through on click/keyboard:
+  //   2 (default) — off / on (stored falsy / 1)
+  //   3           — off / on / "twist" (stored falsy / 1 / 2). Used by the
+  //                 icon "available" track: blank, available, available-but-
+  //                 with-a-guaranteed-twist (slashed, recolored).
+  // Stored value 0 is represented by deleting the key (keeps saves lean and
+  // backward-compatible with the old boolean form, which normalizes to 1).
+  function useLevel(v, states) {
+    let n = v === true ? 1 : (parseInt(v, 10) || 0);
+    if (n < 0) n = 0;
+    if (n > states - 1) n = states - 1;
+    return n;
+  }
+  function boxClass(lvl) {
+    return 'check-box' + (lvl >= 1 ? ' checked' : '') + (lvl === 2 ? ' twist' : '');
+  }
+  // 2 = "mixed" is the natural ARIA value for the partial/twist state.
+  function boxAria(lvl) {
+    return lvl === 2 ? 'mixed' : (lvl === 1 ? 'true' : 'false');
+  }
+
+  function appendUses(parent, stateKey, idx, count, valuesObj, prop, glyph, states) {
+    prop = prop || 'used';
+    glyph = glyph || '✕';
+    states = states || 2;
+    for (let u = 0; u < count; u++) {
+      const lvl = useLevel(valuesObj && valuesObj[u], states);
+      const box = el('div', {
+        class: boxClass(lvl),
+        role: 'checkbox', tabindex: '0',
+        'aria-checked': boxAria(lvl)
+      }, glyph);
+      box.addEventListener('click', () => cycleUse(stateKey, idx, u, box, prop, states));
+      parent.appendChild(box);
+    }
+  }
+
+  function cycleUse(stateKey, idx, useIdx, boxEl, prop, states) {
+    prop = prop || 'used';
+    states = states || 2;
+    const item = state[stateKey][idx];
+    if (!item[prop]) item[prop] = {};
+    const next = (useLevel(item[prop][useIdx], states) + 1) % states;
+    if (next === 0) delete item[prop][useIdx];
+    else item[prop][useIdx] = next;
+    boxEl.className = boxClass(next);
+    boxEl.setAttribute('aria-checked', boxAria(next));
+    saveNow();
+  }
+
+  function renderBackgrounds() {
+    const list = document.getElementById('backgrounds-list');
+    list.innerHTML = '';
+    state.backgrounds.forEach((bg, i) => {
+      list.appendChild(el('div', { class: 'row' },
+        el('input', {
+          class: 'field-inline field-flex', value: bg.name, placeholder: 'Background name',
+          oninput: e => { state.backgrounds[i].name = e.target.value; }
+        }),
+        el('input', {
+          class: 'field-inline field-md', value: bg.bonus, placeholder: '+0',
+          oninput: e => { state.backgrounds[i].bonus = e.target.value; }
+        }),
+        el('button', {
+          class: 'roll-btn',
+          title: 'Roll skill check: d20 + level + background (add the relevant ability mod yourself)',
+          'aria-label': `Roll ${bg.name || 'background'} skill check`,
+          onclick: () => {
+            collectState();
+            const b = state.backgrounds[i];
+            rollD20(`${b.name || 'Background'} (+ ability mod)`,
+                    intOrZero(state.fields.level) + intOrZero(b.bonus));
+          }
+        }, '🎲'),
+        el('button', {
+          class: 'remove-btn',
+          onclick: () => { state.backgrounds.splice(i, 1); renderBackgrounds(); saveNow(); }
+        }, '×')
+      ));
+    });
+  }
+  function addBackground() { state.backgrounds.push({ name: '', bonus: '' }); renderBackgrounds(); saveNow(); }
+
+  function renderIcons() {
+    const list = document.getElementById('icons-list');
+    list.innerHTML = '';
+    state.icons.forEach((ic, i) => {
+      const dice = Math.min(Math.max(parseInt(ic.dice) || 0, 0), 3);
+      const availTrack = el('div', { class: 'icon-track' });
+      const usedTrack  = el('div', { class: 'icon-track' });
+      if (dice > 0) {
+        appendUses(availTrack, 'icons', i, dice, ic.available, 'available', '✓', 3);
+        appendUses(usedTrack,  'icons', i, dice, ic.used,      'used',      '✕');
+      }
+      list.appendChild(el('div', { class: 'icon-rel-row' },
+        el('input', {
+          class: 'field-inline icon-dice', value: ic.dice, placeholder: '#',
+          inputmode: 'numeric',
+          oninput: e => { state.icons[i].dice = e.target.value; },
+          onchange: () => { renderIcons(); saveNow(); }
+        }),
+        el('input', {
+          class: 'field-inline icon-mod', value: ic.mod, placeholder: '±',
+          oninput: e => { state.icons[i].mod = e.target.value; }
+        }),
+        el('input', {
+          class: 'field-inline icon-name', value: ic.name, placeholder: 'Icon name',
+          oninput: e => { state.icons[i].name = e.target.value; }
+        }),
+        dice > 0 ? availTrack : el('span'),
+        dice > 0 ? usedTrack  : el('span'),
+        el('span', { style: 'display:flex; align-items:center;' },
+          el('button', {
+            class: 'roll-btn',
+            title: 'Roll relationship dice: each 5 or 6 earns a use',
+            'aria-label': `Roll ${ic.name || 'icon'} relationship dice`,
+            onclick: () => rollIconDice(i)
+          }, '🎲'),
+          el('button', {
+            class: 'remove-btn',
+            onclick: () => { state.icons.splice(i, 1); renderIcons(); saveNow(); }
+          }, '×')
+        )
+      ));
+    });
+  }
+  function addIcon() { state.icons.push({ dice: '', mod: '', name: '', used: {}, available: {} }); renderIcons(); saveNow(); }
+
+  // Unified renderer for powers and spells. opts:
+  //   listId, stateKey, namePlaceholder, descPlaceholder, withPrep
+  function renderPowerLike(opts) {
+    const { listId, stateKey, namePlaceholder, descPlaceholder, withPrep } = opts;
+    const list = document.getElementById(listId);
+    list.innerHTML = '';
+    const rerender = () => renderPowerLike(opts);
+    state[stateKey].forEach((item, i) => {
+      const maxU = parseInt(item.max_uses) || 0;
+      const useChecks = el('div', { class: 'use-checks' });
+      if (maxU > 0) appendUses(useChecks, stateKey, i, maxU, item.used);
+      const prepBtn = withPrep ? el('div', {
+        class: 'prep-btn' + (item.prepared !== false ? ' active' : ''),
+        role: 'checkbox', tabindex: '0',
+        'aria-checked': item.prepared !== false ? 'true' : 'false',
+        'aria-label': 'Prepared', title: 'Prepared',
+        onclick: ev => toggleSpellPrep(i, ev.currentTarget)
+      }, '✦') : null;
+      const header = el('div', { class: 'power-header' },
+        el('span', { class: 'drag-handle', title: 'Drag to reorder' }, '⋮⋮'),
+        prepBtn,
+        el('input', {
+          class: 'field-inline power-name', value: item.name, placeholder: namePlaceholder,
+          oninput: e => { state[stateKey][i].name = e.target.value; }
+        }),
+        el('input', {
+          class: 'field-inline power-action', value: item.action, placeholder: 'Action',
+          oninput: e => { state[stateKey][i].action = e.target.value; }
+        }),
+        el('input', {
+          class: 'field-inline power-usage', value: item.usage,
+          placeholder: 'At-Will / Battle / Arc',
+          oninput: e => { state[stateKey][i].usage = e.target.value; }
+        }),
+        maxU > 0 ? useChecks : null,
+        el('input', {
+          class: 'field-inline field-sm', value: item.max_uses || '',
+          placeholder: 'Uses', title: 'Number of use checkboxes',
+          inputmode: 'numeric',
+          onchange: e => { state[stateKey][i].max_uses = e.target.value; rerender(); saveNow(); }
+        }),
+        el('button', {
+          class: 'remove-btn',
+          onclick: () => { state[stateKey].splice(i, 1); rerender(); saveNow(); }
+        }, '×')
+      );
+      const desc = el('textarea', {
+        rows: '1', class: 'field-block', placeholder: descPlaceholder,
+        oninput: e => { state[stateKey][i].desc = e.target.value; }
+      });
+      desc.value = item.desc || '';
+      const blockClasses = 'power-block' + (withPrep && item.prepared === false ? ' unprepared' : '');
+      list.appendChild(el('div', { class: blockClasses }, header, desc));
+    });
+    enableReorder(listId, stateKey, rerender);
+    autoGrowAll();
+  }
+
+  function renderFeatures() {
+    renderPowerLike({
+      listId: 'features-list', stateKey: 'features',
+      namePlaceholder: 'Feature name',
+      descPlaceholder: 'What it does…'
+    });
+  }
+  function renderTalents() {
+    renderPowerLike({
+      listId: 'talents-list', stateKey: 'talents',
+      namePlaceholder: 'Talent name',
+      descPlaceholder: 'What it does…'
+    });
+  }
+  function renderPowers() {
+    const spec = CLASS_ABILITY_SECTION[currentClassKey()];
+    const noun = (spec && spec.list === 'powers') ? spec.noun : 'Power';
+    renderPowerLike({
+      listId: 'powers-list', stateKey: 'powers',
+      namePlaceholder: noun + ' name',
+      descPlaceholder: 'Trigger, target, effect…'
+    });
+  }
+  function renderSpells() {
+    renderPowerLike({
+      listId: 'spells-list', stateKey: 'spells',
+      namePlaceholder: 'Spell name',
+      descPlaceholder: 'Target, attack, effect…',
+      withPrep: true
+    });
+  }
+  function blankPowerRow() { return { name: '', action: '', usage: '', desc: '', max_uses: '', used: {} }; }
+  function addFeature() { state.features.push(blankPowerRow()); renderFeatures(); saveNow(); }
+  function addTalent() { state.talents.push(blankPowerRow()); renderTalents(); saveNow(); }
+  function addPower() { state.powers.push(blankPowerRow()); renderPowers(); saveNow(); }
+  function addSpell() { state.spells.push({ name: '', action: '', usage: '', desc: '', max_uses: '', used: {}, prepared: true }); renderSpells(); saveNow(); }
+
+  function toggleSpellPrep(i, btn) {
+    state.spells[i].prepared = !state.spells[i].prepared;
+    btn.classList.toggle('active', state.spells[i].prepared);
+    btn.setAttribute('aria-checked', state.spells[i].prepared ? 'true' : 'false');
+    btn.closest('.power-block').classList.toggle('unprepared', !state.spells[i].prepared);
+    saveNow();
+  }
+
+  // Drag-and-drop reordering for any list of `.power-block` rows backed by a state array.
+  // Only the `.drag-handle` arms the row as draggable, so text selection inside inputs still works.
+  //
+  // HTML5 drag-and-drop doesn't fire on touch devices, so the touchstart path
+  // below implements an equivalent flow using touch events: track the finger
+  // with elementFromPoint, mirror the same drag-over-top/bottom hints, and run
+  // the same reorder math on release.
+  function enableReorder(listId, stateKey, render) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    const blocks = list.querySelectorAll('.power-block');
+    blocks.forEach((block, idx) => {
+      const handle = block.querySelector('.drag-handle');
+      if (!handle) return;
+      handle.addEventListener('mousedown', () => { block.draggable = true; });
+
+      // ── Touch reorder ──
+      handle.addEventListener('touchstart', e => {
+        // Suppress page scroll + synthetic mouse events for the gesture.
+        e.preventDefault();
+        block.classList.add('dragging');
+        let targetBlock = null;
+        let dropBefore = true;
+
+        const clearHint = () => {
+          if (targetBlock) targetBlock.classList.remove('drag-over-top', 'drag-over-bottom');
+        };
+
+        const onMove = ev => {
+          ev.preventDefault();
+          const t = ev.touches[0];
+          if (!t) return;
+          const under = document.elementFromPoint(t.clientX, t.clientY);
+          const newTarget = under && under.closest('.power-block');
+          if (newTarget !== targetBlock) clearHint();
+          targetBlock = newTarget;
+          // Restrict to the same list so a power can't be dropped into spells.
+          if (!targetBlock || targetBlock === block || !list.contains(targetBlock)) return;
+          const rect = targetBlock.getBoundingClientRect();
+          dropBefore = t.clientY < rect.top + rect.height / 2;
+          targetBlock.classList.toggle('drag-over-top', dropBefore);
+          targetBlock.classList.toggle('drag-over-bottom', !dropBefore);
+        };
+
+        const onEnd = () => {
+          document.removeEventListener('touchmove', onMove);
+          document.removeEventListener('touchend', onEnd);
+          document.removeEventListener('touchcancel', onEnd);
+          block.classList.remove('dragging');
+          clearHint();
+          if (!targetBlock || targetBlock === block || !list.contains(targetBlock)) return;
+          const siblings = Array.from(list.querySelectorAll('.power-block'));
+          const targetIdx = siblings.indexOf(targetBlock);
+          if (targetIdx < 0) return;
+          let to = targetIdx + (dropBefore ? 0 : 1);
+          const from = idx;
+          if (from < to) to -= 1;
+          if (from === to) return;
+          const arr = state[stateKey];
+          const [moved] = arr.splice(from, 1);
+          arr.splice(to, 0, moved);
+          render();
+          saveNow();
+        };
+
+        // passive:false so onMove can preventDefault the scroll.
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+        document.addEventListener('touchcancel', onEnd);
+      }, { passive: false });
+
+      block.addEventListener('dragstart', e => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', `${stateKey}:${idx}`);
+        block.classList.add('dragging');
+      });
+      block.addEventListener('dragend', () => {
+        block.draggable = false;
+        block.classList.remove('dragging');
+        list.querySelectorAll('.power-block').forEach(b => {
+          b.classList.remove('drag-over-top', 'drag-over-bottom');
+        });
+      });
+      block.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const rect = block.getBoundingClientRect();
+        const before = e.clientY < rect.top + rect.height / 2;
+        block.classList.toggle('drag-over-top', before);
+        block.classList.toggle('drag-over-bottom', !before);
+      });
+      block.addEventListener('dragleave', () => {
+        block.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+      block.addEventListener('drop', e => {
+        e.preventDefault();
+        const data = e.dataTransfer.getData('text/plain') || '';
+        const [srcKey, srcIdxStr] = data.split(':');
+        if (srcKey !== stateKey) return;
+        const from = parseInt(srcIdxStr, 10);
+        const rect = block.getBoundingClientRect();
+        const before = e.clientY < rect.top + rect.height / 2;
+        let to = idx + (before ? 0 : 1);
+        if (from < to) to -= 1;
+        if (from === to || isNaN(from)) return;
+        const arr = state[stateKey];
+        const [moved] = arr.splice(from, 1);
+        arr.splice(to, 0, moved);
+        render();
+        saveNow();
+      });
+    });
+  }
+
+  function renderFeats() {
+    const list = document.getElementById('feats-list');
+    list.innerHTML = '';
+    state.feats.forEach((ft, i) => {
+      list.appendChild(el('div', { class: 'row' },
+        el('input', {
+          class: 'field-inline field-flex', value: ft.name,
+          placeholder: 'Feat name / source',
+          oninput: e => { state.feats[i].name = e.target.value; }
+        }),
+        el('button', {
+          class: 'remove-btn',
+          onclick: () => { state.feats.splice(i, 1); renderFeats(); saveNow(); }
+        }, '×')
+      ));
+    });
+  }
+  function addFeat() { state.feats.push({ name: '' }); renderFeats(); saveNow(); }
+
+  const ADVANCES = [
+    { key: 'feat',           label: 'Feat' },
+    { key: 'max_hp',         label: 'Max HP ↑' },
+    { key: 'attunement',     label: '+1 Attunement' },
+    { key: 'pd',             label: '+1 PD' },
+    { key: 'md',             label: '+1 MD' },
+    { key: 'skill_init',     label: '+1 Skill & Init' },
+    { key: 'power_spell',    label: 'Power/Spell' },
+    { key: 'class_feature',  label: 'Class Feature',    note: 'some classes' },
+    { key: 'talent',         label: 'Talent',           note: 'some classes' },
+    { key: 'ability_scores', label: '+1 Ability Scores', note: 'lvl 3/6/9' },
+    { key: 'ability_mults',  label: 'Ability ×2/×4',   note: 'lvl 4/7' },
+  ];
+
+  function renderAdvances() {
+    const grid = document.getElementById('advances-grid');
+    grid.innerHTML = '';
+    ADVANCES.forEach(adv => {
+      const item = document.createElement('div');
+      item.className = 'advance-item';
+      item.setAttribute('role', 'checkbox');
+      item.setAttribute('tabindex', '0');
+      item.setAttribute('aria-checked', state.advances[adv.key] ? 'true' : 'false');
+      item.setAttribute('aria-label', adv.label);
+      const box = document.createElement('div');
+      box.className = 'check-box' + (state.advances[adv.key] ? ' checked' : '');
+      box.textContent = '✕';
+      box.setAttribute('aria-hidden', 'true');
+      const lbl = document.createElement('span');
+      lbl.className = 'advance-label';
+      lbl.textContent = adv.label;
+      if (adv.note) {
+        const note = document.createElement('span');
+        note.className = 'advance-note';
+        note.textContent = ` (${adv.note})`;
+        lbl.appendChild(note);
+      }
+      item.appendChild(box);
+      item.appendChild(lbl);
+      item.addEventListener('click', () => {
+        const next = !state.advances[adv.key];
+        state.advances[adv.key] = next;
+        box.classList.toggle('checked', next);
+        item.setAttribute('aria-checked', next ? 'true' : 'false');
+        saveNow();
+      });
+      grid.appendChild(item);
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  CLASS MODULES — per-class sections, attacks, fields and behaviour
+  // ══════════════════════════════════════════════════════════════════════
+  //
+  // A module is one declarative entry in CLASS_MODULES, keyed by the same
+  // string the class <select> stores (a CLASS_INFO key). Every part is
+  // optional:
+  //
+  //   slots:      { <slot name>: () => Node }
+  //               Content built and injected into the matching
+  //               `[data-class-slot="…"]` host in the markup. Slots today:
+  //                 'attacks'      — extra cards in the Basic Attacks section
+  //                 'hp-side'      — inline panel right of recoveries + skulls
+  //                 'skulls-under' — strip directly beneath the skull track
+  //                 'sections'     — whole extra sections after Basic Attacks
+  //               Adding a slot = add a host div + its name to CLASS_SLOTS.
+  //
+  //   derived:    DERIVED_FIELDS-shaped entries merged over the base set
+  //               while this class is active, so class fields get the same
+  //               auto-calculation and lock/override behaviour as built-ins.
+  //
+  //   onMount / onUnmount:  arbitrary DOM work when the class is selected /
+  //               switched away from — hide a section, retitle a heading,
+  //               anything the slots can't express declaratively.
+  //
+  //   defenses:   { ac, pd, md } 13th Age 2e base values, and
+  //   baseHp:     the per-class HP base — both read by DERIVED_FIELDS.
+  //
+  //   css:        a stylesheet string injected once on registration, so a
+  //               class's look travels with its file.
+  //
+  //   onQuickRest / onFullHeal:  react to the rest buttons (see classHook).
+  //
+  // ── NOTHING IS EVER LOST WHEN SWITCHING CLASS ─────────────────────────
+  // Class content is *unmounted*, never cleared. Two stores, both untouched
+  // by unmounting:
+  //
+  //   • Class FIELDS are ordinary `data-field` inputs whose keys carry a
+  //     class prefix (`barb_rs_damage`). They live in state.fields with
+  //     everything else. collectState() only reads inputs that are currently
+  //     on screen, so an unmounted field can never be blanked — switch away
+  //     and back and the values re-appear.
+  //   • Everything else (toggles, counters, per-class lists) goes in
+  //     state.classData[<class>] via classData().
+  //
+  // Both are saved to file and localStorage as part of `state`, and only a
+  // deliberate "New Sheet" clears them.
+  const CLASS_SLOTS = ['attacks', 'hp-side', 'skulls-under', 'sections'];
+  const CLASS_DIR = 'classes/';
+
+  // Populated by registerClass() as class files load; empty at startup.
+  const CLASS_MODULES = {};
+  const _classLoad = {};   // class name → Promise<boolean loaded>
+
+  // The entry point every `classes/*.js` file calls.
+  function registerClass(name, mod) {
+    if (!name || !mod) return;
+    CLASS_MODULES[name] = mod;
+    if (mod.css) injectClassCss(name, mod.css);
+  }
+
+  // A class file ships its own styles so its look travels with it.
+  function injectClassCss(name, css) {
+    const id = 'class-css-' + name;
+    if (document.getElementById(id)) return;
+    document.head.appendChild(el('style', { id }, css));
+  }
+
+  // Class files are pulled in with a classic <script> tag rather than
+  // fetch() or import(). Both of those are blocked by the browser on
+  // file:// pages, and this sheet is meant to work opened straight off
+  // disk (or emailed to a player as a folder) with no server. A classic
+  // script tag has no such restriction.
+  //
+  // Loading is lazy and one-shot per class: you only need the files for
+  // the classes you actually play, and a missing file is not an error —
+  // the sheet just falls back to fully manual defenses and HP.
+  function loadClassModule(name) {
+    if (_classLoad[name]) return _classLoad[name];
+    _classLoad[name] = new Promise(resolve => {
+      const script = document.createElement('script');
+      script.src = CLASS_DIR + name + '.js';
+      script.onload  = () => resolve(true);
+      script.onerror = () => {
+        console.warn(`No class module found at ${script.src} — using the base sheet.`);
+        resolve(false);
+      };
+      document.head.appendChild(script);
+    });
+    return _classLoad[name];
+  }
+
+  function currentClassKey() { return state.fields.class || ''; }
+  function activeClassModule() { return CLASS_MODULES[currentClassKey()] || null; }
+
+  // The current class's bucket of non-field state, created on first use.
+  // Pass a class name to reach another class's bucket explicitly.
+  function classData(className) {
+    const key = className || currentClassKey() || '_none';
+    if (!state.classData) state.classData = {};
+    if (!state.classData[key]) state.classData[key] = {};
+    return state.classData[key];
+  }
+
+  // Fire an optional lifecycle hook on the active module. Errors are
+  // contained so a broken module can't take the rest of the sheet down.
+  function classHook(name) {
+    const mod = activeClassModule();
+    if (!mod || typeof mod[name] !== 'function') return;
+    try { mod[name](); } catch (e) { console.warn('class hook ' + name, e); }
+  }
+
+  let _mountedClass = null;
+
+  function mountClassSlot(name) {
+    const host = document.querySelector(`[data-class-slot="${name}"]`);
+    if (!host) return;
+    host.innerHTML = '';
+    const mod = activeClassModule();
+    const build = mod && mod.slots && mod.slots[name];
+    if (!build) return;
+    try {
+      const node = build();
+      if (node) host.appendChild(node);
+    } catch (e) { console.warn('class slot ' + name, e); }
+  }
+
+  // Re-render every slot for the current class, then wire up what was just
+  // built: values out of state.fields, lock toggles on derived fields, and a
+  // recompute so mirrored values (e.g. raging strike ← melee) land immediately.
+  //
+  // Safe to call before the class file has loaded: it renders what's known
+  // now (i.e. nothing yet), kicks off the load, and runs again when the
+  // module arrives. `opts.notify` toasts if the file turns out to be missing
+  // — worth saying out loud when the user just picked the class, but not on
+  // a page load they didn't ask for.
+  function renderClassContent(opts = {}) {
+    const key = currentClassKey();
+    if (key && !CLASS_MODULES[key] && !_classLoad[key]) {
+      loadClassModule(key).then(ok => {
+        if (!ok && opts.notify) showToast(`No ${key} module found`);
+        renderClassContent();
+      });
+    }
+    if (_mountedClass !== key) {
+      const prev = CLASS_MODULES[_mountedClass];
+      if (prev && typeof prev.onUnmount === 'function') {
+        try { prev.onUnmount(); } catch (e) { console.warn('onUnmount', e); }
+      }
+      _mountedClass = key;
+    }
+    refreshDerivedIndex();
+    // Which third ability section shows, and what it's called, is a property
+    // of the class name alone — so this runs whether or not the file loaded.
+    applyAbilitySections();
+    renderPowers();       // the row placeholders follow the section's noun
+    CLASS_SLOTS.forEach(mountClassSlot);
+    document.querySelectorAll('[data-class-slot] [data-field]').forEach(node => {
+      node.value = state.fields[node.dataset.field] || '';
+    });
+    initLocks();          // skips inputs already wrapped; wires the new ones
+    recomputeDerived();
+    classHook('onMount');
+    autoGrowAll();
+  }
+
+  const STORAGE_KEY = '13a_sheet';
+  let _saveTimer;
+  let _initializing = true;
+  let _applying = false;
+  function saveNow() {
+    clearTimeout(_saveTimer);
+    if (_initializing || _applying) return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); } catch(e) {}
+  }
+  function autoSave() {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(saveNow, 400);
+  }
+  // Flush any pending debounced save when the tab is hidden or closing, so
+  // keystrokes inside the 400ms autosave window aren't lost.
+  window.addEventListener('pagehide', saveNow);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveNow();
+  });
+
+  function collectState() {
+    document.querySelectorAll('[data-field]').forEach(el => { state.fields[el.dataset.field] = el.value; });
+    return JSON.parse(JSON.stringify(state));
+  }
+
+  function saveToFile() {
+    const data = collectState();
+    const name = (data.fields.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('Sheet saved');
+  }
+
+  // Sheets saved before Features / Talents / Powers were split into their own
+  // sections carry one combined `powers` list and a free-text `talents` box.
+  // Move both into the new lists so nothing typed goes missing — and so it
+  // lands somewhere *visible*: the old combined list becomes Class Features,
+  // which is on every sheet, rather than the class-dependent Powers section.
+  // Keyed off `features`, which only a post-split save has.
+  function migrateAbilityLists(s) {
+    if (!s || typeof s !== 'object') return;
+    if (!Array.isArray(s.features)) {
+      s.features = Array.isArray(s.powers) ? s.powers : [];
+      s.powers = [];
+    }
+    if (!Array.isArray(s.talents)) {
+      const text = s.fields && s.fields.talents;
+      s.talents = text ? [Object.assign(blankPowerRow(), { desc: text })] : [];
+      if (s.fields) delete s.fields.talents;
+    }
+  }
+
+  function loadFromFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        // Shape guard: a valid sheet always carries a `fields` object. This
+        // catches mis-selected files (other-app exports, settings dumps,
+        // arbitrary JSON) before they overwrite the current state and leave
+        // the sheet in a half-broken visual state.
+        if (!parsed || typeof parsed !== 'object' || typeof parsed.fields !== 'object' || parsed.fields === null) {
+          showToast('Not a valid character sheet');
+          return;
+        }
+        state = parsed;
+        migrateAbilityLists(state);
+        if (!state.checkboxes) state.checkboxes = {};
+        if (!state.backgrounds) state.backgrounds = [];
+        if (!state.icons) state.icons = [];
+        if (!state.powers) state.powers = [];
+        if (!state.spells) state.spells = [];
+        if (!state.feats) state.feats = [];
+        if (!state.advances) state.advances = {};
+        if (!state.locks) state.locks = {};
+        if (!state.activeConditions) state.activeConditions = {};
+        if (!state.classData) state.classData = {};
+        if (typeof state.escalation !== 'number') state.escalation = 0;
+        if (!state.theme) state.theme = 'necromancer';
+        applyState();
+        autoSave();
+        showToast('Sheet loaded');
+      } catch (err) { showToast('Error reading file'); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  function applyState() {
+    _applying = true;
+    try {
+      setTheme(state.theme || 'necromancer');
+      document.querySelectorAll('[data-field]').forEach(el => { el.value = state.fields[el.dataset.field] || ''; });
+      recomputeDerived();
+      // Sync each lock toggle's visual to the current state (visuals were
+      // created once at init; locks may have flipped on load/reset).
+      document.querySelectorAll('.lock-toggle').forEach(toggle => {
+        const input = toggle.previousElementSibling;
+        if (!input) return;
+        const key = input.dataset.field;
+        if (key) setLockVisual(toggle, input, !!state.locks[key]);
+      });
+      [renderRecoveries, renderSkulls, renderBackgrounds, renderIcons, renderFeatures, renderTalents, renderPowers, renderSpells, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpStatus].forEach(fn => {
+        try { fn(); } catch(e) { console.warn(fn.name, e); }
+      });
+    } finally {
+      _applying = false;
+    }
+  }
+
+  // ── REST / HEAL ACTIONS ──────────────────────────────────────────────
+  // Skull/recovery state lives in `state.checkboxes` under keys like
+  // `skull_3` / `rec_2`. We mutate that map and re-render the affected
+  // trackers; the renderers read the same keys back out.
+
+  function quickRest() {
+    // Clear skull_1..N; leave skull_0 in whatever state it's currently in
+    // (treat it as a persistent wound that carries across post-battle rests).
+    Object.keys(state.checkboxes).forEach(key => {
+      const m = key.match(/^skull_(\d+)$/);
+      if (m && parseInt(m[1], 10) > 0) delete state.checkboxes[key];
+    });
+    renderSkulls();
+    classHook('onQuickRest');
+    logAction('Quick Rest', 'Death-save skulls cleared (first preserved)');
+    saveNow();
+    showToast('Quick rest');
+  }
+
+  function fullHealUp() {
+    // Clear every skull and recovery checkbox, and refill current HP.
+    Object.keys(state.checkboxes).forEach(key => {
+      if (/^(skull|rec)_\d+$/.test(key)) delete state.checkboxes[key];
+    });
+    // Set current HP from max HP. If max is blank, leave current blank
+    // rather than writing "undefined" or stale data into the field.
+    const max = state.fields.max_hp || '';
+    state.fields.current_hp = max;
+    setFieldDom('current_hp');
+    // A full heal-up ends the battle/arc: temp HP, conditions and the
+    // escalation die don't carry over.
+    state.fields.temp_hp = '';
+    setFieldDom('temp_hp');
+    state.activeConditions = {};
+    state.escalation = 0;
+    renderConditions();
+    renderEscalation();
+    renderSkulls();
+    renderRecoveries();
+    classHook('onFullHeal');
+    updateHpStatus();
+    logAction('Full Heal-Up',
+      `HP → ${max || '—'} · recoveries & skulls reset · conditions, temp HP & escalation cleared`);
+    saveNow();
+    showToast('Fully healed');
+  }
+
+  // Push a state.fields value back into its DOM input (the reverse of the
+  // input listener's sync). Used by actions that mutate fields directly.
+  function setFieldDom(key) {
+    const node = document.querySelector(`[data-field="${key}"]`);
+    if (node) node.value = state.fields[key] || '';
+  }
+
+  // ── HP STATUS (staggered / down / dead) ─────────────────────────────
+  // Purely visual: compares current HP against the staggered and death
+  // thresholds and shows a pulsing badge next to the Temp HP card.
+  function updateHpStatus() {
+    const badge = document.getElementById('hp-status');
+    if (!badge) return;
+    badge.className = 'hp-status-badge';
+    badge.textContent = '';
+    const cur = intOrNull(state.fields.current_hp);
+    if (cur === null) return;
+    const stag = intOrNull(state.fields.staggered);
+    const dead = intOrNull(state.fields.dead);
+    if (dead !== null && cur <= dead) {
+      badge.classList.add('down'); badge.textContent = '☠ DEAD';
+    } else if (cur <= 0) {
+      badge.classList.add('down'); badge.textContent = '☠ DOWN';
+    } else if (stag !== null && cur <= stag) {
+      badge.classList.add('staggered'); badge.textContent = '⚠ STAGGERED';
+    }
+  }
+
+  // ── DAMAGE / HEAL QUICK-APPLY ───────────────────────────────────────
+  function hpAdjustAmount() {
+    const inp = document.getElementById('hp-adjust-amt');
+    const n = parseInt(inp.value, 10);
+    if (isNaN(n) || n <= 0) { showToast('Enter an amount first'); return null; }
+    inp.value = '';
+    return n;
+  }
+
+  // "47/60"-style suffix for log lines; just "47" when max HP is unknown.
+  function hpFraction(cur) {
+    const maxHp = intOrNull(state.fields.max_hp);
+    return cur + (maxHp !== null ? '/' + maxHp : '');
+  }
+
+  function applyDamage() {
+    const n = hpAdjustAmount();
+    if (n === null) return;
+    collectState();
+    let temp = intOrZero(state.fields.temp_hp);
+    let remaining = n;
+    const absorbed = Math.min(temp, remaining);
+    temp -= absorbed;
+    remaining -= absorbed;
+    const cur = intOrZero(state.fields.current_hp) - remaining;
+    state.fields.temp_hp = temp ? String(temp) : '';
+    state.fields.current_hp = String(cur);
+    setFieldDom('temp_hp');
+    setFieldDom('current_hp');
+    updateHpStatus();
+    const status = document.getElementById('hp-status').textContent;
+    logAction('Damage taken',
+      (absorbed ? `${absorbed} soaked by temp HP · ` : '') +
+      `HP → ${hpFraction(cur)}` + (status ? ` · ${status}` : ''),
+      '−' + n);
+    saveNow();
+    showToast(absorbed ? `−${n} (${absorbed} soaked by temp HP)` : `−${n} HP`);
+  }
+
+  function applyHeal() {
+    const n = hpAdjustAmount();
+    if (n === null) return;
+    collectState();
+    const maxHp = intOrNull(state.fields.max_hp);
+    let cur = intOrZero(state.fields.current_hp) + n;
+    if (maxHp !== null && cur > maxHp) cur = maxHp;
+    state.fields.current_hp = String(cur);
+    setFieldDom('current_hp');
+    updateHpStatus();
+    logAction('Healed', `HP → ${hpFraction(cur)}`, '+' + n);
+    saveNow();
+    showToast(`+${n} HP`);
+  }
+
+  // ── DICE ROLLER ─────────────────────────────────────────────────────
+  function rollDie(sides) { return Math.floor(Math.random() * sides) + 1; }
+
+  // Roll an "NdX+B" expression (reuses parseRecoveryDice). Returns
+  // { rolls, bonus, total } or null if unparseable / absurdly large.
+  function rollExpr(str) {
+    const d = parseRecoveryDice(str);
+    if (!d || d.count > 50 || d.sides > 1000 || d.sides < 1) return null;
+    const rolls = [];
+    let sum = 0;
+    for (let i = 0; i < d.count; i++) {
+      const v = rollDie(d.sides);
+      rolls.push(v);
+      sum += v;
+    }
+    return { rolls, bonus: d.bonus, total: sum + d.bonus };
+  }
+  function exprDetail(expr, r) {
+    return `${expr}: [${r.rolls.join(', ')}]` + (r.bonus ? ' ' + signed(r.bonus) : '');
+  }
+
+  function openDiceTray() {
+    document.getElementById('dice-tray').classList.remove('collapsed');
+    document.getElementById('dice-tray-head').setAttribute('aria-expanded', 'true');
+    document.getElementById('dice-tray-caret').textContent = '▾';
+  }
+  function toggleDiceTray() {
+    const collapsed = document.getElementById('dice-tray').classList.toggle('collapsed');
+    document.getElementById('dice-tray-head').setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    document.getElementById('dice-tray-caret').textContent = collapsed ? '▸' : '▾';
+  }
+
+  // Prepend an entry to the dice & action log (newest on top, capped at 30)
+  // and pop the tray open so the result is visible. The log is intentionally
+  // not persisted — it's table chatter, not character data.
+  function logRoll(title, detail, total, cls) {
+    openDiceTray();
+    const log = document.getElementById('roll-log');
+    log.prepend(el('div', { class: 'roll-entry' + (cls ? ' ' + cls : '') },
+      el('div', { class: 'roll-entry-main' },
+        el('div', { class: 'roll-entry-title', title: title }, title),
+        detail ? el('div', { class: 'roll-entry-detail' }, detail) : null
+      ),
+      (total === '' || total === null || total === undefined)
+        ? null
+        : el('div', { class: 'roll-entry-total' }, String(total))
+    ));
+    while (log.children.length > 30) log.removeChild(log.lastChild);
+  }
+  // Automated sheet actions (damage applied, rests, …) log here too, so
+  // every button that mutates state leaves a visible summary of what it did.
+  function logAction(title, detail, value) {
+    logRoll(title, detail, value === undefined ? '' : value, 'action');
+  }
+
+  // Shared d20 roll. Reports the natural die (13A cares about even/odd
+  // triggers), flags nat 1/20, and optionally adds the escalation die
+  // (attacks get it; saves, initiative and skill checks don't). The Fear
+  // condition blocks the escalation die, so an active Fear pill drops it.
+  // `opts.critFrom` widens the crit range (barbarian raging attacks crit on
+  // a natural 16+); it defaults to the usual natural 20.
+  function rollD20(title, bonus, opts = {}) {
+    const critFrom = opts.critFrom || 20;
+    const nat = rollDie(20);
+    const fearBlocked = !!(opts.escalation && state.activeConditions && state.activeConditions.fear);
+    const esc = (opts.escalation && !fearBlocked) ? (state.escalation || 0) : 0;
+    const total = nat + bonus + esc;
+    const parts = [`d20: ${nat} (${nat % 2 === 0 ? 'even' : 'odd'})`];
+    if (bonus) parts.push(signed(bonus));
+    if (esc) parts.push(`esc +${esc}`);
+    if (fearBlocked && (state.escalation || 0) > 0) parts.push('fear: no esc');
+    if (critFrom < 20) parts.push(`crit ${critFrom}+`);
+    let cls = '';
+    if (nat >= critFrom) { cls = 'crit'; title += ' — CRIT!'; }
+    else if (nat === 1) { cls = 'fumble'; title += ' — natural 1'; }
+    logRoll(title, parts.join('  '), total, cls);
+  }
+
+  function rollAttack(weaponField, fallbackTitle, bonusField) {
+    collectState();
+    rollD20(state.fields[weaponField] || fallbackTitle,
+            intOrZero(state.fields[bonusField]), { escalation: true });
+  }
+
+  function rollDamage(field, title) {
+    collectState();
+    const expr = (state.fields[field] || '').trim();
+    const r = rollExpr(expr);
+    if (!r) { showToast('Set damage like "2d6+3" first'); return; }
+    logRoll(title, exprDetail(expr, r), r.total);
+  }
+
+  // Spend the next unspent recovery, roll the recovery dice, and apply the
+  // healing to current HP (capped at max when max is known).
+  function rollRecovery() {
+    collectState();
+    const expr = (state.fields.recovery_dice || '').trim();
+    const r = rollExpr(expr);
+    if (!r) { showToast('Set Recovery Dice (e.g. "3d8+2") first'); return; }
+    const max = maxRecoveries();
+    let slot = -1;
+    for (let i = 0; i < max; i++) {
+      if (!state.checkboxes['rec_' + i]) { slot = i; break; }
+    }
+    if (slot === -1) { showToast('No recoveries left!'); return; }
+    state.checkboxes['rec_' + slot] = true;
+    const maxHp = intOrNull(state.fields.max_hp);
+    let cur = intOrZero(state.fields.current_hp) + r.total;
+    if (maxHp !== null && cur > maxHp) cur = maxHp;
+    state.fields.current_hp = String(cur);
+    setFieldDom('current_hp');
+    renderRecoveries();
+    updateHpStatus();
+    logRoll(`Recovery (${max - slot - 1} left)`,
+            `${exprDetail(expr, r)} · HP → ${hpFraction(cur)}`, '+' + r.total);
+    saveNow();
+  }
+
+  // Icon relationship roll: Nd6 — each 5 or 6 earns a use of the
+  // relationship. (Whether a use comes with a twist is decided when it's
+  // played, not by the roll — that's what the 3-state "available" track
+  // is for.)
+  function rollIconDice(i) {
+    const ic = state.icons[i];
+    const n = Math.min(Math.max(parseInt(ic.dice) || 0, 0), 3);
+    if (!n) { showToast('Set the number of dice first'); return; }
+    const rolls = [];
+    for (let k = 0; k < n; k++) rolls.push(rollDie(6));
+    const successes = rolls.filter(v => v >= 5).length;
+    const label = successes ? `${successes} use${successes > 1 ? 's' : ''}` : 'no 5s or 6s';
+    logRoll(`${ic.name || 'Icon'} — ${label}`, `[${rolls.join(', ')}]`,
+            successes, successes ? 'crit' : '');
+  }
+
+  const ROLL_HANDLERS = {
+    d20:    () => rollD20('d20', 0),
+    d20esc: () => rollD20('d20 + escalation', 0, { escalation: true }),
+    d6:     () => logRoll('d6', '', rollDie(6)),
+    '2d6':  () => { const a = rollDie(6), b = rollDie(6); logRoll('2d6', `${a} + ${b}`, a + b); },
+    save:   () => {
+      const n = rollDie(20);
+      logRoll('Save (11+) — ' + (n >= 11 ? 'success' : 'failed'), `d20: ${n}`,
+              n, n >= 11 ? 'crit' : 'fumble');
+    },
+    init:            () => { collectState(); rollD20('Initiative', intOrZero(state.fields.initiative)); },
+    melee_atk:       () => rollAttack('melee_weapon', 'Melee attack', 'melee_vs_ac'),
+    ranged_atk_near: () => rollAttack('ranged_weapon', 'Ranged attack (near)', 'ranged_vs_ac_near'),
+    ranged_atk_far:  () => rollAttack('ranged_weapon', 'Ranged attack (far)', 'ranged_vs_ac_far'),
+    melee_dmg:       () => rollDamage('melee_damage', 'Melee damage'),
+    ranged_dmg:      () => rollDamage('ranged_damage', 'Ranged damage'),
+  };
+
+  // ── ESCALATION DIE ──────────────────────────────────────────────────
+  // Persisted in state.escalation (0–6). Attack rolls add it automatically.
+  function renderEscalation() {
+    const v = state.escalation || 0;
+    const big = document.getElementById('esc-value');
+    const mini = document.getElementById('esc-mini-value');
+    if (big) big.textContent = v;
+    if (mini) mini.textContent = v;
+  }
+  function bumpEscalation(delta) {
+    state.escalation = Math.min(6, Math.max(0, (state.escalation || 0) + delta));
+    renderEscalation();
+    saveNow();
+  }
+
+  // ── CONDITION PILLS ─────────────────────────────────────────────────
+  // Standard 13A conditions as toggleable chips; tooltips carry the rules
+  // reminder. Active keys persist in state.activeConditions.
+  const CONDITIONS = [
+    { key: 'confused',   label: 'Confused',   tip: 'Your attacks target a random nearby ally; you can\'t make opportunity attacks (save ends).' },
+    { key: 'dazed',      label: 'Dazed',      tip: '−4 to attacks (save ends).' },
+    { key: 'fear',       label: 'Fear',       tip: '−4 to attacks and you can\'t use the escalation die (save ends).' },
+    { key: 'grabbed',    label: 'Grabbed',    tip: 'Stuck; −5 to attack anyone other than the creature grabbing you.' },
+    { key: 'hampered',   label: 'Hampered',   tip: 'You can only make basic attacks (save ends).' },
+    { key: 'helpless',   label: 'Helpless',   tip: '−4 to defenses; attackers crit you on a natural 16+ (save ends).' },
+    { key: 'stuck',      label: 'Stuck',      tip: 'You can\'t move, pop free, or change position (save ends).' },
+    { key: 'stunned',    label: 'Stunned',    tip: '−4 to defenses and you can\'t take actions (save ends).' },
+    { key: 'vulnerable', label: 'Vulnerable', tip: 'Attacks against you crit on a natural 16+.' },
+    { key: 'weakened',   label: 'Weakened',   tip: '−4 to attacks AND defenses (save ends).' },
+  ];
+
+  function renderConditions() {
+    const wrap = document.getElementById('cond-pills');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    CONDITIONS.forEach(c => {
+      const active = !!state.activeConditions[c.key];
+      const pill = el('div', {
+        class: 'cond-pill' + (active ? ' active' : ''),
+        role: 'checkbox', tabindex: '0',
+        'aria-checked': active ? 'true' : 'false',
+        title: c.tip
+      }, c.label);
+      pill.addEventListener('click', () => {
+        const next = !state.activeConditions[c.key];
+        if (next) state.activeConditions[c.key] = true;
+        else delete state.activeConditions[c.key];
+        pill.classList.toggle('active', next);
+        pill.setAttribute('aria-checked', next ? 'true' : 'false');
+        saveNow();
+      });
+      wrap.appendChild(pill);
+    });
+  }
+
+  function resetSheet() {
+    if (!confirm('Start a new blank sheet? Any unsaved changes will be lost.')) return;
+    // Display preferences (theme) survive a reset; only character data is
+    // cleared. Which ability sections show is derived from the class, so
+    // there's nothing to preserve there.
+    state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], features: [], talents: [], powers: [], spells: [], feats: [], advances: {}, locks: {}, activeConditions: {}, classData: {}, escalation: 0, theme: state.theme };
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    applyState();
+    showToast('New sheet');
+  }
+
+
+  document.addEventListener('input', (e) => {
+    if (e.target.tagName === 'TEXTAREA') autoGrow(e.target);
+    if (e.target.dataset && e.target.dataset.field) {
+      const key = e.target.dataset.field;
+      // Sync state.fields synchronously so recomputeDerived sees the latest
+      // source values (otherwise recompute reads stale state from last save).
+      state.fields[key] = e.target.value;
+      // Only recompute when the edited field actually feeds a derived value.
+      // Typing into `notes`, `gear_notes`, etc. shouldn't walk DERIVED_FIELDS.
+      if (DERIVED_SOURCES.has(key)) recomputeDerived();
+      // Changing class swaps the whole class-module layer (slots, derived
+      // fields, hooks). Nothing is cleared — see the CLASS MODULES block.
+      // notify: the user picked this class, so say so if its file is missing.
+      if (key === 'class') renderClassContent({ notify: true });
+      // current_hp / temp_hp aren't derived sources, but they drive the
+      // staggered/down badge — refresh it on direct edits too.
+      if (['current_hp', 'temp_hp', 'staggered', 'dead', 'max_hp'].includes(key)) updateHpStatus();
+    }
+    autoSave();
+  });
+
+  // Space / Enter toggle any focused custom checkbox (recoveries, skulls,
+  // power-use trackers, prep buttons, incremental advances) or switch
+  // (lock toggles on auto-derived fields).
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== ' ' && e.key !== 'Enter') return;
+    const el = e.target;
+    if (!el || !el.getAttribute) return;
+    const role = el.getAttribute('role');
+    if (role !== 'checkbox' && role !== 'switch' && role !== 'button') return;
+    e.preventDefault();
+    el.click();
+  });
+
+  // Re-render trackers only after the user commits a value (blur / Enter), so
+  // typing "12" doesn't briefly redraw with 1 box on the first keystroke.
+  document.addEventListener('change', (e) => {
+    if (!e.target.dataset) return;
+    if (e.target.dataset.field === 'max_recoveries') renderRecoveries();
+  });
+
+  // Load from localStorage on init
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      state = JSON.parse(saved);
+      migrateAbilityLists(state);
+      if (!state.checkboxes) state.checkboxes = {};
+      if (!state.backgrounds) state.backgrounds = [];
+      if (!state.icons) state.icons = [];
+      if (!state.powers) state.powers = [];
+      if (!state.feats) state.feats = [];
+      if (!state.spells) state.spells = [];
+      if (!state.advances) state.advances = {};
+      if (!state.locks) state.locks = {};
+      if (!state.activeConditions) state.activeConditions = {};
+      if (!state.classData) state.classData = {};
+      if (typeof state.escalation !== 'number') state.escalation = 0;
+      if (!state.theme) state.theme = 'necromancer';
+    }
+  } catch(e) {}
+
+  // Wires the toolbar + add-row buttons that used to use inline onclick.
+  // Centralizing these here keeps the markup CSP-friendly and makes it easy
+  // to audit every entry point that mutates state.
+  function wireStaticHandlers() {
+    const ACTIONS = {
+      'add-background': addBackground,
+      'add-icon':       addIcon,
+      'add-feature':    addFeature,
+      'add-talent':     addTalent,
+      'add-power':      addPower,
+      'add-spell':      addSpell,
+      'add-feat':       addFeat,
+      'quick-rest':     quickRest,
+      'full-heal':      fullHealUp,
+      'hp-damage':      applyDamage,
+      'hp-heal':        applyHeal,
+      'roll-recovery':  rollRecovery,
+    };
+    document.querySelectorAll('[data-action]').forEach(btn => {
+      const fn = ACTIONS[btn.dataset.action];
+      if (fn) btn.addEventListener('click', fn);
+    });
+    // Static roll buttons (attacks, damage, initiative, dice-tray quick rolls).
+    document.querySelectorAll('[data-roll]').forEach(btn => {
+      const fn = ROLL_HANDLERS[btn.dataset.roll];
+      if (fn) btn.addEventListener('click', fn);
+    });
+    document.getElementById('dice-tray-head').addEventListener('click', toggleDiceTray);
+    document.getElementById('esc-plus').addEventListener('click', () => bumpEscalation(1));
+    document.getElementById('esc-minus').addEventListener('click', () => bumpEscalation(-1));
+    document.getElementById('esc-reset').addEventListener('click', () => {
+      state.escalation = 0; renderEscalation(); saveNow();
+    });
+    // Enter in the amount field applies damage — the common case in play.
+    document.getElementById('hp-adjust-amt').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); applyDamage(); }
+    });
+    document.getElementById('theme-select').addEventListener('change', e => setTheme(e.target.value));
+    document.getElementById('btn-save').addEventListener('click', saveToFile);
+    document.getElementById('btn-load').addEventListener('click', () => document.getElementById('load-input').click());
+    document.getElementById('btn-reset').addEventListener('click', resetSheet);
+    document.getElementById('load-input').addEventListener('change', loadFromFile);
+  }
+
+  // Surface the numeric keypad on mobile for positive-integer fields. Signed
+  // values (mods, vs-AC bonuses, initiative, `dead`'s auto-negative) and the
+  // free-text fields (`recovery_dice` like "2d10+4", `gold`) stay as default
+  // text — iOS's numeric keypad has no `-` or `.`, so locking those would
+  // prevent typing a sign or notation.
+  const NUMERIC_FIELDS = [
+    'level',
+    'str_score','dex_score','con_score','wis_score','int_score','cha_score',
+    'ac','pd','md',
+    'max_hp','current_hp','temp_hp','staggered',
+    'max_recoveries','recovery_avg',
+    'melee_avg','melee_miss','ranged_avg','ranged_miss',
+    'max_spells','max_magic','base_ac','shield',
+  ];
+  function applyInputModes() {
+    NUMERIC_FIELDS.forEach(key => {
+      const input = document.querySelector(`[data-field="${key}"]`);
+      if (input) input.setAttribute('inputmode', 'numeric');
+    });
+  }
+
+  // Init
+  wireStaticHandlers();
+  populateClassOptions();
+  applyInputModes();
+  initLocks();
+  applyState();
+  autoGrowAll();
+  if (state.backgrounds.length === 0) { addBackground(); addBackground(); }
+  if (state.icons.length === 0) { addIcon(); }
+  if (state.features.length === 0) { addFeature(); }
+  if (state.talents.length === 0) { addTalent(); }
+  if (state.powers.length === 0) { addPower(); }
+  if (state.spells.length === 0) { addSpell(); }
+  if (state.feats.length === 0) { addFeat(); }
+  _initializing = false;
+
+  // Recalculate textarea heights once webfonts have loaded (fallback-font
+  // metrics differ enough to mis-wrap text and lock in a too-tall height),
+  // and again whenever the viewport width changes wrap points.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(autoGrowAll);
+  }
+  window.addEventListener('resize', autoGrowAll);
+</script>
+
+</body>
+</html>
