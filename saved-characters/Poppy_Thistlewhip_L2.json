@@ -1,0 +1,287 @@
+{
+  "fields": {
+    "name": "Poppy Thistlewhip",
+    "level": "2",
+    "class": "rogue",
+    "kin": "Halfling",
+    "description": "Could be any age 25-45; forgettable face",
+    "unique_thing": "I faked my own death to escape the consequences of my dubious past decisions. I am the only person known to ever have evaded the Dwarf King's justice.",
+    "str_score": "13",
+    "str_mod": "+1",
+    "dex_score": "19",
+    "dex_mod": "+4",
+    "con_score": "10",
+    "con_mod": "+0",
+    "wis_score": "14",
+    "wis_mod": "+2",
+    "int_score": "12",
+    "int_mod": "+1",
+    "cha_score": "17",
+    "cha_mod": "+3",
+    "ac": "16",
+    "pd": "15",
+    "md": "14",
+    "initiative": "+6",
+    "armor_type": "Light armor",
+    "base_ac": "12",
+    "shield": "0",
+    "max_hp": "24",
+    "current_hp": "24",
+    "staggered": "12",
+    "temp_hp": "",
+    "recovery_dice": "2d8",
+    "recovery_avg": "9",
+    "max_recoveries": "8",
+    "melee_weapon": "Dagger",
+    "melee_damage": "1d8 + 4",
+    "melee_avg": "8",
+    "melee_miss": "2",
+    "melee_vs_ac": "+6",
+    "ranged_weapon": "Dagger",
+    "ranged_damage": "1d6 + 4",
+    "ranged_avg": "7",
+    "ranged_miss": "2",
+    "ranged_vs_ac_near": "+6",
+    "ranged_vs_ac_far": "+6",
+    "gear_melee": "Dagger",
+    "gear_ranged": "Dagger",
+    "gold": "",
+    "gear_notes": "",
+    "max_magic": "2",
+    "magic_items": "2 adventurer healing potion (Recovery + 1d8, hp cap 30)",
+    "conditions": "",
+    "notes": "",
+    "dead": "-12",
+    "max_skulls": 5,
+    "max_spells": "4",
+    "barb_rs_weapon": "Molten arm (fire dmg)",
+    "barb_rs_damage": "1d10 + 4",
+    "barb_rs_avg": "9",
+    "barb_rs_miss": "4",
+    "barb_rs_vs_ac": "+6",
+    "barb_rt_weapon": "Magma throw (fire dmg - near only)",
+    "barb_rt_damage": "1d6 + 4",
+    "barb_rt_avg": "7",
+    "barb_rt_miss": "4",
+    "barb_rt_vs_ac_near": "+6",
+    "barb_rt_vs_ac_far": "N/A",
+    "barb_rs_crit": "",
+    "barb_rt_crit": ""
+  },
+  "checkboxes": {},
+  "backgrounds": [
+    {
+      "name": "Semi-repentant former con artist",
+      "bonus": "+5"
+    },
+    {
+      "name": "Raised by highwaymen",
+      "bonus": "+2"
+    },
+    {
+      "name": "Lying low as apothecary's assistant",
+      "bonus": "+1"
+    }
+  ],
+  "icons": [
+    {
+      "dice": "2",
+      "mod": "+",
+      "name": "Shadow Prince",
+      "used": {
+        "0": false
+      },
+      "available": {}
+    },
+    {
+      "dice": "1",
+      "mod": "-",
+      "name": "Dwarf King",
+      "available": {},
+      "used": {}
+    }
+  ],
+  "powers": [
+    {
+      "name": "Evasive Strike",
+      "action": "Standard action",
+      "usage": "At-Will",
+      "desc": "Same as rogue basic melee attack except...\nHit: Same basic attack damage, and you can pop free from the target",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Flying Blade (1 bravado point optional)",
+      "action": "Standard action",
+      "usage": "At-Will",
+      "desc": "Same as rogue basic ranged attack except...\nSpecial: You must use a small, bladed weapon or a hand crossbow with this attack.\nBravado: Spend 1 bravado to add your Rush Attack or Sneak Attack damage to the hit, even if the target would not normally be eligible for that damage. (feats give you benefits to using this without spending bravado)\nTarget: One nearby enemy",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Roll With It (1 bravado point optional)",
+      "action": "Interrupt action (Getting hit)",
+      "usage": "Battle",
+      "desc": "Trigger: A melee attack that targets AC hits you\nEffect: Reduce the damage from the attack by double your level.\nBravado: Spend 1 bravado to take half damage instead.",
+      "max_uses": "1",
+      "used": {}
+    },
+    {
+      "name": "Sure Cut (1 bravado point)",
+      "action": "Standard action",
+      "usage": "At-Will",
+      "desc": "Special: You must be able to deal your Sneak Attack or Rush Attack damage to the target.\nTarget: One enemy\nAttack: Same as normal melee attack\nHit: Weapon damage + level + Sneak/Rush damage (same as normal Sneak/Rush attack)\nMiss: Level + Sneak/Rush damage (no base weapon damage)",
+      "max_uses": "",
+      "used": {}
+    }
+  ],
+  "feats": [
+    {
+      "name": "ADV: Rush Attack"
+    },
+    {
+      "name": "ADV: Smooth Talk"
+    }
+  ],
+  "theme": "rogue",
+  "spells": [
+    {
+      "name": "Chant of Endings",
+      "action": "Std",
+      "usage": "At-will",
+      "desc": "Target: The nearby enemy with the fewest hit points (you choose if there’s a tie; you also don’t have to be able to see that enemy)\nAttack: Intelligence + Level vs. MD (+5)\nHit: 1d10 + Intelligence necro damage.",
+      "max_uses": "",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Command Undead",
+      "action": "Std",
+      "usage": "Battle",
+      "desc": "Target: One nearby undead creature with 64 hp or fewer\nAttack: Intelligence + Level vs. MD\nHit: The target is confused (hard save ends, 16+).\nADV FEAT: Miss does not expend spell",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Unholy Blast",
+      "action": "Std",
+      "usage": "Arc",
+      "desc": "Target: One nearby enemy\nAttack: Intelligence + Level vs. PD\nHit: 4d6 + Intelligence negative energy damage.\nFirst Miss: Half damage, and make the attack again against an\nenemy you haven’t already targeted with unholy blast this turn.\nSecond Miss: Half damage, or full damage if the escalation die is\n1+ and you choose to decrease it by 1.",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Summon Undead",
+      "action": "Std",
+      "usage": "Arc",
+      "desc": "Effect: You summon a mob of 1d3 + 1 crumbling skeleton mooks, as per the summoning rules on page 11. These skeletons fight for you until the end of the battle or until they drop to 0 hp, whichever comes first.\n\n1st level mook [undead]\nInitiative: +6 Vulnerability: holy\nSword +6 vs. AC—3 damage+CHA (First attack extra +CHA (3) vs AC)\nResist weapons 16+: When a weapon attack targets this creature, the attacker must roll a natural 16+ on the attack roll or it only deals half damage.\nAC 16, PD 14, MD 10, HP 6 (mook)\nMook: Kill one crumbling skeleton mook for every 6 damage you deal to the mob.",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Terror",
+      "action": "Std",
+      "usage": "Arc",
+      "desc": "One nearby enemy <= 50hp\nAttack: Intelligence + Level vs. MD\nHit: The target uses all its actions during its turn to move away from the battle, disengaging from enemies to do so (hard save ends, 16+). If it fails to disengage with all of its actions, it won’t take opportunity attacks by moving. The effect also ends when you or one of your allies attacks the target.\nMiss: 1d10 + Intelligence psychic damage",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    }
+  ],
+  "showSpells": true,
+  "advances": {
+    "max_hp": false,
+    "attunement": false,
+    "pd": false,
+    "md": false,
+    "skill_init": false,
+    "power_spell": false,
+    "ability_mults": false,
+    "ability_scores": false,
+    "talent": false,
+    "class_feature": false,
+    "feat": false
+  },
+  "locks": {},
+  "defensesMigrated": true,
+  "activeConditions": {},
+  "escalation": 0,
+  "classData": {
+    "barbarian": {}
+  },
+  "features": [
+    {
+      "name": "Bravado",
+      "action": "Passive",
+      "usage": "N/A",
+      "desc": "Bravado has no limit. It resets 0 when you take a quick rest or a full heal-up.\nYou can gain bravado in 2 ways:\n- Initiative: You gain a point of Bravado when your natural initiative roll is even.\n- Hitting: You also gain a point of Bravado the first time you hit with a rogue attack on each of your turns. (Hitting with an opportunity attack won’t give you a point of Bravado.)",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Rush Attack",
+      "action": "Standard action",
+      "usage": "At-Will",
+      "desc": "Once on each of your turns, your rogue melee weapon attack deals an additional +1d6 damage against an enemy you were not engaged with at the start of your turn if you hit. Decide whether you are using Rush Attack before rolling an eligible attack.\n2nd +5 (2d4) damage\n3rd +7 (2d6) damage\n4th +9 (2d8) damage\n5th +11 (2d10) damage\n6th +14 (4d6) damage\n7th +18 (4d8) damage\n8th +22 damage\n9th +30 damage\n10th +40 damage\n11th +50 damage\n12th +60 damage\n\nADV FEAT: When the escalation die is 2+, bump up your Rush Attack damage by two levels.",
+      "max_uses": "",
+      "used": {
+        "0": false
+      }
+    },
+    {
+      "name": "Sneak Attack",
+      "action": "Standard action",
+      "usage": "At-Will",
+      "desc": "Once on your turn, when you make a rogue melee weapon attack against an enemy engaged with one or more of your allies, you can deal +3 (1d4) damage if your attack hits.\nSpecial: For each Sneak Attack feat you choose, bump up your Sneak Attack damage by one level. For example, if you’re 5th level with both the adventurer-tier and champion-tier feats, you deal Sneak Attack damage at 7th level.\n2nd +4 (1d6) damage\n3rd +5 (1d8) damage\n4th +7 (2d6) damage\n5th +9 (2d8) damage\n6th +11 (3d6) damage\n7th +14 (4d6) damage\n8th +20 damage\n9th +25 damage\n10th +30 damage\n11th +40 damage\n12th +50 damage\n13th +60 damage",
+      "max_uses": "",
+      "used": {}
+    }
+  ],
+  "talents": [
+    {
+      "name": "Both Styles Now",
+      "action": "Passive",
+      "usage": "N/A",
+      "desc": "You have both Rush Attack and Sneak Attack class features.\nYou can’t use both Rush Attack and Sneak Attack at the same time.\nChoose as you make an attack whether you are using Rush Attack or Sneak Attack",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Murderous",
+      "action": "Passive",
+      "usage": "N/A",
+      "desc": "Your crit range against staggered enemies expands by 2.",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Shift, Wriggle, and Roll",
+      "action": "Getting hit",
+      "usage": "Battle",
+      "desc": "Once per battle, when you are hit by a nearby enemy, you can force the enemy to reroll the attack with an attack penalty equal to your highest mental ability modifier",
+      "max_uses": "1",
+      "used": {}
+    },
+    {
+      "name": "Smooth Talk (feat)",
+      "action": "Skill check",
+      "usage": "Arc",
+      "desc": "3x uses /arc increasing to 4x uses arc at epic-tier.\nReroll a failed skill check involving social interaction, diplomacy, or other personal interactions between free-willed beings. Similarly, for a single use of Social Skill, a bard can allow a nearby ally to reroll such a skill check.\nFor an additional use of Social Skill (i.e. 2 uses total), decided before the reroll, the bard tells everyone how something they do, or did before, or arranged ahead of time, is now providing a +3 bonus on the skill reroll.",
+      "max_uses": "3",
+      "used": {}
+    }
+  ],
+  "kinPowers": [
+    {
+      "name": "Evasive",
+      "action": "Getting hit",
+      "usage": "Battle",
+      "desc": "Once per battle, force an enemy that hits you with an attack to reroll the attack with a –2 penalty and keep the second result",
+      "max_uses": "1",
+      "used": {}
+    }
+  ]
+}
