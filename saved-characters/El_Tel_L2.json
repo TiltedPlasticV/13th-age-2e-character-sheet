@@ -29,7 +29,7 @@
     "current_hp": "40",
     "staggered": "20",
     "temp_hp": "",
-    "recovery_dice": "2d12 + 3",
+    "recovery_dice": "2d12+3",
     "recovery_avg": "16",
     "max_recoveries": "8",
     "melee_weapon": "Molten arm (fire dmg)",
@@ -181,7 +181,8 @@
     "feat": false
   },
   "locks": {
-    "ac": true
+    "ac": true,
+    "barb_rs_weapon": true
   },
   "defensesMigrated": true,
   "activeConditions": {},
@@ -192,7 +193,7 @@
   "features": [
     {
       "name": "Grim Determination (built in)",
-      "action": "N/A",
+      "action": "Passive",
       "usage": "N/A",
       "desc": "When you have one or more Skulls, you gain a +1 bonus to all your defenses. When you have two or more Skulls, it's +2.",
       "max_uses": "",
@@ -200,7 +201,7 @@
     },
     {
       "name": "Legendary Prowess (built in)",
-      "action": "N/A",
+      "action": "Skill check",
       "usage": "N/A",
       "desc": "Whenever you fail a Strength or Constitution skill check, you can reroll the skill check once and abide by the reroll.",
       "max_uses": "",
@@ -210,7 +211,7 @@
     },
     {
       "name": "Rage (built in)",
-      "action": "N/A",
+      "action": "Multiple triggers",
       "usage": "N/A",
       "desc": "You can rage. See rage tracker above.\n\nAdventurer Feat: While raging, you gain a +4 bonus to both your PD and your MD",
       "max_uses": "",
@@ -220,7 +221,7 @@
   "talents": [
     {
       "name": "Building Frenzy",
-      "action": "N/A",
+      "action": "Miss with attack",
       "usage": "N/A",
       "desc": "The first time you miss with a melee attack each turn, you deal a cumulative +2 damage with your subsequent melee attack hits until the end of the battle, up to a maximum of +12.\n2nd +3 per miss, +18 max\n4th +4 per miss, +24 max\n6th +6 per miss, +36 max\n8th +10 per miss, +60 max\n10th +15 per miss, +90 max\n\nAdventurer Feat: Count the first time you are staggered each battle as a miss that builds your frenzy.",
       "max_uses": "",
@@ -228,7 +229,7 @@
     },
     {
       "name": "Strongheart",
-      "action": "Free Action",
+      "action": "Getting hit",
       "usage": "Battle",
       "desc": "Once per battle, as a free action, when an enemy hits you with an attack against Physical Defense or Mental Defense, you can make the enemy reroll the attack. The rerolled attack automatically misses if it is a natural odd roll.",
       "max_uses": "1",
@@ -244,9 +245,19 @@
     },
     {
       "name": "Bloody Vengeance (Magic item)",
-      "action": "Free action",
+      "action": "Getting hit",
       "usage": "Arc / desperate",
       "desc": "When a foe hits you and you end up staggered but conscious, you can take a Skull to heal using a recovery as a free action. In addition, until the end of the battle, each of your melee hits against that foe deal +5 damage (champion hero: +10; epic hero: +20).\nQuiddity: The item loves to tell stories about previous owners who died heroically or gruesomely or both.\n\n(arc / desperate = 1/arc power but also recharges 1/arc if you fail a death save or spend last recovery)",
+      "max_uses": "1",
+      "used": {}
+    }
+  ],
+  "kinPowers": [
+    {
+      "name": "Push It (Kin Power)",
+      "action": "Melee attack",
+      "usage": "Battle",
+      "desc": "Trigger: 1/battle, when the escalation die is 2+ and you hit (but don’t crit) a target with an attack, you can choose to attempt to push it as a free action. If you do, your attack has no effect on that target until you make a second attack roll against the target with the same attack bonus. If the second roll hits, you deal double damage with the hit; if the second roll crits you deal triple damage!\nOn the other hand, if you miss with the second roll, the original attack deals only half damage against that target. If your second roll is a natural 1, your attack deals no damage and has no effect.",
       "max_uses": "1",
       "used": {}
     }
