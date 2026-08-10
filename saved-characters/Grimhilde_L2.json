@@ -1,0 +1,197 @@
+{
+  "fields": {
+    "name": "Grimhilde",
+    "level": "2",
+    "class": "necromancer",
+    "kin": "Human",
+    "description": "Leathery, slipping skin. Twitchy and unsettling. Very long fingernails.",
+    "unique_thing": "I am the last remnant of an ancient necromantic culture, dug out of a bog and displayed for years in a museum.",
+    "str_score": "12",
+    "str_mod": "+1",
+    "dex_score": "13",
+    "dex_mod": "+1",
+    "con_score": "10",
+    "con_mod": "+0",
+    "wis_score": "14",
+    "wis_mod": "+2",
+    "int_score": "19",
+    "int_mod": "+4",
+    "cha_score": "17",
+    "cha_mod": "+3",
+    "ac": "13",
+    "pd": "13",
+    "md": "16",
+    "initiative": "+3",
+    "armor_type": "None",
+    "base_ac": "10",
+    "shield": "0",
+    "max_hp": "24",
+    "current_hp": "24",
+    "staggered": "12",
+    "temp_hp": "",
+    "recovery_dice": "2d6 + 0",
+    "recovery_avg": "7",
+    "max_recoveries": "8",
+    "melee_weapon": "Dagger",
+    "melee_damage": "1d4 + 1",
+    "melee_avg": "3",
+    "melee_miss": "0",
+    "melee_vs_ac": "+3",
+    "ranged_weapon": "Dagger",
+    "ranged_damage": "1d4 + 1",
+    "ranged_avg": "3",
+    "ranged_miss": "0",
+    "ranged_vs_ac_near": "+3",
+    "ranged_vs_ac_far": "N/A",
+    "talents": "Redeemer - Summoned undead are released from service > fight harder for you. Minions: On death release CHA * 1d4 holy burst to all engaged, atks deal +CHA holy dmg.\n\nCackling Soliloquist - Spend all actions casting a /arc spell, spell recharges 18+ after battle + invent a slight improvement to spell.\n\nDeath Priest - Icon connections can be conversations with the dead. Also can use Seance 1/arc when not in battle.",
+    "gear_melee": "Dagger",
+    "gear_ranged": "Dagger",
+    "gold": "",
+    "gear_notes": "Flap of demonic neck skin\nRusty nail",
+    "max_magic": "2",
+    "magic_items": "2 healing potion (Recovery + 1d8)",
+    "conditions": "",
+    "notes": "",
+    "dead": "-12",
+    "max_skulls": 6,
+    "max_spells": "4"
+  },
+  "checkboxes": {
+    "rec_0": false
+  },
+  "backgrounds": [
+    {
+      "name": "Feared Myrr Shaman",
+      "bonus": "+5"
+    },
+    {
+      "name": "Displayed in a museum for years",
+      "bonus": "+3"
+    }
+  ],
+  "icons": [
+    {
+      "dice": "2",
+      "mod": "-",
+      "name": "Lich Queen",
+      "used": {
+        "0": false
+      },
+      "available": {}
+    },
+    {
+      "dice": "1",
+      "mod": "+",
+      "name": "Shadow Prince",
+      "available": {},
+      "used": {}
+    }
+  ],
+  "powers": [
+    {
+      "name": "Wasting Away",
+      "action": "N/A",
+      "usage": "N/A",
+      "desc": "I have 6 skulls instead of 5",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Seance",
+      "action": "Out of battle",
+      "usage": "Per Arc",
+      "desc": "Short rite to contact dead related to random non-Lich Queen icon. GM rolls in secret, on 1-2 info is wrong",
+      "max_uses": "1",
+      "used": {
+        "0": false
+      }
+    },
+    {
+      "name": "Cackling Soliloquist",
+      "action": "ALL",
+      "usage": "At-Will",
+      "desc": "Spend all actions when casting a /arc spell, spell recharges 18+ after battle + invent a slight improvement to spell.\nADV FEAT: Also gain 1d6 + LVL + CHA temp HP.",
+      "max_uses": "",
+      "used": {}
+    }
+  ],
+  "feats": [
+    {
+      "name": "ADV: Cackling Soliloquist"
+    },
+    {
+      "name": "ADV: Redeemer"
+    },
+    {
+      "name": "ADV: Command Undead"
+    }
+  ],
+  "theme": "necromancer",
+  "spells": [
+    {
+      "name": "Chant of Endings",
+      "action": "Std",
+      "usage": "At-will",
+      "desc": "Target: The nearby enemy with the fewest hit points (you choose if there’s a tie; you also don’t have to be able to see that enemy)\nAttack: Intelligence + Level vs. MD (+5)\nHit: 1d10 + Intelligence necro damage.",
+      "max_uses": "",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Command Undead",
+      "action": "Std",
+      "usage": "Battle",
+      "desc": "Target: One nearby undead creature with 64 hp or fewer\nAttack: Intelligence + Level vs. MD\nHit: The target is confused (hard save ends, 16+).\nADV FEAT: Miss does not expend spell",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Unholy Blast",
+      "action": "Std",
+      "usage": "Arc",
+      "desc": "Target: One nearby enemy\nAttack: Intelligence + Level vs. PD\nHit: 4d6 + Intelligence negative energy damage.\nFirst Miss: Half damage, and make the attack again against an\nenemy you haven’t already targeted with unholy blast this turn.\nSecond Miss: Half damage, or full damage if the escalation die is\n1+ and you choose to decrease it by 1.",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Summon Undead",
+      "action": "Std",
+      "usage": "Arc",
+      "desc": "Effect: You summon a mob of 1d3 + 1 crumbling skeleton mooks, as per the summoning rules on page 11. These skeletons fight for you until the end of the battle or until they drop to 0 hp, whichever comes first.\n\n1st level mook [undead]\nInitiative: +6 Vulnerability: holy\nSword +6 vs. AC—3 damage+CHA (First attack extra +CHA (3) vs AC)\nResist weapons 16+: When a weapon attack targets this creature, the attacker must roll a natural 16+ on the attack roll or it only deals half damage.\nAC 16, PD 14, MD 10, HP 6 (mook)\nMook: Kill one crumbling skeleton mook for every 6 damage you deal to the mob.",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Terror",
+      "action": "Std",
+      "usage": "Arc",
+      "desc": "One nearby enemy <= 50hp\nAttack: Intelligence + Level vs. MD\nHit: The target uses all its actions during its turn to move away from the battle, disengaging from enemies to do so (hard save ends, 16+). If it fails to disengage with all of its actions, it won’t take opportunity attacks by moving. The effect also ends when you or one of your allies attacks the target.\nMiss: 1d10 + Intelligence psychic damage",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    }
+  ],
+  "showSpells": true,
+  "advances": {
+    "max_hp": false,
+    "attunement": false,
+    "pd": false,
+    "md": false,
+    "skill_init": false,
+    "power_spell": false,
+    "ability_mults": false,
+    "ability_scores": false,
+    "talent": false,
+    "class_feature": false,
+    "feat": false
+  },
+  "locks": {
+    "max_hp": true
+  },
+  "defensesMigrated": true,
+  "activeConditions": {},
+  "escalation": 0
+}

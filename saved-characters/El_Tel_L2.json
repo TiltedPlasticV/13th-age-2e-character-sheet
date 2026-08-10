@@ -1,0 +1,254 @@
+{
+  "fields": {
+    "name": "El Tel",
+    "level": "2",
+    "class": "barbarian",
+    "kin": "Human",
+    "description": "Rotund, scarred man in partially charred vestments, oddly untroubled by his burns",
+    "unique_thing": "I am the Dwarf King's most trusted bouncer, the only one trusted to leave his post and check on surface matters, such as the Diabolist's demons.",
+    "str_score": "19",
+    "str_mod": "+4",
+    "dex_score": "14",
+    "dex_mod": "+2",
+    "con_score": "17",
+    "con_mod": "+3",
+    "wis_score": "12",
+    "wis_mod": "+1",
+    "int_score": "10",
+    "int_mod": "+0",
+    "cha_score": "13",
+    "cha_mod": "+1",
+    "ac": "17",
+    "pd": "16",
+    "md": "13",
+    "initiative": "+4",
+    "armor_type": "Light armor",
+    "base_ac": "12",
+    "shield": "0",
+    "max_hp": "40",
+    "current_hp": "40",
+    "staggered": "20",
+    "temp_hp": "",
+    "recovery_dice": "2d12 + 3",
+    "recovery_avg": "16",
+    "max_recoveries": "8",
+    "melee_weapon": "Molten arm (fire dmg)",
+    "melee_damage": "1d10 + 4",
+    "melee_avg": "9",
+    "melee_miss": "2",
+    "melee_vs_ac": "+6",
+    "ranged_weapon": "Magma throw (fire dmg - near only)",
+    "ranged_damage": "1d6 + 4",
+    "ranged_avg": "7",
+    "ranged_miss": "0",
+    "ranged_vs_ac_near": "+6",
+    "ranged_vs_ac_far": "N/A",
+    "gear_melee": "Molten Arm",
+    "gear_ranged": "Magma Throw",
+    "gold": "",
+    "gear_notes": "",
+    "max_magic": "2",
+    "magic_items": "2 adventurer healing potion (Recovery + 1d8, hp cap 30)\n\n# Armor of Bloody Vengeance: +1 AC - Bloody Vengeance",
+    "conditions": "",
+    "notes": "",
+    "dead": "-20",
+    "max_skulls": 5,
+    "max_spells": "4",
+    "barb_rs_weapon": "Molten arm (fire dmg)",
+    "barb_rs_damage": "1d10 + 4",
+    "barb_rs_avg": "9",
+    "barb_rs_miss": "4",
+    "barb_rs_vs_ac": "+6",
+    "barb_rt_weapon": "Magma throw (fire dmg - near only)",
+    "barb_rt_damage": "1d6 + 4",
+    "barb_rt_avg": "7",
+    "barb_rt_miss": "4",
+    "barb_rt_vs_ac_near": "+6",
+    "barb_rt_vs_ac_far": "N/A",
+    "barb_rs_crit": "",
+    "barb_rt_crit": ""
+  },
+  "checkboxes": {
+    "rec_0": false,
+    "skull_0": false
+  },
+  "backgrounds": [
+    {
+      "name": "Caravan Outrider",
+      "bonus": "+5"
+    },
+    {
+      "name": "Former Volcano Priest",
+      "bonus": "+3"
+    }
+  ],
+  "icons": [
+    {
+      "dice": "2",
+      "mod": "+",
+      "name": "Dwarf King",
+      "used": {
+        "0": false
+      },
+      "available": {}
+    },
+    {
+      "dice": "1",
+      "mod": "-",
+      "name": "Diabolist",
+      "available": {},
+      "used": {}
+    }
+  ],
+  "powers": [
+    {
+      "name": "",
+      "action": "",
+      "usage": "",
+      "desc": "",
+      "max_uses": "",
+      "used": {}
+    }
+  ],
+  "feats": [
+    {
+      "name": "ADV: Building Frenzy"
+    },
+    {
+      "name": "ADV: Rage"
+    }
+  ],
+  "theme": "barbarian",
+  "spells": [
+    {
+      "name": "Chant of Endings",
+      "action": "Std",
+      "usage": "At-will",
+      "desc": "Target: The nearby enemy with the fewest hit points (you choose if there’s a tie; you also don’t have to be able to see that enemy)\nAttack: Intelligence + Level vs. MD (+5)\nHit: 1d10 + Intelligence necro damage.",
+      "max_uses": "",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Command Undead",
+      "action": "Std",
+      "usage": "Battle",
+      "desc": "Target: One nearby undead creature with 64 hp or fewer\nAttack: Intelligence + Level vs. MD\nHit: The target is confused (hard save ends, 16+).\nADV FEAT: Miss does not expend spell",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Unholy Blast",
+      "action": "Std",
+      "usage": "Arc",
+      "desc": "Target: One nearby enemy\nAttack: Intelligence + Level vs. PD\nHit: 4d6 + Intelligence negative energy damage.\nFirst Miss: Half damage, and make the attack again against an\nenemy you haven’t already targeted with unholy blast this turn.\nSecond Miss: Half damage, or full damage if the escalation die is\n1+ and you choose to decrease it by 1.",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Summon Undead",
+      "action": "Std",
+      "usage": "Arc",
+      "desc": "Effect: You summon a mob of 1d3 + 1 crumbling skeleton mooks, as per the summoning rules on page 11. These skeletons fight for you until the end of the battle or until they drop to 0 hp, whichever comes first.\n\n1st level mook [undead]\nInitiative: +6 Vulnerability: holy\nSword +6 vs. AC—3 damage+CHA (First attack extra +CHA (3) vs AC)\nResist weapons 16+: When a weapon attack targets this creature, the attacker must roll a natural 16+ on the attack roll or it only deals half damage.\nAC 16, PD 14, MD 10, HP 6 (mook)\nMook: Kill one crumbling skeleton mook for every 6 damage you deal to the mob.",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Terror",
+      "action": "Std",
+      "usage": "Arc",
+      "desc": "One nearby enemy <= 50hp\nAttack: Intelligence + Level vs. MD\nHit: The target uses all its actions during its turn to move away from the battle, disengaging from enemies to do so (hard save ends, 16+). If it fails to disengage with all of its actions, it won’t take opportunity attacks by moving. The effect also ends when you or one of your allies attacks the target.\nMiss: 1d10 + Intelligence psychic damage",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    }
+  ],
+  "showSpells": true,
+  "advances": {
+    "max_hp": false,
+    "attunement": false,
+    "pd": false,
+    "md": false,
+    "skill_init": false,
+    "power_spell": false,
+    "ability_mults": false,
+    "ability_scores": false,
+    "talent": false,
+    "class_feature": false,
+    "feat": false
+  },
+  "locks": {
+    "ac": true
+  },
+  "defensesMigrated": true,
+  "activeConditions": {},
+  "escalation": 0,
+  "classData": {
+    "barbarian": {}
+  },
+  "features": [
+    {
+      "name": "Grim Determination (built in)",
+      "action": "N/A",
+      "usage": "N/A",
+      "desc": "When you have one or more Skulls, you gain a +1 bonus to all your defenses. When you have two or more Skulls, it's +2.",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Legendary Prowess (built in)",
+      "action": "N/A",
+      "usage": "N/A",
+      "desc": "Whenever you fail a Strength or Constitution skill check, you can reroll the skill check once and abide by the reroll.",
+      "max_uses": "",
+      "used": {
+        "0": false
+      }
+    },
+    {
+      "name": "Rage (built in)",
+      "action": "N/A",
+      "usage": "N/A",
+      "desc": "You can rage. See rage tracker above.\n\nAdventurer Feat: While raging, you gain a +4 bonus to both your PD and your MD",
+      "max_uses": "",
+      "used": {}
+    }
+  ],
+  "talents": [
+    {
+      "name": "Building Frenzy",
+      "action": "N/A",
+      "usage": "N/A",
+      "desc": "The first time you miss with a melee attack each turn, you deal a cumulative +2 damage with your subsequent melee attack hits until the end of the battle, up to a maximum of +12.\n2nd +3 per miss, +18 max\n4th +4 per miss, +24 max\n6th +6 per miss, +36 max\n8th +10 per miss, +60 max\n10th +15 per miss, +90 max\n\nAdventurer Feat: Count the first time you are staggered each battle as a miss that builds your frenzy.",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Strongheart",
+      "action": "Free Action",
+      "usage": "Battle",
+      "desc": "Once per battle, as a free action, when an enemy hits you with an attack against Physical Defense or Mental Defense, you can make the enemy reroll the attack. The rerolled attack automatically misses if it is a natural odd roll.",
+      "max_uses": "1",
+      "used": {}
+    },
+    {
+      "name": "Unstoppable",
+      "action": "Melee Attack",
+      "usage": "Battle",
+      "desc": "Once per battle, declare you’re using Unstoppable before making a melee attack. If your attack hits the first target, you can heal using a recovery.",
+      "max_uses": "1",
+      "used": {}
+    },
+    {
+      "name": "Bloody Vengeance (Magic item)",
+      "action": "Free action",
+      "usage": "Arc / desperate",
+      "desc": "When a foe hits you and you end up staggered but conscious, you can take a Skull to heal using a recovery as a free action. In addition, until the end of the battle, each of your melee hits against that foe deal +5 damage (champion hero: +10; epic hero: +20).\nQuiddity: The item loves to tell stories about previous owners who died heroically or gruesomely or both.\n\n(arc / desperate = 1/arc power but also recharges 1/arc if you fail a death save or spend last recovery)",
+      "max_uses": "1",
+      "used": {}
+    }
+  ]
+}
