@@ -29,13 +29,13 @@
     "current_hp": "24",
     "staggered": "12",
     "temp_hp": "",
-    "recovery_dice": "2d6 + 0",
+    "recovery_dice": "2d6",
     "recovery_avg": "7",
     "max_recoveries": "8",
     "melee_weapon": "Dagger",
     "melee_damage": "1d4 + 1",
     "melee_avg": "3",
-    "melee_miss": "0",
+    "melee_miss": "2",
     "melee_vs_ac": "+3",
     "ranged_weapon": "Dagger",
     "ranged_damage": "1d4 + 1",
@@ -43,7 +43,6 @@
     "ranged_miss": "0",
     "ranged_vs_ac_near": "+3",
     "ranged_vs_ac_far": "N/A",
-    "talents": "Redeemer - Summoned undead are released from service > fight harder for you. Minions: On death release CHA * 1d4 holy burst to all engaged, atks deal +CHA holy dmg.\n\nCackling Soliloquist - Spend all actions casting a /arc spell, spell recharges 18+ after battle + invent a slight improvement to spell.\n\nDeath Priest - Icon connections can be conversations with the dead. Also can use Seance 1/arc when not in battle.",
     "gear_melee": "Dagger",
     "gear_ranged": "Dagger",
     "gold": "",
@@ -87,34 +86,7 @@
       "used": {}
     }
   ],
-  "powers": [
-    {
-      "name": "Wasting Away",
-      "action": "N/A",
-      "usage": "N/A",
-      "desc": "I have 6 skulls instead of 5",
-      "max_uses": "",
-      "used": {}
-    },
-    {
-      "name": "Seance",
-      "action": "Out of battle",
-      "usage": "Per Arc",
-      "desc": "Short rite to contact dead related to random non-Lich Queen icon. GM rolls in secret, on 1-2 info is wrong",
-      "max_uses": "1",
-      "used": {
-        "0": false
-      }
-    },
-    {
-      "name": "Cackling Soliloquist",
-      "action": "ALL",
-      "usage": "At-Will",
-      "desc": "Spend all actions when casting a /arc spell, spell recharges 18+ after battle + invent a slight improvement to spell.\nADV FEAT: Also gain 1d6 + LVL + CHA temp HP.",
-      "max_uses": "",
-      "used": {}
-    }
-  ],
+  "powers": [],
   "feats": [
     {
       "name": "ADV: Cackling Soliloquist"
@@ -130,7 +102,7 @@
   "spells": [
     {
       "name": "Chant of Endings",
-      "action": "Std",
+      "action": "Standard action",
       "usage": "At-will",
       "desc": "Target: The nearby enemy with the fewest hit points (you choose if there’s a tie; you also don’t have to be able to see that enemy)\nAttack: Intelligence + Level vs. MD (+5)\nHit: 1d10 + Intelligence necro damage.",
       "max_uses": "",
@@ -139,36 +111,27 @@
     },
     {
       "name": "Command Undead",
-      "action": "Std",
+      "action": "Standard action",
       "usage": "Battle",
-      "desc": "Target: One nearby undead creature with 64 hp or fewer\nAttack: Intelligence + Level vs. MD\nHit: The target is confused (hard save ends, 16+).\nADV FEAT: Miss does not expend spell",
+      "desc": "Target: One nearby undead creature with 64 hp or fewer\n3rd level spell Target with 96 hp or fewer.\n5th level spell Target with 160 hp or fewer.\n7th level spell Target with 266 hp or fewer.\n9th level spell Target with 460 hp or fewer.\n\nAttack: Intelligence + Level vs. MD\nHit: The target is confused (hard save ends, 16+).\nADV FEAT: Miss does not expend spell",
       "max_uses": "1",
       "used": {},
       "prepared": true
     },
     {
       "name": "Unholy Blast",
-      "action": "Std",
+      "action": "Standard action",
       "usage": "Arc",
-      "desc": "Target: One nearby enemy\nAttack: Intelligence + Level vs. PD\nHit: 4d6 + Intelligence negative energy damage.\nFirst Miss: Half damage, and make the attack again against an\nenemy you haven’t already targeted with unholy blast this turn.\nSecond Miss: Half damage, or full damage if the escalation die is\n1+ and you choose to decrease it by 1.",
+      "desc": "Target: One nearby enemy\nAttack: Intelligence + Level vs. PD\nHit: 4d6 + Intelligence negative energy damage.\nFirst Miss: Half damage, and make the attack again against an enemy you haven’t already targeted with unholy blast this turn.\nSecond Miss: Half damage, or full damage if the escalation die is 1+ and you choose to decrease it by 1.",
       "max_uses": "1",
       "used": {},
       "prepared": true
     },
     {
       "name": "Summon Undead",
-      "action": "Std",
+      "action": "Standard action",
       "usage": "Arc",
-      "desc": "Effect: You summon a mob of 1d3 + 1 crumbling skeleton mooks, as per the summoning rules on page 11. These skeletons fight for you until the end of the battle or until they drop to 0 hp, whichever comes first.\n\n1st level mook [undead]\nInitiative: +6 Vulnerability: holy\nSword +6 vs. AC—3 damage+CHA (First attack extra +CHA (3) vs AC)\nResist weapons 16+: When a weapon attack targets this creature, the attacker must roll a natural 16+ on the attack roll or it only deals half damage.\nAC 16, PD 14, MD 10, HP 6 (mook)\nMook: Kill one crumbling skeleton mook for every 6 damage you deal to the mob.",
-      "max_uses": "1",
-      "used": {},
-      "prepared": true
-    },
-    {
-      "name": "Terror",
-      "action": "Std",
-      "usage": "Arc",
-      "desc": "One nearby enemy <= 50hp\nAttack: Intelligence + Level vs. MD\nHit: The target uses all its actions during its turn to move away from the battle, disengaging from enemies to do so (hard save ends, 16+). If it fails to disengage with all of its actions, it won’t take opportunity attacks by moving. The effect also ends when you or one of your allies attacks the target.\nMiss: 1d10 + Intelligence psychic damage",
+      "desc": "Effect: You summon a mob of 1d3 + 1 crumbling skeleton mooks. These skeletons fight for you until the end of the battle or until they drop to 0 hp, whichever comes first.\n\n1st level mook [undead]\nInitiative: +6 / Vulnerability: holy\nAttack: Sword +6 vs. AC  (ADV FEAT: First attack gets extra +CHA vs AC)\nHit: 3 dmg +CHA\nResist weapons 16+: When a weapon attack targets this creature, the attacker must roll a natural 16+ on the attack roll or it only deals half damage.\nAC 16, PD 14, MD 10, HP 6 (mook)\nMook: One mook dies for every 6 damage you dealt to the mob",
       "max_uses": "1",
       "used": {},
       "prepared": true
@@ -193,5 +156,60 @@
   },
   "defensesMigrated": true,
   "activeConditions": {},
-  "escalation": 0
+  "escalation": 0,
+  "features": [
+    {
+      "name": "Wasting Away",
+      "action": "Passive",
+      "usage": "N/A",
+      "desc": "You have 6 skulls instead of 5",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Summoning",
+      "action": "Passive",
+      "usage": "N/A",
+      "desc": "You are able to summon creatures",
+      "max_uses": "",
+      "used": {}
+    }
+  ],
+  "talents": [
+    {
+      "name": "Cackling Soliloquist",
+      "action": "All actions",
+      "usage": "At-will",
+      "desc": "Spend all actions when casting a /arc spell, spell recharges 18+ after battle + invent a slight improvement to spell.\nADV FEAT: Also gain 1d6 + LVL + CHA temp HP.",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Redeemer",
+      "action": "Minion atk / death",
+      "usage": "N/A",
+      "desc": "Summoned undead are released from service > fight harder for you.\nMinions: On death release CHA * 1d4 holy burst to all engaged, atks deal +CHA holy dmg.\nADV FEAT: The first time each battle an undead creature you have summoned attacks, it gains an attack bonus equal to your Charisma modifier",
+      "max_uses": "",
+      "used": {}
+    },
+    {
+      "name": "Death Priest",
+      "action": "Out of battle",
+      "usage": "Arc",
+      "desc": "Icon connections can be conversations with the dead. Also can use Seance 1/arc when not in battle.\nSeance: Short rite to contact dead related to random non-Lich Queen icon. GM rolls in secret, on 1-2 info is wrong",
+      "max_uses": "1",
+      "used": {}
+    }
+  ],
+  "kinPowers": [
+    {
+      "name": "Resourceful",
+      "action": "Passive",
+      "usage": "N/A",
+      "desc": "You have a bonus feat of the highest tier you qualify for.",
+      "max_uses": "",
+      "used": {}
+    }
+  ],
+  "classData": {}
 }
