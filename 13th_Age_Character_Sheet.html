@@ -120,7 +120,14 @@
     --header-ornament: '⚔';
     --display-font:   'Metamorphous', cursive;
     --heading-font:   'Cinzel', serif;
-    --body-font:      'Almendra', serif;
+    /* Body text falls back to the reader's own browser font — Almendra was
+       too decorative to read at body size. `initial` is load-bearing and the
+       only keyword that does this: it sets the custom property to the
+       guaranteed-invalid value, so `font-family: var(--body-font)` drops out
+       and `body` inherits from `html`, which no rule styles. `revert` and
+       `unset` both resolve the *variable* instead, inheriting the :root
+       declaration and landing back on Crimson Text. */
+    --body-font:      initial;
     --print-accent:   #a04810;
     --print-card-bg:  #faf4ec;
     --card-glow:      inset 0 0 20px -8px rgba(255, 64, 64, 0.1), inset 0 0 20px -8px rgba(255, 152, 48, 0.1);
@@ -421,7 +428,7 @@
 
   /* ── SECTIONS ── */
   .section {
-    margin-bottom: 8px;
+    margin-bottom: var(--section-gap, 8px);
     border: 1px solid var(--field-border);
     border-radius: 4px;
     transition: border-color 0.4s;
@@ -536,6 +543,9 @@
     display: grid; grid-template-columns: 3fr 2fr;
     gap: 8px;
     align-items: stretch;
+    /* The row stands in for a section in the flow, so it owes the next one the
+       same gap — its children can't, theirs is zeroed to keep them flush. */
+    margin-bottom: var(--section-gap, 8px);
   }
   .combo-row > .section {
     margin-bottom: 0;
@@ -551,10 +561,20 @@
     display: flex; flex-direction: column; justify-content: center; align-items: center;
   }
   .combo-row .stat-card    { padding: 4px 4px; gap: 2px; }
-  .combo-row .defense-card { padding: 6px 4px; gap: 4px; }
+  .combo-row .defense-card { padding: 6px 4px; gap: 4px; position: relative; }
   .combo-row .defense-card .field-inline {
-    font-size: calc(var(--fs-value-lg) * 1.4);
-    padding: 4px 0;
+    font-size: calc(var(--fs-value-lg) * 1.2);
+    padding: 2px 0;
+  }
+  /* The defenses column sets the height of the whole row (`align-items:
+     stretch`), and `grid-auto-rows: 1fr` on both grids then hands any surplus
+     to every ability card, where `justify-content: center` splits it above and
+     below the numbers. So the initiative die is taken out of the card's flow —
+     in-flow it stacks under the input and, via the 1fr rows, pads out all four
+     defence cards and the six ability cards with it. Anchored bottom-right, it
+     sits beside the number rather than under it. */
+  .combo-row .defense-card .roll-btn {
+    position: absolute; bottom: 4px; right: 2px;
   }
 
   /* ── COMPACT LIST GRIDS (backgrounds / icons / feats wrap multi-column) ──
@@ -865,6 +885,13 @@
 
   .attack-weapon { margin-bottom: 4px; }
   .attack-weapon .field-inline { width: 100%; font-size: var(--fs-field); }
+  /* A weapon name that a class derives (the barbarian mirrors the basic
+     attacks into raging strike / raging throw) is wrapped in `.has-lock` for
+     its padlock. That wrapper is `inline-block`, so it shrink-wraps the
+     input's default width and the `100%` above resolves against the wrapper
+     rather than the card — long names get clipped. Block makes it span the
+     card, and the padlock still pins to the input's top-right corner. */
+  .attack-weapon .has-lock { display: block; }
 
   .attack-stats {
     display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
@@ -1150,6 +1177,13 @@
     background: radial-gradient(ellipse at center, #080c08 40%, #030503 100%);
   }
 
+  /* Borderless sections need more air between them. Carried as a variable, not
+     a `margin-bottom` on `[data-theme] .section` — that ties on specificity
+     with `.combo-row > .section` and silently wins on source order. Declared
+     here rather than in the theme's `:root` block, which necromancer shares
+     with the no-attribute default and would leak the gap to all 8 themes. */
+  [data-theme="necromancer"] { --section-gap: 14px; }
+
   [data-theme="necromancer"] .section {
     position: relative;
     overflow: visible;
@@ -1157,7 +1191,6 @@
     box-shadow: 0 0 12px -4px rgba(120, 232, 48, 0.2), 0 0 8px -4px rgba(208, 160, 255, 0.1);
     border: none;
     border-radius: 0;
-    margin-bottom: 14px;
   }
 
   [data-theme="necromancer"] .section-head {
@@ -1772,7 +1805,8 @@
     .stat-grid { grid-template-columns: repeat(3, 1fr); }
     .defense-row { grid-template-columns: repeat(2, 1fr); }
     .combo-row { grid-template-columns: 1fr; }
-    .combo-row > .section { margin-bottom: 8px; }
+    /* Stacked, the two sections are separated by the row-gap `.combo-row`
+       already carries; a margin here would double it. */
     .sheet-container { padding: 12px 12px 12px; }
     .char-name-row .field-inline { font-size: 24px; }
     .dice-tray { right: 8px; bottom: 8px; width: min(272px, calc(100vw - 16px)); }
@@ -1865,7 +1899,7 @@
     </div>
 
     <div class="section">
-      <div class="section-head"><span class="icon">⛊</span> Defenses & Initiative</div>
+      <div class="section-head"><span class="icon">⛊</span> Defenses</div>
       <div class="section-body">
         <div class="defense-row">
           <div class="defense-card"><div class="stat-label">Armor Class</div><input class="field-inline" data-field="ac" placeholder="—" aria-label="Armor Class"></div>
