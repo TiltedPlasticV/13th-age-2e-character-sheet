@@ -301,6 +301,8 @@
   registerClass('barbarian', {
     defenses: { ac: 12, pd: 11, md: 10 },
     baseHp: 7,
+    // Recovery dice = one per level, + Con mod (×2 from 5th, ×4 from 8th).
+    recoveryDie: 12,
 
     slots: {
       attacks:        buildAttacks,

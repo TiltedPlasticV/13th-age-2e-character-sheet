@@ -47,6 +47,13 @@
     // max HP = (baseHp + Con mod) × level multiplier. Almost always 6 or 7.
     // Use null if you're unsure — max HP then stays blank and manual.
     baseHp: 7,
+    // Recovery dice = one die per level, + Con mod (×2 from 5th level, ×4
+    // from 8th). Omit if you're unsure and the Recovery Dice field stays
+    // blank and hand-typed.
+    recoveryDie: 8,
+    // Set false only for a class whose Con mod stays flat at every level
+    // (the necromancer). Omit it and the ×2 / ×4 above apply.
+    // recoveryConScales: false,
 
     // ── UI injected into the sheet ──
     // Each slot maps to a `[data-class-slot]` host in the HTML:

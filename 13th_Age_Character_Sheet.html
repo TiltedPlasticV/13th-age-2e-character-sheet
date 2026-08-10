@@ -71,19 +71,19 @@
   /* ── ROGUE — blood crimson headers, tarnished gold highlights ── */
   [data-theme="rogue"] {
     --bg:             #060404;
-    --bg-card:        #2e1a1a;
+    --bg-card:        #150000;
     --bg-card-alt:    #2a2418;
     --ink:            #ffffff;
     --ink-dim:        #e0d4c8;
     --ink-faint:      #b8a898;
-    --accent:         #ff6070;
+    --accent:         #fff;
     --accent-glow:    #ff8898;
     --accent-dim:     #4a0c14;
-    --highlight:      #e8c050;
-    --highlight-dim:  #c8a030;
+    --highlight:      #31a8ff;
+    --highlight-dim:  #31a8ff;
     --bone:           #ffffff;
-    --field-bg:       rgba(200,80,80,0.20);
-    --field-border:   rgba(220,100,100,0.50);
+    --field-bg:       rgb(27, 27, 27);
+    --field-border:   rgb(61, 61, 61);
     --field-focus:    rgba(240,70,80,0.50);
     --check-active-bg:   #4a0c14;
     --check-active-bdr:  #d83848;
@@ -243,7 +243,8 @@
     --header-ornament: '⛨';
     --display-font:   'Uncial Antiqua', cursive;
     --heading-font:   'Cinzel', serif;
-    --body-font:      'Almendra', serif;
+    /* Reader's own browser font — see the barbarian block for why `initial`. */
+    --body-font:      initial;
     --print-accent:   #3848a0;
     --print-card-bg:  #f0f2fa;
     --card-glow:      inset 0 0 16px -8px rgba(168, 200, 255, 0.1), inset 0 0 16px -8px rgba(255, 200, 64, 0.06);
@@ -342,6 +343,20 @@
     margin-bottom: 6px;
   }
 
+  /* Grows with the name rather than clipping it at a fixed 300px — same idiom
+     as the gear and backgrounds rows. The centre track is `auto`, so widening
+     the input widens the track and the two `1fr` sides give way evenly,
+     keeping the name centred.
+
+     `min-width` is a flat length, not `min(100%, 300px)`: the percentage would
+     resolve against a grid area that is itself sized from this input, so it
+     collapses to the content width and the box would visibly shrink around
+     short names. The narrow breakpoint drops it to 0 instead.
+
+     `max-width: 100%` keeps the input inside its own track, so a very long
+     name can't shove the tier badge off the row — past that it clips, which
+     beats overflowing the sheet. Where `field-sizing` is unsupported this
+     falls back to the input's default width, as on those other rows. */
   .char-name-row .field-inline {
     grid-column: 2;
     justify-self: center;
@@ -349,7 +364,10 @@
     font-size: var(--fs-display);
     color: var(--bone);
     text-align: center;
-    max-width: 300px;
+    field-sizing: content;
+    width: auto;
+    min-width: 300px;
+    max-width: 100%;
   }
 
   .char-name-row .tier-badge {
@@ -1808,7 +1826,9 @@
     /* Stacked, the two sections are separated by the row-gap `.combo-row`
        already carries; a margin here would double it. */
     .sheet-container { padding: 12px 12px 12px; }
-    .char-name-row .field-inline { font-size: 24px; }
+    /* min-width: the 300px floor doesn't fit beside the tier badge here, and
+       would push it off the row. Let the field shrink to its content instead. */
+    .char-name-row .field-inline { font-size: 24px; min-width: 0; }
     .dice-tray { right: 8px; bottom: 8px; width: min(272px, calc(100vw - 16px)); }
   }
 
@@ -2067,6 +2087,15 @@
     </div>
   </div>
 
+  <!-- KIN POWERS -->
+  <div class="section">
+    <div class="section-head"><span class="icon">❦</span> Kin Powers</div>
+    <div class="section-body">
+      <div id="kin-powers-list" class="powers-list"></div>
+      <button class="add-row-btn" data-action="add-kin-power">+ Add Kin Power</button>
+    </div>
+  </div>
+
   <!-- CLASS FEATURES -->
   <div class="section">
     <div class="section-head"><span class="icon">🔥</span> Class Features</div>
@@ -2229,9 +2258,10 @@
     checkboxes: {},
     backgrounds: [],
     icons: [],
-    // The three ability lists, all the same row shape: class features and
-    // talents are always on the sheet; `powers` and `spells` are the
+    // The ability lists, all the same row shape: kin powers, class features
+    // and talents are always on the sheet; `powers` and `spells` are the
     // class-dependent third section (see CLASS_ABILITY_SECTION).
+    kinPowers: [],
     features: [],
     talents: [],
     powers: [],
@@ -2336,8 +2366,32 @@
     return (ci.baseHp + intOrZero(f.con_mod)) * mult;
   }
 
-  // A class's base numbers (`defenses`, `baseHp`) are ordinary properties of
-  // its module, so they arrive with the rest of the class file. Returns null
+  // Recovery dice: one die per level, plus Con mod — doubled from 5th level
+  // and quadrupled from 8th. Two things vary by class and both ride along in
+  // the class module: `recoveryDie` (the die size) and `recoveryConScales`,
+  // which a deliberately frail class sets to false to keep a flat Con mod at
+  // every level (the necromancer).
+  //
+  // Produces an expression ("5d8+6") rather than a number, because that is
+  // what the Roll Recovery button and the Avg field both parse. A class file
+  // that predates this (or a class whose die isn't recorded yet) leaves
+  // `recoveryDie` undefined and the field stays blank and hand-typed.
+  function recoveryConMult(lvl, ci) {
+    if (ci && ci.recoveryConScales === false) return 1;
+    return lvl >= 8 ? 4 : lvl >= 5 ? 2 : 1;
+  }
+
+  function recoveryDiceCalc(f) {
+    const ci = getClassInfo(f.class);
+    if (!ci || ci.recoveryDie == null) return '';
+    const lvl = intOrNull(f.level);
+    if (lvl === null || lvl < 1 || lvl > 10) return '';
+    const bonus = intOrZero(f.con_mod) * recoveryConMult(lvl, ci);
+    return lvl + 'd' + ci.recoveryDie + (bonus === 0 ? '' : signed(bonus));
+  }
+
+  // A class's base numbers (`defenses`, `baseHp`, `recoveryDie`) are ordinary
+  // properties of its module, so they arrive with the class file. Returns null
   // until that file has loaded — and every calc reading it already treats
   // null as "leave the field blank and editable", so a missing class file
   // degrades to a plain manual sheet rather than breaking anything.
@@ -2403,6 +2457,9 @@
       const hp = intOrNull(f.max_hp);
       return hp === null ? '' : -Math.floor(hp / 2);
     }},
+    // Before recovery_avg so the average resolves off the fresh expression in
+    // this same pass, the way max_hp feeds staggered/dead above.
+    recovery_dice: { sources: ['class', 'level', 'con_mod'], calc: f => recoveryDiceCalc(f) },
     recovery_avg: { sources: ['recovery_dice'], calc: f => recoveryAvg(f.recovery_dice) },
     // Average weapon damage from the hit-damage formula (e.g. "1d8+4" → 8).
     melee_avg:    { sources: ['melee_damage'],  calc: f => diceAvg(f.melee_damage) },
@@ -2942,6 +2999,13 @@
     autoGrowAll();
   }
 
+  function renderKinPowers() {
+    renderPowerLike({
+      listId: 'kin-powers-list', stateKey: 'kinPowers',
+      namePlaceholder: 'Kin power name',
+      descPlaceholder: 'What it does…'
+    });
+  }
   function renderFeatures() {
     renderPowerLike({
       listId: 'features-list', stateKey: 'features',
@@ -2974,6 +3038,7 @@
     });
   }
   function blankPowerRow() { return { name: '', action: '', usage: '', desc: '', max_uses: '', used: {} }; }
+  function addKinPower() { state.kinPowers.push(blankPowerRow()); renderKinPowers(); saveNow(); }
   function addFeature() { state.features.push(blankPowerRow()); renderFeatures(); saveNow(); }
   function addTalent() { state.talents.push(blankPowerRow()); renderTalents(); saveNow(); }
   function addPower() { state.powers.push(blankPowerRow()); renderPowers(); saveNow(); }
@@ -3412,6 +3477,7 @@
         if (!state.checkboxes) state.checkboxes = {};
         if (!state.backgrounds) state.backgrounds = [];
         if (!state.icons) state.icons = [];
+        if (!state.kinPowers) state.kinPowers = [];
         if (!state.powers) state.powers = [];
         if (!state.spells) state.spells = [];
         if (!state.feats) state.feats = [];
@@ -3444,7 +3510,7 @@
         const key = input.dataset.field;
         if (key) setLockVisual(toggle, input, !!state.locks[key]);
       });
-      [renderRecoveries, renderSkulls, renderBackgrounds, renderIcons, renderFeatures, renderTalents, renderPowers, renderSpells, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpStatus].forEach(fn => {
+      [renderRecoveries, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpStatus].forEach(fn => {
         try { fn(); } catch(e) { console.warn(fn.name, e); }
       });
     } finally {
@@ -3793,7 +3859,7 @@
     // Display preferences (theme) survive a reset; only character data is
     // cleared. Which ability sections show is derived from the class, so
     // there's nothing to preserve there.
-    state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], features: [], talents: [], powers: [], spells: [], feats: [], advances: {}, locks: {}, activeConditions: {}, classData: {}, escalation: 0, theme: state.theme };
+    state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], kinPowers: [], features: [], talents: [], powers: [], spells: [], feats: [], advances: {}, locks: {}, activeConditions: {}, classData: {}, escalation: 0, theme: state.theme };
     try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
     applyState();
     showToast('New sheet');
@@ -3850,6 +3916,7 @@
       if (!state.checkboxes) state.checkboxes = {};
       if (!state.backgrounds) state.backgrounds = [];
       if (!state.icons) state.icons = [];
+      if (!state.kinPowers) state.kinPowers = [];
       if (!state.powers) state.powers = [];
       if (!state.feats) state.feats = [];
       if (!state.spells) state.spells = [];
@@ -3869,6 +3936,7 @@
     const ACTIONS = {
       'add-background': addBackground,
       'add-icon':       addIcon,
+      'add-kin-power':  addKinPower,
       'add-feature':    addFeature,
       'add-talent':     addTalent,
       'add-power':      addPower,
@@ -3936,6 +4004,7 @@
   autoGrowAll();
   if (state.backgrounds.length === 0) { addBackground(); addBackground(); }
   if (state.icons.length === 0) { addIcon(); }
+  if (state.kinPowers.length === 0) { addKinPower(); }
   if (state.features.length === 0) { addFeature(); }
   if (state.talents.length === 0) { addTalent(); }
   if (state.powers.length === 0) { addPower(); }

@@ -11,4 +11,9 @@ registerClass('necromancer', {
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 6,
 
+  // Recovery dice = one per level, + Con mod. Deliberately frail: unlike
+  // every other class the Con mod stays flat, with no ×2 at 5th or ×4 at 8th.
+  recoveryDie: 6,
+  recoveryConScales: false,
+
 });

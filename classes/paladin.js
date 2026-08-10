@@ -11,4 +11,7 @@ registerClass('paladin', {
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 7,
 
+  // Recovery dice = one per level, + Con mod (×2 from 5th, ×4 from 8th).
+  recoveryDie: 10,
+
 });
