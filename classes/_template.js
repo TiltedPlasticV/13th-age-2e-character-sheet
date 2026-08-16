@@ -68,6 +68,11 @@
       //   el('div', { class: 'note' }, 'Rules reminder…')),
     },
 
+    // Slots listed here shrink to their contents instead of taking their
+    // default share of the row — for a panel that has nothing to do with
+    // the extra width. Only 'hp-side' styles it today.
+    // slotFit: ['hp-side'],
+
     // ── Auto-calculated fields ──
     // Same shape as the sheet's built-in DERIVED_FIELDS: `sources` lists the
     // fields the calc reads (keep them in sync — it's what triggers a

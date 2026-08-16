@@ -70,6 +70,10 @@
       'hp-side': buildBravadoPanel,
     },
 
+    // The counter needs no more room than its buttons — let the recoveries
+    // column have the rest.
+    slotFit: ['hp-side'],
+
     css: `
       /* flex:1 takes the space the panel has left over next to the taller
          recoveries column, so the counter sits centred in it. */
