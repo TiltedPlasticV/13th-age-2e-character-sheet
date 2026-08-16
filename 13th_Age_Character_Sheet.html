@@ -1600,6 +1600,10 @@
     display: flex; flex-direction: column; justify-content: center; gap: 4px;
   }
   .hp-lower > .class-slot:not(:empty) { flex: 1 1 250px; display: flex; }
+  /* A panel with nothing that wants the extra room asks for `fit` sizing
+     (see the slot API) and shrinks to its contents, handing the width back
+     to the recoveries column. */
+  .hp-lower > .class-slot.slot-fit:not(:empty) { flex: 0 1 auto; }
 
   .class-slot:empty { display: none; }
 
@@ -3252,6 +3256,11 @@
   //                 'sections'     — whole extra sections after Basic Attacks
   //               Adding a slot = add a host div + its name to CLASS_SLOTS.
   //
+  //   slotFit:    [ <slot name>, … ]  — slots whose content should be only
+  //               as wide as it needs to be, instead of stretching to the
+  //               slot's default share of the row. Adds `.slot-fit` to the
+  //               host; today only 'hp-side' styles it.
+  //
   //   derived:    DERIVED_FIELDS-shaped entries merged over the base set
   //               while this class is active, so class fields get the same
   //               auto-calculation and lock/override behaviour as built-ins.
@@ -3355,6 +3364,9 @@
     host.innerHTML = '';
     const mod = activeClassModule();
     const build = mod && mod.slots && mod.slots[name];
+    // Sizing is re-applied on every mount, so it leaves with the class.
+    host.classList.toggle('slot-fit',
+      !!(build && mod.slotFit && mod.slotFit.includes(name)));
     if (!build) return;
     try {
       const node = build();
