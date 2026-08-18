@@ -19,7 +19,7 @@
     "cha_score": "17",
     "cha_mod": "+3",
     "ac": "13",
-    "pd": "13",
+    "pd": "14",
     "md": "16",
     "initiative": "+3",
     "armor_type": "None",
@@ -48,7 +48,7 @@
     "gold": "",
     "gear_notes": "Flap of demonic neck skin\nRusty nail",
     "max_magic": "2",
-    "magic_items": "2 healing potion (Recovery + 1d8)",
+    "magic_items": "# 2 healing potion (Recovery + 1d8)\n\n# Stalwart Cloak +1 PD (2/arc force reroll when atk vs your PD hits)",
     "conditions": "",
     "notes": "",
     "dead": "-12",
@@ -86,7 +86,16 @@
       "used": {}
     }
   ],
-  "powers": [],
+  "powers": [
+    {
+      "name": "",
+      "action": "",
+      "usage": "",
+      "desc": "",
+      "max_uses": "",
+      "used": {}
+    }
+  ],
   "feats": [
     {
       "name": "ADV: Cackling Soliloquist"
@@ -152,7 +161,7 @@
     "feat": false
   },
   "locks": {
-    "max_hp": true
+    "pd": true
   },
   "defensesMigrated": true,
   "activeConditions": {},
@@ -199,6 +208,14 @@
       "desc": "Icon connections can be conversations with the dead. Also can use Seance 1/arc when not in battle.\nSeance: Short rite to contact dead related to random non-Lich Queen icon. GM rolls in secret, on 1-2 info is wrong",
       "max_uses": "1",
       "used": {}
+    },
+    {
+      "name": "Stalwart Cloak (ITEM)",
+      "action": "When atk vs my PD hits",
+      "usage": "Arc",
+      "desc": "Force reroll of the attack",
+      "max_uses": "2",
+      "used": {}
     }
   ],
   "kinPowers": [
@@ -211,5 +228,9 @@
       "used": {}
     }
   ],
-  "classData": {}
+  "classData": {},
+  "prefs": {
+    "animations": false,
+    "diceRoller": false
+  }
 }
