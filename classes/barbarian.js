@@ -6,11 +6,9 @@
 (function () {
 
   // ── Raging attacks ──────────────────────────────────────────────────
-  // Raging strike and raging throw are "the same as your basic melee /
-  // ranged attack except …", so their weapon, damage, average and attack
-  // bonus are *derived* from the basic attack fields — fill the basic
-  // attack in once and these mirror it. Any of them can still be
-  // overridden the usual way: type in it, or click its padlock.
+  // Both are "as your basic attack except …", so weapon, damage, average and
+  // attack bonus all derive from the basic attack fields — fill those in once
+  // and these mirror them. Each stays overridable in the usual way.
 
   function twiceLevel(f) {
     const lvl = intOrNull(f.level);
@@ -127,15 +125,12 @@
   }
 
   // ── Skull defense bonus ─────────────────────────────────────────────
-  // Class feature: 1+ skulls gives +1 to all defenses, 2+ raises it to +2.
-  // This is a *reminder only* — it deliberately doesn't touch the AC/PD/MD
-  // fields, since the player is better placed to judge when the bonus is
-  // actually in play than the sheet is.
+  // 1+ skulls gives +1 to all defenses, 2+ raises it to +2. A reminder only:
+  // it deliberately doesn't touch the AC/PD/MD fields, since the player judges
+  // when the bonus is actually in play better than the sheet can.
   //
-  // The markers are drawn as brackets under the real skull boxes, so they
-  // have to be measured rather than laid out: the skull row is owned by the
-  // sheet (and rebuilt whenever the skull count changes), not by this
-  // module. A MutationObserver re-measures on any rebuild.
+  // The brackets sit under skull boxes the sheet owns and rebuilds, so they
+  // have to be measured rather than laid out — hence the MutationObserver.
 
   let _skullWatch = null;
   const _reposition = () => positionSkullBonus();
@@ -327,8 +322,8 @@
     },
 
     css: `
-      /* Crit range renders as one control — the number and its "+" share a
-         single bordered box, which focuses and highlights as a unit. */
+      /* The number and its "+" share one bordered box, so "16+" reads as a
+         single value and focuses as a unit. */
       .crit-box {
         display: inline-flex; align-items: center;
         background: var(--field-bg);
@@ -350,9 +345,8 @@
       }
       .crit-plus { color: var(--ink-dim); line-height: 1; }
 
-      /* Brackets under the skull track marking the defense bonus. Segments
-         are absolutely positioned from measured skull positions; the labels
-         are allowed to overhang their bracket. */
+      /* Brackets under the skull track. Segments are positioned from measured
+         skull positions; labels may overhang their bracket. */
       .skull-bonus { position: relative; height: 22px; }
       .skull-bonus-seg {
         position: absolute; top: 0; height: 5px;
@@ -361,9 +355,8 @@
         border-radius: 0 0 3px 3px;
         opacity: 0.7;
       }
-      /* Layout only — the text itself is a plain .note. The bonus is the
-         value being called out, so it takes the highlight rather than the
-         lead-in label colour a note's bold normally gets. */
+      /* Layout only — the text is a plain .note. The bonus takes the highlight
+         rather than the lead-in colour a note's bold normally gets. */
       .skull-bonus-label {
         position: absolute; top: 6px; left: 50%;
         transform: translateX(-50%);

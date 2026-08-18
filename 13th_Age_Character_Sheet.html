@@ -120,13 +120,10 @@
     --header-ornament: '⚔';
     --display-font:   'Metamorphous', cursive;
     --heading-font:   'Cinzel', serif;
-    /* Body text falls back to the reader's own browser font — Almendra was
-       too decorative to read at body size. `initial` is load-bearing and the
-       only keyword that does this: it sets the custom property to the
-       guaranteed-invalid value, so `font-family: var(--body-font)` drops out
-       and `body` inherits from `html`, which no rule styles. `revert` and
-       `unset` both resolve the *variable* instead, inheriting the :root
-       declaration and landing back on Crimson Text. */
+    /* Body text falls back to the reader's own browser font. `initial` is the
+       only keyword that does this: it makes the variable invalid, so
+       `font-family: var(--body-font)` drops out entirely. `revert`/`unset`
+       resolve the variable instead and land back on the :root value. */
     --body-font:      initial;
     --print-accent:   #a04810;
     --print-card-bg:  #faf4ec;
@@ -330,10 +327,9 @@
     transition: background 0.5s, color 0.4s;
   }
 
-  /* 3-column grid (1fr / auto / 1fr) keeps the name visually centered in the
-     row regardless of whether the tier badge is present. The badge sits in
-     the right column with `justify-self: start` so it floats next to the name
-     instead of being pushed to the far edge. */
+  /* 1fr / auto / 1fr keeps the name centred whether or not the tier badge is
+     there; the badge is `justify-self: start` so it sits beside the name
+     rather than at the far edge. */
   .char-name-row {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -343,20 +339,12 @@
     margin-bottom: 6px;
   }
 
-  /* Grows with the name rather than clipping it at a fixed 300px — same idiom
-     as the gear and backgrounds rows. The centre track is `auto`, so widening
-     the input widens the track and the two `1fr` sides give way evenly,
-     keeping the name centred.
-
-     `min-width` is a flat length, not `min(100%, 300px)`: the percentage would
-     resolve against a grid area that is itself sized from this input, so it
-     collapses to the content width and the box would visibly shrink around
-     short names. The narrow breakpoint drops it to 0 instead.
-
-     `max-width: 100%` keeps the input inside its own track, so a very long
-     name can't shove the tier badge off the row — past that it clips, which
-     beats overflowing the sheet. Where `field-sizing` is unsupported this
-     falls back to the input's default width, as on those other rows. */
+  /* Grows with the name instead of clipping at a fixed width — the centre
+     track is `auto`, so the two `1fr` sides give way evenly and the name stays
+     centred. `min-width` must be a flat length: a percentage would resolve
+     against a track sized from this very input and collapse to the content
+     width. `max-width: 100%` keeps a long name from shoving the tier badge
+     off the row. */
   .char-name-row .field-inline {
     grid-column: 2;
     justify-self: center;
@@ -424,10 +412,9 @@
     min-width: 40px;
   }
 
-  /* A <select>'s intrinsic width is computed without letter-spacing in most
-     browsers, so the spaced-out selected text ("Necromancer") gets clipped.
-     Auto width + reduced spacing + room for the native arrow lets it grow
-     to fit the chosen class. */
+  /* Most browsers compute a <select>'s intrinsic width without letter-spacing,
+     clipping the spaced-out class name. Auto width + tighter spacing + room
+     for the native arrow lets it fit. */
   .char-subtitle select.field-inline {
     width: auto;
     letter-spacing: 1px;
@@ -584,23 +571,18 @@
     font-size: calc(var(--fs-value-lg) * 1.2);
     padding: 2px 0;
   }
-  /* The defenses column sets the height of the whole row (`align-items:
-     stretch`), and `grid-auto-rows: 1fr` on both grids then hands any surplus
-     to every ability card, where `justify-content: center` splits it above and
-     below the numbers. So the initiative die is taken out of the card's flow —
-     in-flow it stacks under the input and, via the 1fr rows, pads out all four
-     defence cards and the six ability cards with it. Anchored bottom-right, it
-     sits beside the number rather than under it. */
+  /* Out of flow deliberately: in-flow the die stacks under the input, and the
+     `1fr` rows then pad out all ten cards to match. Anchored bottom-right it
+     sits beside the number instead. */
   .combo-row .defense-card .roll-btn {
     position: absolute; bottom: 4px; right: 2px;
   }
 
   /* ── COMPACT LIST GRIDS (backgrounds / icons / feats wrap multi-column) ──
-     Flexbox-with-wrap (rather than CSS Grid) so each row can size to its
-     content. Combined with `field-sizing: content` on the name inputs, a long
-     entry stretches its row and pushes neighbouring rows to a new line.
-     `min-width: min(100%, Npx)` keeps each row reasonably sized on wide
-     screens but lets it shrink to a single column on narrow ones. */
+     Wrapping flex rather than grid, so a row sizes to its content: with
+     `field-sizing: content` on the name inputs a long entry widens its own row
+     and pushes the next onto a new line. `min(100%, Npx)` lets the rows drop
+     to a single column on narrow screens. */
   #backgrounds-list,
   #feats-list {
     display: flex; flex-wrap: wrap;
@@ -612,9 +594,7 @@
     min-width: min(100%, 220px);
   }
   /* Feats-list isn't a `.table-section`, so its rows don't inherit the shared
-     flex layout — apply it here. `flex: 1 1 auto` is for the parent flex
-     wrap (#feats-list); the inner `display: flex` arranges the name input
-     and remove button on a single baseline. */
+     flex layout — apply it here. */
   #feats-list .row {
     display: flex;
     align-items: center;
@@ -626,10 +606,9 @@
   #icons-list .icon-rel-row {
     border-bottom: none;
   }
-  /* Auto-grow the name inputs to fit their text. Supported in Chrome/Edge 123+
-     and Safari 18.1+. Firefox does not support this property in any released
-     version (including 150) — those users will see the input cap at the row's
-     allocated width via plain flex behaviour. */
+  /* Auto-grow the name inputs to fit their text. Unsupported in Firefox, where
+     the input just caps at the row's width — a graceful fallback, so no
+     feature query. */
   #backgrounds-list .row .field-flex,
   #feats-list .row .field-flex {
     field-sizing: content;
@@ -669,11 +648,9 @@
     --heart-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 29'%3E%3Cpath d='M16 29S1 20.5 1 9.5C1 4.25 5.25 1 9.5 1 12.7 1 15 2.8 16 5.3 17 2.8 19.3 1 22.5 1 26.75 1 31 4.25 31 9.5 31 20.5 16 29 16 29Z'/%3E%3C/svg%3E");
   }
   .hp-heart::before {
-    /* Heart drawn as a fixed-size SVG MASK, not a font glyph. A glyph's size
-       and metrics depend on the device's fonts (and mobile emoji presentation
-       / text auto-inflation), so it rendered larger and clipped on phones
-       while a narrow desktop window — using a different font — looked right.
-       A masked vector is pixel-identical on every device. */
+    /* A masked SVG, not a glyph: glyph metrics vary with the device's fonts
+       and mobile emoji presentation, which rendered the heart oversized and
+       clipped on phones. A vector is pixel-identical everywhere. */
     content: ''; position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
@@ -737,21 +714,16 @@
     font-size: var(--fs-field); font-weight: 400;
   }
 
-  /* Gear's top row sizes to what's in it. Armour and weapon names are text of
-     unpredictable length, so the equal-width grid track this row used to sit
-     in just cut them off. Same idiom as the backgrounds/feats rows: wrap on
-     flex, so a long name widens its own item and pushes the next one onto a
-     new line rather than being clipped. Browser support for `field-sizing` is
-     as noted on those rows; without it these fall back to the input default
-     width, which is still wider than the old track. */
+  /* Armour and weapon names are unpredictably long, so this row uses the same
+     wrapping-flex idiom as backgrounds/feats rather than equal-width tracks
+     that would clip them. */
   .gear-row {
     display: flex; flex-wrap: wrap;
     gap: 6px 18px;
   }
   .gear-row .hp-item { min-width: 0; max-width: 100%; }
-  /* Everything except the two numeric boxes, which read better at a fixed
-     size and can't overflow anyway. Beats `.hp-item .field-inline`'s 60px on
-     specificity, so `width` has to be handed back explicitly. */
+  /* Everything except the two numeric boxes, which read better fixed. This
+     beats `.hp-item .field-inline`'s 60px, so `width` is handed back here. */
   .gear-row .field-inline:not(.field-sm) {
     field-sizing: content;
     width: auto;
@@ -776,11 +748,10 @@
     opacity: 1;
     filter: drop-shadow(0 0 4px var(--accent));
   }
-  /* Sequential-tracker rules (see applySequentialState): only the boundary
-     boxes are clickable. Unchecked-disabled is pushed fainter than the default
-     unchecked state so the single "next available" skull stands out by being
-     relatively brighter. Checked-disabled keeps full opacity (seeing it isn't
-     blocked, clicking it is) — the cursor cue is enough. */
+  /* Sequential tracker (see applySequentialState): only the boundary boxes are
+     clickable. Disabled-unchecked goes fainter than plain unchecked so the one
+     "next available" skull stands out; disabled-checked stays fully visible —
+     it's clicking that's blocked, not reading. */
   .skull-box.disabled { cursor: not-allowed; }
   .skull-box.disabled:not(.checked) { opacity: 0.08; }
   .skull-box.disabled:not(.checked):hover { opacity: 0.08; }
@@ -828,10 +799,6 @@
     color: var(--highlight);
   }
 
-  /* Utility classes have moved further down — see "UTILITY CLASSES" below
-     the theme-specific effects. They must come after every context rule
-     like `.hp-item .field-inline` so they win on equal specificity. */
-
   /* ── CHECKBOXES ── */
   .check-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .check-row .hp-label { margin-right: 4px; }
@@ -853,9 +820,8 @@
     color: var(--check-active-col);
   }
   /* Icon-relationship third state: "available, but with a guaranteed twist".
-     Reuses .checked's filled shape but recolors to the highlight tone and
-     slashes the tick so it reads as distinct at a glance. Declared after
-     .checked (equal specificity) so its colors win. */
+     Same filled shape as .checked, recoloured and with the tick slashed.
+     Declared after .checked (equal specificity) so its colours win. */
   .check-box.twist {
     background: var(--accent-dim);
     border-color: var(--highlight);
@@ -872,8 +838,7 @@
   }
   .check-box.disabled:not(.checked):hover { border-color: var(--ink-faint); }
 
-  /* Visible focus ring for keyboard users on custom checkbox-style controls.
-     `:focus-visible` keeps mouse clicks from leaving a ring behind. */
+  /* Keyboard focus ring for the custom checkbox-style controls. */
   .check-box:focus-visible,
   .skull-box:focus-visible,
   .prep-btn:focus-visible,
@@ -903,12 +868,9 @@
 
   .attack-weapon { margin-bottom: 4px; }
   .attack-weapon .field-inline { width: 100%; font-size: var(--fs-field); }
-  /* A weapon name that a class derives (the barbarian mirrors the basic
-     attacks into raging strike / raging throw) is wrapped in `.has-lock` for
-     its padlock. That wrapper is `inline-block`, so it shrink-wraps the
-     input's default width and the `100%` above resolves against the wrapper
-     rather than the card — long names get clipped. Block makes it span the
-     card, and the padlock still pins to the input's top-right corner. */
+  /* A derived weapon name is wrapped in `.has-lock` for its padlock. That
+     wrapper is inline-block, so the `100%` above would resolve against a
+     shrink-wrapped box instead of the card. Block makes it span the card. */
   .attack-weapon .has-lock { display: block; }
 
   .attack-stats {
@@ -947,24 +909,16 @@
   .table-section .row:last-child { border-bottom: none; }
 
   /* ── ICON RELATIONSHIPS ──
-     ONE grid owns the column tracks (.icon-rel-grid). The header and each
-     row use `grid-template-columns: subgrid` so they all share the *same*
-     `auto`-sized columns — meaning a column is sized to the widest cell
-     across the whole table, not just within an individual row. This way:
-       • column widths adapt to theme-font metrics (no hard-coded pixels);
-       • headers always line up with the data underneath them.
-     `#icons-list` uses `display: contents` so the rows it contains
-     participate directly in the parent grid even though renderIcons() still
-     appends them inside that wrapper. */
+     One grid owns the column tracks; header and rows take `subgrid`, so every
+     column sizes to the widest cell in the whole table. Widths then adapt to
+     each theme's font metrics with no hard-coded pixels, and the headers stay
+     aligned with their data. `#icons-list` is `display: contents` so the rows
+     renderIcons() appends inside it still join the parent grid. */
   .icon-rel-grid {
     display: grid;
-    /* Cols 1, 2, 4, 5 (dice / bonus / available / used) size to whichever
-       cell is widest — header or row. The dice and bonus inputs are given
-       explicit widths below so they don't inflate the column to an
-       <input>'s ~150px UA default. The icon column is `minmax(0, 1fr)` so
-       it absorbs leftover space, but can also shrink past its content
-       (the long name just scrolls inside the input) instead of pushing
-       everything else around. */
+    /* The icon column is `minmax(0, 1fr)`: it takes the leftover space but can
+       shrink past its content, so a long name scrolls inside its input rather
+       than pushing the other columns around. */
     grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
     column-gap: 4px;
   }
@@ -1013,10 +967,9 @@
   }
   .add-row-btn:hover { color: var(--highlight); border-color: var(--highlight-dim); }
 
-  /* In-section action buttons (Quick Rest, Full Heal-Up). Heavier than
-     `.add-row-btn` (these mutate real state, not just add a list row) but
-     subtler than the toolbar's primary button (these are routine, not
-     sheet-wide). */
+  /* In-section action buttons (Quick Rest, Full Heal-Up): heavier than
+     `.add-row-btn` since they mutate real state, subtler than the toolbar's
+     primary button since they're routine rather than sheet-wide. */
   .action-row {
     display: flex;
     flex-wrap: wrap;
@@ -1176,9 +1129,8 @@
   .toolbar button.primary { background: var(--bg-card-alt); color: var(--bone); }
   .toolbar button.primary:hover { background: var(--accent-glow); }
 
-  /* Display preferences: a second toolbar row of on/off switches, reusing
-     the .class-switch primitive so the sheet has only one switch style.
-     Sits tighter to the buttons above than a full toolbar's padding. */
+  /* Display preferences: a second toolbar row, reusing .class-switch so the
+     sheet has only one switch style. */
   .prefs-row { padding-top: 0; gap: 20px; }
 
   .toast {
@@ -1196,27 +1148,23 @@
      ═══════════════════════════════════════════ */
 
   /* ── ANIMATION-ONLY OVERLAYS ──
-     Several themes hang a moving sheen on a `::after` — a slash, a sweep, a
-     glint. Animation can be switched off (Utilities, or the OS reduce-motion
-     setting), and a stopped animation doesn't remove anything: the element
-     stays wherever its base rule puts it, which for a sweep means a static
-     gradient parked across the middle of every box. Worse than not having it.
-     So the rule for any overlay that exists *only* to carry an animation:
-     give it `opacity: 0` and let its own keyframes bring it in. Off means
-     invisible, with nothing anywhere needing to know which themes have one.
-     Overlays that are static decoration in their own right (necromancer's
-     torn edges, fighter's hairline) simply don't declare it. */
+     Animation can be switched off (Utilities, or the OS reduce-motion
+     setting), and stopping one removes nothing: the element stays where its
+     base rule puts it, parking a sweep across the middle of every box. So an
+     overlay that exists *only* to carry an animation declares `opacity: 0`
+     and lets its own keyframes bring it in — off then means invisible, with
+     nothing needing to know which themes have one. Overlays that are static
+     decoration (necromancer's torn edges, fighter's hairline) don't. */
 
   /* ── NECROMANCER — toxic glow, torn parchment edges, decay ── */
   body[data-theme="necromancer"] {
     background: radial-gradient(ellipse at center, #080c08 40%, #030503 100%);
   }
 
-  /* Borderless sections need more air between them. Carried as a variable, not
-     a `margin-bottom` on `[data-theme] .section` — that ties on specificity
-     with `.combo-row > .section` and silently wins on source order. Declared
-     here rather than in the theme's `:root` block, which necromancer shares
-     with the no-attribute default and would leak the gap to all 8 themes. */
+  /* Borderless sections need more air. A variable, not a `margin-bottom` on
+     `[data-theme] .section` — that ties `.combo-row > .section` on specificity
+     and wins on source order. Not in the `:root` block either: necromancer
+     shares that with the no-attribute default, leaking the gap to all 8. */
   [data-theme="necromancer"] { --section-gap: 14px; }
 
   [data-theme="necromancer"] .section {
@@ -1523,9 +1471,7 @@
     pointer-events: none;
   }
 
-  /* Shared rule consuming the per-theme `--card-glow` variable. Each theme's
-     :root block sets its own value; this single rule replaces what used to
-     be 8 near-identical selectors. */
+  /* One rule for all 8 themes; each sets its own `--card-glow`. */
   .stat-card,
   .defense-card,
   .attack-card,
@@ -1534,17 +1480,13 @@
   }
 
   /* ── UTILITY CLASSES ──
-     Compound `.field-inline.field-XX` (specificity 0,2,0) + placement after
-     every context rule (e.g. `.hp-item .field-inline`, `.attack-stats
-     .field-inline`) means these utilities always win on width. */
-  /* ── NOTE TEXT ──
-     One style for every small explanatory line on the sheet: the rules
-     reminders in a class panel, the footnote under an attack card, the
-     skill-check hint under Backgrounds. A `b` inside a note is the part
-     carrying the emphasis, usually a lead-in label.
-     `.note-row` adds inline layout for notes that sit alongside small
-     controls. `.field-inline` inherits its font-size, so an input dropped
-     into a note picks up the smaller text without needing its own rule. */
+     Compound `.field-inline.field-XX` and placement after every context rule
+     (`.hp-item .field-inline` and friends) means these always win on width.
+
+     `.note` is the one style for every small explanatory line on the sheet —
+     class-panel reminders, attack footnotes, the Backgrounds hint. `.note-row`
+     adds inline layout for notes sitting alongside small controls; an input
+     inside one inherits the smaller font-size. */
   .note {
     font-size: 12px;
     line-height: 1.35;
@@ -1596,36 +1538,28 @@
   }
 
   /* ── CLASS MODULES (per-class add-on UI) ──
-     Everything here is injected into a `[data-class-slot]` host by the
-     class-module framework. The `class-*` names are deliberately generic so
-     any future class can reuse them; only the `.rage-*` rules are barbarian
-     specific. An empty slot collapses so non-class sheets look untouched. */
-  /* ── THE EMPTY-SLOT INVARIANT ──
-     A slot with no content must leave NO trace: no gap, no flex track, no
-     margin. A class the player isn't playing must never change the layout
-     of the sheet in front of them.
-     Two things enforce this, because `display: none` on its own loses to
-     any equally-specific contextual rule that comes later in the file:
-       1. every contextual rule that gives a slot layout is written
-          `:not(:empty)`, so it simply doesn't apply to an empty slot;
-       2. the `:empty` rule below sits last in this block so source order
-          backs that up.
-     Keep both when adding a slot. Class CSS shipped in a `classes/*.js`
-     file must likewise only ever target that class's own elements. */
+     Injected into a `[data-class-slot]` host by the class-module framework.
+     The `class-*` names are generic so any class can reuse them.
 
-  /* Lower half of the HP section: recoveries + skulls on the left, the
-     active class's inline panel (if any) on the right; it wraps to its own
-     row on narrow screens. With no panel, `.hp-lower-main` spans the full
-     width exactly as it did before class slots existed. */
+     THE EMPTY-SLOT INVARIANT: a slot with no content must leave no trace — no
+     gap, no flex track, no margin — so a class the player isn't playing never
+     changes the sheet in front of them. Both halves are needed, since
+     `display: none` alone loses to any equally-specific rule later in the file:
+       1. every contextual rule giving a slot layout is written `:not(:empty)`;
+       2. the `:empty` rule below sits last in this block.
+     Keep both when adding a slot. */
+
+  /* Lower half of the HP section: recoveries + skulls on the left, the active
+     class's panel (if any) on the right, wrapping to its own row when narrow.
+     With no panel, `.hp-lower-main` spans the full width. */
   .hp-lower { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
   .hp-lower-main {
     flex: 1 1 340px; min-width: 0;
     display: flex; flex-direction: column; justify-content: center; gap: 4px;
   }
   .hp-lower > .class-slot:not(:empty) { flex: 1 1 250px; display: flex; }
-  /* A panel with nothing that wants the extra room asks for `fit` sizing
-     (see the slot API) and shrinks to its contents, handing the width back
-     to the recoveries column. */
+  /* A panel with no use for the extra room asks for `fit` sizing (see the slot
+     API) and shrinks to its contents. */
   .hp-lower > .class-slot.slot-fit:not(:empty) { flex: 0 1 auto; }
 
   .class-slot:empty { display: none; }
@@ -1749,12 +1683,9 @@
   .dice-tray-body { border-top: 1px solid var(--field-border); }
   .dice-tray.collapsed .dice-tray-body { display: none; }
 
-  /* ── DICE ROLLER OFF ──
-     The Utilities toggle hides the module whole: the floating tray (roller,
-     escalation die and log all live inside it) and every 🎲 button on the
-     sheet, class-module ones included. Nothing is torn down in JS — with no
-     button to press the roll paths simply never run, so turning it back on
-     restores everything untouched. */
+  /* The Utilities toggle hides the module whole: the tray (roller, escalation
+     die and log all live in it) and every 🎲 button, class ones included.
+     Nothing is torn down in JS, so switching it back restores everything. */
   body.no-dice .dice-tray,
   body.no-dice .roll-btn,
   body.no-dice .dice-action { display: none; }
@@ -1860,38 +1791,27 @@
     .stat-grid { grid-template-columns: repeat(3, 1fr); }
     .defense-row { grid-template-columns: repeat(2, 1fr); }
     .combo-row { grid-template-columns: 1fr; }
-    /* Stacked, the two sections are separated by the row-gap `.combo-row`
-       already carries; a margin here would double it. */
     .sheet-container { padding: 12px 12px 12px; }
-    /* min-width: the 300px floor doesn't fit beside the tier badge here, and
-       would push it off the row. Let the field shrink to its content instead. */
+    /* The 300px floor won't fit beside the tier badge at this width. */
     .char-name-row .field-inline { font-size: 24px; min-width: 0; }
     .dice-tray { right: 8px; bottom: 8px; width: min(272px, calc(100vw - 16px)); }
   }
 
   /* ── REDUCED MOTION ──
-     Each theme animates whole sections (gradients, glows, box-shadows), which
-     repaints large areas continuously — on a slow machine that competes with
-     typing for the same main thread. Honour the OS "reduce motion" setting and
-     the sheet goes still; nothing but the animation is lost. Last in the
-     stylesheet, and !important, so it beats every theme rule above. */
+     Theme animations repaint whole sections continuously, which on a slow
+     machine competes with typing. Both rules below stop that — one on the OS
+     setting, one on the Utilities switch. Last in the stylesheet, and
+     !important, so they beat every theme rule above. */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation: none !important;
       transition: none !important;
     }
   }
-  /* The same stillness, asked for by hand in Utilities rather than by the OS.
-     It lives here for the same reason: last in the stylesheet, so it wins
-     against every theme rule above. */
   body.no-anim, body.no-anim *, body.no-anim *::before, body.no-anim *::after {
     animation: none !important;
     transition: none !important;
   }
-  /* Nothing here needs to know about individual themes: an overlay that
-     exists only to carry an animation declares `opacity: 0` and is brought
-     in by its own keyframes, so killing the animation leaves it invisible
-     rather than parked mid-sweep. See ANIMATION-ONLY OVERLAYS above. */
 
   /* ── PRINT ── */
   @media print {
@@ -2331,16 +2251,14 @@
     locks: {},
     activeConditions: {},
     escalation: 0,
-    // Per-class bucket for class-module state that isn't a `data-field`
-    // input (toggles, class-specific lists). Keyed by class; entries are
-    // never deleted when you switch class, so nothing is lost. See the
-    // CLASS MODULES block for the full data-retention contract.
+    // Per-class bucket for class-module state that isn't a `data-field` input
+    // (toggles, counters). Keyed by class and never deleted on a class switch
+    // — see the CLASS MODULES block for the data-retention contract.
     classData: {},
     theme: 'necromancer',
-    // Display preferences, grouped under one key so the next one doesn't
-    // have to be threaded through the load and reset paths all over again.
-    // Like the theme these are settings, not character data: they survive
-    // "New Sheet". See PREF_SWITCHES.
+    // Display preferences under one key, so the next one doesn't need
+    // threading through the load and reset paths. Settings, not character
+    // data: like the theme, they survive "New Sheet". See PREF_SWITCHES.
     prefs: { animations: true, diceRoller: true }
   };
 
@@ -2379,34 +2297,26 @@
   function recoveryAvg(diceStr) { return diceAvg(diceStr); }
 
   // ── CLASS ROSTER ──────────────────────────────────────────────────────
-  // Everything class-specific — base defenses, base HP, extra attacks,
-  // panels, sections — lives in its own file under `classes/`, loaded the
-  // first time that class is selected. See the CLASS MODULES block below
-  // for the loader and the module API.
-  //
-  // The sheet itself only needs to know which classes *exist*, so the
-  // dropdown can be built before any class file has loaded. To add a class:
-  // add its name here and drop a `classes/<name>.js` beside this file (copy
-  // `classes/_template.js`). Nothing else needs editing.
+  // Everything class-specific lives in `classes/<name>.js`, loaded the first
+  // time that class is selected (see the CLASS MODULES block). All the sheet
+  // needs up front is which classes *exist*, so the dropdown can be built
+  // before any file has loaded. To add one: add the name here and drop the
+  // file in beside this one — a copy of `classes/_template.js`.
   const CLASS_ROSTER = [
     'barbarian', 'bard', 'cleric', 'commander', 'druid', 'fighter', 'monk',
     'necromancer', 'occultist', 'paladin', 'ranger', 'rogue', 'sorcerer', 'wizard',
   ];
 
   // ── THIRD ABILITY SECTION ─────────────────────────────────────────────
-  // Every sheet has Class Features and Talents. What comes after them
-  // depends on the class: casters get the Spells list, rogues and fighters
-  // get the same list under their own name, and a class with no third kind
-  // of ability shows no third section at all.
-  //
+  // After Class Features and Talents, casters get Spells, rogues and fighters
+  // get the same list under their own name, and a class with no third kind of
+  // ability shows nothing.
   //   list:  which state array / section — 'spells' or 'powers'
   //   label: the section heading
   //   noun:  singular, for the add button ('+ Add Maneuver')
-  //
-  // This mapping stays in the base sheet rather than moving into the class
-  // modules: it has to be known before any class file has loaded, and a
-  // player who never received `classes/rogue.js` must still see Powers.
-  // Neither list is ever cleared, so a class switch only hides rows.
+  // Kept here rather than in the class modules: it must be known before any
+  // class file loads, so a player without `classes/rogue.js` still sees
+  // Powers. Neither list is ever cleared — a class switch only hides rows.
   const CLASS_ABILITY_SECTION = {
     bard:        { list: 'spells', label: 'Spells & Songs', noun: 'Spell' },
     cleric:      { list: 'spells', label: 'Spells',         noun: 'Spell' },
@@ -2432,15 +2342,13 @@
   }
 
   // Recovery dice: one die per level, plus Con mod — doubled from 5th level
-  // and quadrupled from 8th. Two things vary by class and both ride along in
-  // the class module: `recoveryDie` (the die size) and `recoveryConScales`,
-  // which a deliberately frail class sets to false to keep a flat Con mod at
-  // every level (the necromancer).
+  // and quadrupled from 8th. Both class-varying parts ride in the class
+  // module: `recoveryDie`, and `recoveryConScales: false` for a class whose
+  // Con mod stays flat (the necromancer).
   //
-  // Produces an expression ("5d8+6") rather than a number, because that is
-  // what the Roll Recovery button and the Avg field both parse. A class file
-  // that predates this (or a class whose die isn't recorded yet) leaves
-  // `recoveryDie` undefined and the field stays blank and hand-typed.
+  // Produces an expression ("5d8+6"), not a number — that's what the Roll
+  // Recovery button and the Avg field parse. With no `recoveryDie` the field
+  // stays blank and hand-typed.
   function recoveryConMult(lvl, ci) {
     if (ci && ci.recoveryConScales === false) return 1;
     return lvl >= 8 ? 4 : lvl >= 5 ? 2 : 1;
@@ -2455,11 +2363,9 @@
     return lvl + 'd' + ci.recoveryDie + (bonus === 0 ? '' : signed(bonus));
   }
 
-  // A class's base numbers (`defenses`, `baseHp`, `recoveryDie`) are ordinary
-  // properties of its module, so they arrive with the class file. Returns null
-  // until that file has loaded — and every calc reading it already treats
-  // null as "leave the field blank and editable", so a missing class file
-  // degrades to a plain manual sheet rather than breaking anything.
+  // A class's base numbers arrive with its file, so this is null until that
+  // loads. Every calc treats null as "leave the field blank and editable", so
+  // a missing class file degrades to a manual sheet.
   function getClassInfo(className) {
     return CLASS_MODULES[className] || null;
   }
@@ -2492,12 +2398,10 @@
     return ci.defenses[defenseKey] + mid + intOrZero(f.level);
   }
 
-  // Order matters: dependents come after their sources so a single pass
-  // resolves chains like dex_score → dex_mod → initiative.
-  // `sources` lists the fields each calc reads; DERIVED_SOURCES (below) uses
-  // these to gate recomputeDerived so typing into a free-text field like
-  // `notes` or `gear_notes` doesn't trigger a recompute on every keystroke.
-  // Keep `sources` in sync with `calc` — they're the contract.
+  // Order matters: dependents come after their sources so one pass resolves
+  // chains like dex_score → dex_mod → initiative. `sources` lists the fields
+  // each calc reads and gates recomputation (typing in `notes` shouldn't walk
+  // this table), so keep it in sync with `calc` — that's the contract.
   const DERIVED_FIELDS = {
     str_mod:      { sources: ['str_score'], calc: f => abilityMod(f.str_score) },
     dex_mod:      { sources: ['dex_score'], calc: f => abilityMod(f.dex_score) },
@@ -2522,8 +2426,7 @@
       const hp = intOrNull(f.max_hp);
       return hp === null ? '' : -Math.floor(hp / 2);
     }},
-    // Before recovery_avg so the average resolves off the fresh expression in
-    // this same pass, the way max_hp feeds staggered/dead above.
+    // Before recovery_avg, so the average sees the fresh expression.
     recovery_dice: { sources: ['class', 'level', 'con_mod'], calc: f => recoveryDiceCalc(f) },
     recovery_avg: { sources: ['recovery_dice'], calc: f => recoveryAvg(f.recovery_dice) },
     // Average weapon damage from the hit-damage formula (e.g. "1d8+4" → 8).
@@ -2536,9 +2439,8 @@
       const lvl = intOrNull(f.level);
       return lvl === null ? '' : lvl;
     }},
-    // Defenses pull a per-class base from the class module. The *_mod sources are
-    // themselves derived but resolve earlier in this same pass (they're
-    // defined above), so state.fields holds fresh mods by the time we read.
+    // Defenses take their base from the class module. The *_mod sources are
+    // themselves derived, but are defined above and so already fresh here.
     ac: { sources: ['class', 'level', 'con_mod', 'dex_mod', 'wis_mod'],
           calc: f => defenseCalc(f, 'ac', 'con_mod', 'dex_mod', 'wis_mod') },
     pd: { sources: ['class', 'level', 'str_mod', 'con_mod', 'dex_mod'],
@@ -2551,14 +2453,11 @@
       return lvl === null ? '' : lvl;
     }},
   };
-  // The *active* derived set: DERIVED_FIELDS plus whatever the current class
-  // module contributes (see refreshDerivedIndex). Everything downstream —
-  // recomputeDerived, initLocks, the input listener's source gate — reads
-  // these, so a class field behaves exactly like a built-in one.
+  // The *active* derived set: DERIVED_FIELDS plus the current class module's
+  // (see refreshDerivedIndex). Everything downstream reads these, so a class
+  // field behaves exactly like a built-in one.
   let DERIVED = DERIVED_FIELDS;
   let DERIVED_KEYS = Object.keys(DERIVED);
-  // Union of every derived field's source list. `dex_mod` appears here (it's
-  // itself derived but also feeds initiative) — Set dedupes naturally.
   let DERIVED_SOURCES = new Set(Object.values(DERIVED).flatMap(d => d.sources));
 
   // Class entries are merged *after* the base ones, so a class calc can read
@@ -2652,9 +2551,8 @@
 
   // ── DISPLAY PREFERENCES ──
   // Each preference is one body class the stylesheet reacts to, so switching
-  // it off changes nothing but CSS — switch it back and the sheet is exactly
-  // as it was. Deliberately kept out of the roll and animation code paths:
-  // that way there is nothing to un-break.
+  // it off changes nothing but CSS and switching it back needs no repair.
+  // Deliberately out of the roll and animation code paths.
   const PREF_SWITCHES = {
     animations: {
       id: 'pref-animations', bodyClass: 'no-anim',
@@ -2725,15 +2623,11 @@
     setTimeout(() => t.classList.remove('show'), 2000);
   }
 
-  // Textareas grow to fit what's typed in them. Measuring that (`scrollHeight`)
-  // forces a synchronous layout, and the sheet lays out as two balanced CSS
-  // columns — so doing it inline with a keystroke makes the browser re-flow
-  // the whole sheet between the key going down and the letter appearing.
-  //
-  // So nothing measures immediately: every request is queued and flushed on
-  // the next animation frame, in one write→read→write pass. Typing at speed
-  // collapses to a single measurement per frame instead of one per keystroke,
-  // and N textareas cost one layout rather than N.
+  // Textareas grow to fit their text. Measuring that (`scrollHeight`) forces a
+  // synchronous layout of a two-column sheet, so doing it inline with a
+  // keystroke re-flows everything between the keypress and the letter
+  // appearing. Requests are queued and flushed on the next animation frame
+  // instead, in one write→read→write pass: N textareas cost one layout.
   const _growQueue = new Set();
   let _growFrame = 0;
   function autoGrow(ta) {
@@ -2757,21 +2651,18 @@
   }
 
   // Sequential-tracker enforcement for ordered checkbox rows (recoveries,
-  // skulls). Only the boundary boxes are interactive: the first unchecked
-  // box (clickable to check) and the last checked box (clickable to
-  // uncheck). Everything else gets `.disabled` + `aria-disabled` and is
-  // removed from the tab order. Prevents gaps from forming, which would
-  // break Quick Rest's "preserve skull 0, clear the rest" semantics and
-  // generally mismatches how these mechanics work in play (you spend the
-  // next recovery, you fail the next death save).
+  // skulls). Only the boundary boxes are interactive — the first unchecked and
+  // the last checked; the rest get `.disabled` + `aria-disabled` and leave the
+  // tab order. No gaps can form, which matches how the mechanics work in play
+  // (you spend the *next* recovery, you fail the *next* death save) and keeps
+  // Quick Rest's "preserve skull 0, clear the rest" meaningful.
   function applySequentialState(boxes, prefix) {
     let firstUnchecked = -1;
     for (let i = 0; i < boxes.length; i++) {
       if (!state.checkboxes[prefix + i]) { firstUnchecked = i; break; }
     }
-    // If every box is checked, firstUnchecked stays -1 and the final box is
-    // the only interactive one (clickable to uncheck). If nothing is checked,
-    // lastChecked is -1 and only box 0 is interactive (clickable to check).
+    // All checked: firstUnchecked stays -1 and only the final box is live.
+    // None checked: lastChecked is -1 and only box 0 is.
     const lastChecked = firstUnchecked === -1 ? boxes.length - 1 : firstUnchecked - 1;
     boxes.forEach((box, i) => {
       const checked = !!state.checkboxes[prefix + i];
@@ -2918,18 +2809,16 @@
     return trackAnnotation(type, opts).outerHTML;
   }
 
-  // Shared "use" tracker: appends N check-boxes backed by
-  // state[stateKey][idx][prop][u]. Used by powers, spells, and icon
-  // relationships. `prop` defaults to 'used'; icon relationships pass
-  // 'available' for their second tracker.
+  // Shared "use" tracker: N check-boxes backed by state[stateKey][idx][prop][u],
+  // for powers, spells and icon relationships. `prop` defaults to 'used'; icons
+  // pass 'available' for their second track.
   //
-  // `states` is how many levels each box cycles through on click/keyboard:
-  //   2 (default) — off / on (stored falsy / 1)
-  //   3           — off / on / "twist" (stored falsy / 1 / 2). Used by the
-  //                 icon "available" track: blank, available, available-but-
-  //                 with-a-guaranteed-twist (slashed, recolored).
-  // Stored value 0 is represented by deleting the key (keeps saves lean and
-  // backward-compatible with the old boolean form, which normalizes to 1).
+  // `states` is how many levels a box cycles through:
+  //   2 (default) — off / on
+  //   3           — off / on / "twist", the icon track's available-but-with-a-
+  //                 guaranteed-complication state
+  // Level 0 deletes the key, which keeps saves lean and reads the old boolean
+  // form as 1.
   function useLevel(v, states) {
     let n = v === true ? 1 : (parseInt(v, 10) || 0);
     if (n < 0) n = 0;
@@ -3162,13 +3051,10 @@
     saveNow();
   }
 
-  // Drag-and-drop reordering for any list of `.power-block` rows backed by a state array.
-  // Only the `.drag-handle` arms the row as draggable, so text selection inside inputs still works.
-  //
-  // HTML5 drag-and-drop doesn't fire on touch devices, so the touchstart path
-  // below implements an equivalent flow using touch events: track the finger
-  // with elementFromPoint, mirror the same drag-over-top/bottom hints, and run
-  // the same reorder math on release.
+  // Drag-and-drop reordering for any `.power-block` list backed by a state
+  // array. Only the `.drag-handle` arms the row, so text selection inside the
+  // inputs still works. HTML5 drag events don't fire on touch devices, hence
+  // the parallel touch path below — same hints, same reorder math.
   function enableReorder(listId, stateKey, render) {
     const list = document.getElementById(listId);
     if (!list) return;
@@ -3349,54 +3235,35 @@
   //  CLASS MODULES — per-class sections, attacks, fields and behaviour
   // ══════════════════════════════════════════════════════════════════════
   //
-  // A module is one declarative entry in CLASS_MODULES, keyed by the same
-  // string the class <select> stores (a CLASS_INFO key). Every part is
-  // optional:
+  // A module is one declarative entry in CLASS_MODULES, keyed by the string
+  // the class <select> stores. Every part is optional:
   //
-  //   slots:      { <slot name>: () => Node }
-  //               Content built and injected into the matching
-  //               `[data-class-slot="…"]` host in the markup. Slots today:
+  //   slots:      { <slot name>: () => Node } — content injected into the
+  //               matching `[data-class-slot]` host. Slots today:
   //                 'attacks'      — extra cards in the Basic Attacks section
   //                 'hp-side'      — inline panel right of recoveries + skulls
   //                 'skulls-under' — strip directly beneath the skull track
   //                 'sections'     — whole extra sections after Basic Attacks
   //               Adding a slot = add a host div + its name to CLASS_SLOTS.
-  //
-  //   slotFit:    [ <slot name>, … ]  — slots whose content should be only
-  //               as wide as it needs to be, instead of stretching to the
-  //               slot's default share of the row. Adds `.slot-fit` to the
-  //               host; today only 'hp-side' styles it.
-  //
-  //   derived:    DERIVED_FIELDS-shaped entries merged over the base set
-  //               while this class is active, so class fields get the same
+  //   slotFit:    [ <slot name>, … ] — slots that should shrink to their
+  //               content instead of taking their default share of the row.
+  //               Adds `.slot-fit` to the host; only 'hp-side' styles it.
+  //   derived:    DERIVED_FIELDS-shaped entries merged over the base set while
+  //               this class is active, so class fields get the same
   //               auto-calculation and lock/override behaviour as built-ins.
-  //
-  //   onMount / onUnmount:  arbitrary DOM work when the class is selected /
-  //               switched away from — hide a section, retitle a heading,
-  //               anything the slots can't express declaratively.
-  //
-  //   defenses:   { ac, pd, md } 13th Age 2e base values, and
+  //   defenses:   { ac, pd, md } base values, and
   //   baseHp:     the per-class HP base — both read by DERIVED_FIELDS.
-  //
-  //   css:        a stylesheet string injected once on registration, so a
-  //               class's look travels with its file.
-  //
-  //   onQuickRest / onFullHeal:  react to the rest buttons (see classHook).
+  //   css:        a stylesheet injected once on registration, so a class's
+  //               look travels with its file.
+  //   onMount / onUnmount:      DOM work the slots can't express.
+  //   onQuickRest / onFullHeal: react to the rest buttons (see classHook).
   //
   // ── NOTHING IS EVER LOST WHEN SWITCHING CLASS ─────────────────────────
-  // Class content is *unmounted*, never cleared. Two stores, both untouched
-  // by unmounting:
-  //
-  //   • Class FIELDS are ordinary `data-field` inputs whose keys carry a
-  //     class prefix (`barb_rs_damage`). They live in state.fields with
-  //     everything else. collectState() only reads inputs that are currently
-  //     on screen, so an unmounted field can never be blanked — switch away
-  //     and back and the values re-appear.
-  //   • Everything else (toggles, counters, per-class lists) goes in
-  //     state.classData[<class>] via classData().
-  //
-  // Both are saved to file and localStorage as part of `state`, and only a
-  // deliberate "New Sheet" clears them.
+  // Class content is *unmounted*, never cleared. Class FIELDS are ordinary
+  // `data-field` inputs with a class-prefixed key, and collectState() only
+  // reads inputs currently on screen — so an unmounted one can't be blanked.
+  // Everything else goes in state.classData[<class>] via classData(). Both
+  // save with `state`; only a deliberate "New Sheet" clears them.
   const CLASS_SLOTS = ['attacks', 'hp-side', 'skulls-under', 'sections'];
   const CLASS_DIR = 'classes/';
 
@@ -3418,15 +3285,10 @@
     document.head.appendChild(el('style', { id }, css));
   }
 
-  // Class files are pulled in with a classic <script> tag rather than
-  // fetch() or import(). Both of those are blocked by the browser on
-  // file:// pages, and this sheet is meant to work opened straight off
-  // disk (or emailed to a player as a folder) with no server. A classic
-  // script tag has no such restriction.
-  //
-  // Loading is lazy and one-shot per class: you only need the files for
-  // the classes you actually play, and a missing file is not an error —
-  // the sheet just falls back to fully manual defenses and HP.
+  // A classic <script> tag, not fetch() or import(): both of those are blocked
+  // on file:// pages, and the sheet has to work opened straight off disk.
+  // Loading is lazy and one-shot per class, and a missing file is not an
+  // error — the sheet falls back to manual defenses and HP.
   function loadClassModule(name) {
     if (_classLoad[name]) return _classLoad[name];
     _classLoad[name] = new Promise(resolve => {
@@ -3480,15 +3342,12 @@
     } catch (e) { console.warn('class slot ' + name, e); }
   }
 
-  // Re-render every slot for the current class, then wire up what was just
-  // built: values out of state.fields, lock toggles on derived fields, and a
-  // recompute so mirrored values (e.g. raging strike ← melee) land immediately.
-  //
-  // Safe to call before the class file has loaded: it renders what's known
-  // now (i.e. nothing yet), kicks off the load, and runs again when the
-  // module arrives. `opts.notify` toasts if the file turns out to be missing
-  // — worth saying out loud when the user just picked the class, but not on
-  // a page load they didn't ask for.
+  // Re-render every slot for the current class, then wire up what was built:
+  // values out of state.fields, lock toggles, and a recompute so mirrored
+  // values land immediately. Safe to call before the class file has loaded —
+  // it renders what's known, kicks off the load and runs again on arrival.
+  // `opts.notify` toasts a missing file: worth saying when the user just
+  // picked the class, not on a page load they didn't ask for.
   function renderClassContent(opts = {}) {
     const key = currentClassKey();
     if (key && !CLASS_MODULES[key] && !_classLoad[key]) {
@@ -3556,12 +3415,10 @@
     showToast('Sheet saved');
   }
 
-  // Sheets saved before Features / Talents / Powers were split into their own
-  // sections carry one combined `powers` list and a free-text `talents` box.
-  // Move both into the new lists so nothing typed goes missing — and so it
-  // lands somewhere *visible*: the old combined list becomes Class Features,
-  // which is on every sheet, rather than the class-dependent Powers section.
-  // Keyed off `features`, which only a post-split save has.
+  // Old saves carry one combined `powers` list and a free-text `talents` box.
+  // Move both into the new lists so nothing typed goes missing, and into
+  // *visible* ones: the combined list becomes Class Features, which every
+  // sheet shows, rather than the class-dependent Powers section.
   function migrateAbilityLists(s) {
     if (!s || typeof s !== 'object') return;
     if (!Array.isArray(s.features)) {
@@ -3582,10 +3439,8 @@
     reader.onload = (e) => {
       try {
         const parsed = JSON.parse(e.target.result);
-        // Shape guard: a valid sheet always carries a `fields` object. This
-        // catches mis-selected files (other-app exports, settings dumps,
-        // arbitrary JSON) before they overwrite the current state and leave
-        // the sheet in a half-broken visual state.
+        // A valid sheet always carries a `fields` object. Catches a
+        // mis-selected file before it overwrites the current state.
         if (!parsed || typeof parsed !== 'object' || typeof parsed.fields !== 'object' || parsed.fields === null) {
           showToast('Not a valid character sheet');
           return;
@@ -3644,8 +3499,7 @@
   // trackers; the renderers read the same keys back out.
 
   function quickRest() {
-    // Clear skull_1..N; leave skull_0 in whatever state it's currently in
-    // (treat it as a persistent wound that carries across post-battle rests).
+    // skull_0 survives — a lasting wound that carries across rests.
     Object.keys(state.checkboxes).forEach(key => {
       const m = key.match(/^skull_(\d+)$/);
       if (m && parseInt(m[1], 10) > 0) delete state.checkboxes[key];
@@ -3823,11 +3677,8 @@
   }
 
   // Shared d20 roll. Reports the natural die (13A cares about even/odd
-  // triggers), flags nat 1/20, and optionally adds the escalation die
-  // (attacks get it; saves, initiative and skill checks don't). The Fear
-  // condition blocks the escalation die, so an active Fear pill drops it.
-  // `opts.critFrom` widens the crit range (barbarian raging attacks crit on
-  // a natural 16+); it defaults to the usual natural 20.
+  // triggers), flags nat 1/20, and adds the escalation die for attacks only —
+  // an active Fear pill blocks it. `opts.critFrom` widens the crit range.
   function rollD20(title, bonus, opts = {}) {
     const critFrom = opts.critFrom || 20;
     const nat = rollDie(20);
@@ -3885,10 +3736,9 @@
     saveNow();
   }
 
-  // Icon relationship roll: Nd6 — each 5 or 6 earns a use of the
-  // relationship. (Whether a use comes with a twist is decided when it's
-  // played, not by the roll — that's what the 3-state "available" track
-  // is for.)
+  // Icon relationship roll: Nd6, each 5 or 6 earning a use. Whether a use
+  // comes with a twist is decided when it's played, not here — that's what
+  // the 3-state "available" track is for.
   function rollIconDice(i) {
     const ic = state.icons[i];
     const n = Math.min(Math.max(parseInt(ic.dice) || 0, 0), 3);
@@ -3976,9 +3826,7 @@
 
   function resetSheet() {
     if (!confirm('Start a new blank sheet? Any unsaved changes will be lost.')) return;
-    // Display preferences (theme, prefs) survive a reset; only character data is
-    // cleared. Which ability sections show is derived from the class, so
-    // there's nothing to preserve there.
+    // Settings (theme, prefs) survive a reset; only character data is cleared.
     state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], kinPowers: [], features: [], talents: [], powers: [], spells: [], feats: [], advances: {}, locks: {}, activeConditions: {}, classData: {}, escalation: 0, theme: state.theme, prefs: state.prefs };
     try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
     applyState();
@@ -3990,18 +3838,15 @@
     if (e.target.tagName === 'TEXTAREA') autoGrow(e.target);
     if (e.target.dataset && e.target.dataset.field) {
       const key = e.target.dataset.field;
-      // Sync state.fields synchronously so recomputeDerived sees the latest
-      // source values (otherwise recompute reads stale state from last save).
+      // Sync synchronously, or recomputeDerived reads the last saved value.
       state.fields[key] = e.target.value;
-      // Only recompute when the edited field actually feeds a derived value.
-      // Typing into `notes`, `gear_notes`, etc. shouldn't walk DERIVED_FIELDS.
+      // Only when the edited field actually feeds a derived value — typing in
+      // `notes` shouldn't walk DERIVED_FIELDS.
       if (DERIVED_SOURCES.has(key)) recomputeDerived();
-      // Changing class swaps the whole class-module layer (slots, derived
-      // fields, hooks). Nothing is cleared — see the CLASS MODULES block.
-      // notify: the user picked this class, so say so if its file is missing.
+      // Swaps the whole class-module layer; nothing is cleared. notify: the
+      // user picked this class, so say so if its file is missing.
       if (key === 'class') renderClassContent({ notify: true });
-      // current_hp / temp_hp aren't derived sources, but they drive the
-      // staggered/down badge — refresh it on direct edits too.
+      // Not derived sources, but they drive the staggered/down badge.
       if (['current_hp', 'temp_hp', 'staggered', 'dead', 'max_hp'].includes(key)) updateHpStatus();
     }
     autoSave();
@@ -4050,9 +3895,9 @@
     }
   } catch(e) {}
 
-  // Wires the toolbar + add-row buttons that used to use inline onclick.
-  // Centralizing these here keeps the markup CSP-friendly and makes it easy
-  // to audit every entry point that mutates state.
+  // Every static button is wired here rather than with inline onclick, so the
+  // markup stays CSP-friendly and each entry point that mutates state is
+  // listed in one place.
   function wireStaticHandlers() {
     const ACTIONS = {
       'add-background': addBackground,
@@ -4099,11 +3944,9 @@
     document.getElementById('load-input').addEventListener('change', loadFromFile);
   }
 
-  // Surface the numeric keypad on mobile for positive-integer fields. Signed
-  // values (mods, vs-AC bonuses, initiative, `dead`'s auto-negative) and the
-  // free-text fields (`recovery_dice` like "2d10+4", `gold`) stay as default
-  // text — iOS's numeric keypad has no `-` or `.`, so locking those would
-  // prevent typing a sign or notation.
+  // Numeric keypad on mobile, for positive integers only. Signed values (mods,
+  // vs-AC, initiative) and dice notation stay plain text: iOS's numeric keypad
+  // has no `-`, so those fields would become untypeable.
   const NUMERIC_FIELDS = [
     'level',
     'str_score','dex_score','con_score','wis_score','int_score','cha_score',
