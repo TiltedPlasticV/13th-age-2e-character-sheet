@@ -1176,10 +1176,15 @@
   .toolbar button.primary { background: var(--bg-card-alt); color: var(--bone); }
   .toolbar button.primary:hover { background: var(--accent-glow); }
 
+  /* Display preferences: a second toolbar row of on/off switches, reusing
+     the .class-switch primitive so the sheet has only one switch style.
+     Sits tighter to the buttons above than a full toolbar's padding. */
+  .prefs-row { padding-top: 0; gap: 20px; }
+
   .toast {
     position: fixed; bottom: 20px; left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--accent); color: var(--bone);
+    background: var(--highlight-dim); color: var(--bone);
     padding: 8px 20px; border-radius: 4px;
     font-family: 'Cinzel', serif; font-size: var(--fs-label-sm); letter-spacing: 2px;
     opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 200;
@@ -1189,6 +1194,18 @@
   /* ═══════════════════════════════════════════
      THEME-SPECIFIC EFFECTS
      ═══════════════════════════════════════════ */
+
+  /* ── ANIMATION-ONLY OVERLAYS ──
+     Several themes hang a moving sheen on a `::after` — a slash, a sweep, a
+     glint. Animation can be switched off (Utilities, or the OS reduce-motion
+     setting), and a stopped animation doesn't remove anything: the element
+     stays wherever its base rule puts it, which for a sweep means a static
+     gradient parked across the middle of every box. Worse than not having it.
+     So the rule for any overlay that exists *only* to carry an animation:
+     give it `opacity: 0` and let its own keyframes bring it in. Off means
+     invisible, with nothing anywhere needing to know which themes have one.
+     Overlays that are static decoration in their own right (necromancer's
+     torn edges, fighter's hairline) simply don't declare it. */
 
   /* ── NECROMANCER — toxic glow, torn parchment edges, decay ── */
   body[data-theme="necromancer"] {
@@ -1277,8 +1294,8 @@
   }
 
   @keyframes shimmer {
-    0% { background-position: -200% center; }
-    100% { background-position: 200% center; }
+    0% { opacity: 1; background-position: -200% center; }
+    100% { opacity: 1; background-position: 200% center; }
   }
 
   [data-theme="wizard"] .section-head::after {
@@ -1290,6 +1307,7 @@
       rgba(255, 200, 64, 0.10) 50%, rgba(255, 200, 64, 0.04) 60%,
       transparent 100%);
     background-size: 200% 100%;
+    opacity: 0;
     animation: shimmer 24s linear infinite;
     pointer-events: none;
   }
@@ -1321,6 +1339,7 @@
     background: linear-gradient(90deg,
       transparent 30%, rgba(232, 192, 80, 0.06) 48%,
       rgba(255, 96, 112, 0.08) 52%, transparent 70%);
+    opacity: 0;
     animation: dagger-slash 16s ease-in-out infinite;
     pointer-events: none;
   }
@@ -1353,8 +1372,8 @@
   }
 
   @keyframes spotlight-sweep {
-    0%   { background-position: -100% center; }
-    100% { background-position: 200% center; }
+    0%   { opacity: 1; background-position: -100% center; }
+    100% { opacity: 1; background-position: 200% center; }
   }
 
   [data-theme="bard"] .section {
@@ -1372,6 +1391,7 @@
       rgba(255, 144, 128, 0.07) 50%, rgba(192, 112, 255, 0.05) 70%,
       transparent 100%);
     background-size: 200% 100%;
+    opacity: 0;
     animation: spotlight-sweep 20s ease-in-out infinite;
     pointer-events: none;
   }
@@ -1415,6 +1435,7 @@
       rgba(255, 100, 80, 0.03) 0%, rgba(255, 220, 100, 0.04) 20%,
       rgba(100, 200, 100, 0.03) 40%, rgba(100, 160, 255, 0.04) 60%,
       rgba(180, 100, 255, 0.03) 80%, rgba(255, 100, 80, 0.03) 100%);
+    opacity: 0;
     animation: stained-glass 18s ease-in-out infinite;
     pointer-events: none;
   }
@@ -1459,6 +1480,7 @@
     inset: 0;
     background: linear-gradient(90deg,
       transparent 40%, rgba(220, 230, 255, 0.08) 50%, transparent 60%);
+    opacity: 0;
     animation: steel-glint 12s ease-in-out infinite;
     pointer-events: none;
   }
@@ -1485,8 +1507,8 @@
   }
 
   @keyframes ascending-light {
-    0%   { background-position: center 100%; }
-    100% { background-position: center -100%; }
+    0%   { opacity: 1; background-position: center 100%; }
+    100% { opacity: 1; background-position: center -100%; }
   }
 
   [data-theme="paladin"] .section-head::after {
@@ -1496,6 +1518,7 @@
     background: radial-gradient(ellipse at center,
       rgba(255, 240, 200, 0.06) 0%, transparent 70%);
     background-size: 100% 200%;
+    opacity: 0;
     animation: ascending-light 30s linear infinite;
     pointer-events: none;
   }
@@ -1726,6 +1749,16 @@
   .dice-tray-body { border-top: 1px solid var(--field-border); }
   .dice-tray.collapsed .dice-tray-body { display: none; }
 
+  /* ── DICE ROLLER OFF ──
+     The Utilities toggle hides the module whole: the floating tray (roller,
+     escalation die and log all live inside it) and every 🎲 button on the
+     sheet, class-module ones included. Nothing is torn down in JS — with no
+     button to press the roll paths simply never run, so turning it back on
+     restores everything untouched. */
+  body.no-dice .dice-tray,
+  body.no-dice .roll-btn,
+  body.no-dice .dice-action { display: none; }
+
   .esc-row {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     padding: 8px 10px 6px;
@@ -1848,6 +1881,17 @@
       transition: none !important;
     }
   }
+  /* The same stillness, asked for by hand in Utilities rather than by the OS.
+     It lives here for the same reason: last in the stylesheet, so it wins
+     against every theme rule above. */
+  body.no-anim, body.no-anim *, body.no-anim *::before, body.no-anim *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* Nothing here needs to know about individual themes: an overlay that
+     exists only to carry an animation declares `opacity: 0` and is brought
+     in by its own keyframes, so killing the animation leaves it invisible
+     rather than parked mid-sweep. See ANIMATION-ONLY OVERLAYS above. */
 
   /* ── PRINT ── */
   @media print {
@@ -2220,6 +2264,18 @@
       <button id="btn-reset">↺ New Sheet</button>
       <input type="file" id="load-input" accept=".json" style="display:none;">
     </div>
+    <div class="toolbar prefs-row">
+      <div class="class-switch on" id="pref-animations" role="switch" tabindex="0" aria-checked="true"
+           title="Theme glows, gradients and hover transitions — turn them off if the sheet feels sluggish">
+        <span class="class-switch-label">Animations</span>
+        <span class="class-switch-track"><span class="class-switch-knob"></span></span>
+      </div>
+      <div class="class-switch on" id="pref-dice-roller" role="switch" tabindex="0" aria-checked="true"
+           title="The floating Dice &amp; Log tray and every 🎲 button — turn it off if you roll real dice at the table">
+        <span class="class-switch-label">Dice Roller</span>
+        <span class="class-switch-track"><span class="class-switch-knob"></span></span>
+      </div>
+    </div>
   </div>
 
   </div><!-- .sheet-columns -->
@@ -2280,7 +2336,12 @@
     // never deleted when you switch class, so nothing is lost. See the
     // CLASS MODULES block for the full data-retention contract.
     classData: {},
-    theme: 'necromancer'
+    theme: 'necromancer',
+    // Display preferences, grouped under one key so the next one doesn't
+    // have to be threaded through the load and reset paths all over again.
+    // Like the theme these are settings, not character data: they survive
+    // "New Sheet". See PREF_SWITCHES.
+    prefs: { animations: true, diceRoller: true }
   };
 
   // ── AUTO-DERIVED FIELDS ───────────────────────────────────────────────
@@ -2587,6 +2648,51 @@
         }
       });
     });
+  }
+
+  // ── DISPLAY PREFERENCES ──
+  // Each preference is one body class the stylesheet reacts to, so switching
+  // it off changes nothing but CSS — switch it back and the sheet is exactly
+  // as it was. Deliberately kept out of the roll and animation code paths:
+  // that way there is nothing to un-break.
+  const PREF_SWITCHES = {
+    animations: {
+      id: 'pref-animations', bodyClass: 'no-anim',
+      on: 'Animations on', off: 'Animations off',
+    },
+    diceRoller: {
+      id: 'pref-dice-roller', bodyClass: 'no-dice',
+      on: 'Dice roller on', off: 'Dice roller hidden',
+    },
+  };
+
+  // A missing or malformed `prefs` reads as all-on, so a sheet saved before
+  // these switches existed loads with the behaviour it was written with.
+  function normalizePrefs(s) {
+    const p = (s && s.prefs && typeof s.prefs === 'object') ? s.prefs : {};
+    s.prefs = { animations: p.animations !== false, diceRoller: p.diceRoller !== false };
+  }
+
+  function applyPrefs() {
+    if (!state.prefs) normalizePrefs(state);
+    Object.entries(PREF_SWITCHES).forEach(([key, cfg]) => {
+      const on = state.prefs[key] !== false;
+      document.body.classList.toggle(cfg.bodyClass, !on);
+      const sw = document.getElementById(cfg.id);
+      if (!sw) return;
+      sw.classList.toggle('on', on);
+      sw.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+  }
+
+  // Toasted rather than logged: the log lives in the dice tray, which one of
+  // these switches can hide.
+  function togglePref(key) {
+    if (!state.prefs) normalizePrefs(state);
+    state.prefs[key] = state.prefs[key] === false;
+    applyPrefs();
+    showToast(state.prefs[key] ? PREF_SWITCHES[key].on : PREF_SWITCHES[key].off);
+    saveNow();
   }
 
   function setTheme(t) {
@@ -3499,6 +3605,7 @@
         if (!state.classData) state.classData = {};
         if (typeof state.escalation !== 'number') state.escalation = 0;
         if (!state.theme) state.theme = 'necromancer';
+        normalizePrefs(state);
         applyState();
         autoSave();
         showToast('Sheet loaded');
@@ -3512,6 +3619,7 @@
     _applying = true;
     try {
       setTheme(state.theme || 'necromancer');
+      applyPrefs();
       document.querySelectorAll('[data-field]').forEach(el => { el.value = state.fields[el.dataset.field] || ''; });
       recomputeDerived();
       // Sync each lock toggle's visual to the current state (visuals were
@@ -3868,10 +3976,10 @@
 
   function resetSheet() {
     if (!confirm('Start a new blank sheet? Any unsaved changes will be lost.')) return;
-    // Display preferences (theme) survive a reset; only character data is
+    // Display preferences (theme, prefs) survive a reset; only character data is
     // cleared. Which ability sections show is derived from the class, so
     // there's nothing to preserve there.
-    state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], kinPowers: [], features: [], talents: [], powers: [], spells: [], feats: [], advances: {}, locks: {}, activeConditions: {}, classData: {}, escalation: 0, theme: state.theme };
+    state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], kinPowers: [], features: [], talents: [], powers: [], spells: [], feats: [], advances: {}, locks: {}, activeConditions: {}, classData: {}, escalation: 0, theme: state.theme, prefs: state.prefs };
     try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
     applyState();
     showToast('New sheet');
@@ -3938,6 +4046,7 @@
       if (!state.classData) state.classData = {};
       if (typeof state.escalation !== 'number') state.escalation = 0;
       if (!state.theme) state.theme = 'necromancer';
+      normalizePrefs(state);
     }
   } catch(e) {}
 
@@ -3978,6 +4087,10 @@
     // Enter in the amount field applies damage — the common case in play.
     document.getElementById('hp-adjust-amt').addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); applyDamage(); }
+    });
+    Object.entries(PREF_SWITCHES).forEach(([key, cfg]) => {
+      const sw = document.getElementById(cfg.id);
+      if (sw) sw.addEventListener('click', () => togglePref(key));
     });
     document.getElementById('theme-select').addEventListener('change', e => setTheme(e.target.value));
     document.getElementById('btn-save').addEventListener('click', saveToFile);

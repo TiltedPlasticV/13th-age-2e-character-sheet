@@ -277,7 +277,9 @@
       ),
       el('div', { class: 'class-track-row' },
         el('button', {
-          class: 'action-btn',
+          // .dice-action marks a button that rolls, so it goes with the
+          // dice roller when that's switched off in Utilities.
+          class: 'action-btn dice-action',
           title: 'Free action: roll d12 + escalation die — 9+ and you start raging',
           onclick: rollRageDie
         }, '🎲 Rage die'),
