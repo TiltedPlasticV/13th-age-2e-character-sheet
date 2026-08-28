@@ -269,6 +269,12 @@
      ═══════════════════════════════════════════ */
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  /* All eight themes are dark, but the browser can't infer that from CSS
+     variables. Without this it paints every surface it owns — dropdown
+     popups, scrollbars, autofill, spinners — on a light system background.
+     Print flips back, since the print sheet is white. */
+  :root { color-scheme: dark; }
+
   body {
     background: var(--bg);
     color: var(--ink);
@@ -486,6 +492,17 @@
   }
 
   .field-inline { display: inline-block; min-width: 20px; }
+
+  /* A dropdown's open list is drawn on the browser's own surface, not on the
+     card behind the control. `--field-bg` is a translucent tint that only
+     reads as dark because the card composites behind it — over the popup's
+     light backdrop it stays light, and the field's pale text (--accent-glow
+     on usage, --highlight on class) disappears into it. So the options get
+     opaque theme colours of their own rather than inheriting the tint. */
+  select option {
+    background: var(--bg-card);
+    color: var(--ink);
+  }
 
   textarea.field-block {
     display: block;
@@ -722,15 +739,8 @@
     gap: 6px 18px;
   }
   .gear-row .hp-item { min-width: 0; max-width: 100%; }
-  /* Everything except the two numeric boxes, which read better fixed. This
-     beats `.hp-item .field-inline`'s 60px, so `width` is handed back here. */
-  .gear-row .field-inline:not(.field-sm) {
-    field-sizing: content;
-    width: auto;
-    min-width: 90px;
-    max-width: 100%;
-    text-align: left;
-  }
+  /* Every gear field except the two numeric boxes, which read better fixed,
+     carries `.field-grow` — see the field-width utilities. */
 
   /* ── SKULLS TRACKER ── */
   .skulls-row {
@@ -1047,6 +1057,11 @@
 
   .power-header .field-inline.power-usage {
     font-size: var(--fs-field-sm); color: var(--accent-glow); min-width: 70px; text-align: center;
+  }
+  /* The usage control is a <select>; leave room for the native arrow and let
+     it size to the widest label rather than stretching. */
+  .power-header select.field-inline.power-usage {
+    width: auto; padding-right: 16px; cursor: pointer;
   }
   /* "Uses" input sits among the action/usage fields, so match their font-size
      (otherwise field-sm inherits the larger default and renders a taller box). */
@@ -1503,6 +1518,19 @@
   .field-inline.field-md   { width: 50px; text-align: center; }
   .field-inline.field-wide { width: 140px; }
   .field-flex { flex: 1; }
+
+  /* Grows to fit what's typed instead of clipping it — the gear row's
+     behaviour, named so anything can reuse it. `width: auto` is what lets it
+     beat the fixed widths above; declared after them because the specificity
+     is equal, so source order decides. */
+  .field-inline.field-grow {
+    field-sizing: content;
+    width: auto;
+    min-width: 40px;
+    max-width: 100%;
+  }
+  .attack-stats .field-inline.field-grow { min-width: 70px; }
+  .gear-row .field-inline.field-grow { min-width: 90px; text-align: left; }
   .field-inline.field-tiny { font-size: 10px; text-align: center; }
 
   /* ── HP STATUS BADGE (staggered / down / dead) ── */
@@ -1815,6 +1843,7 @@
 
   /* ── PRINT ── */
   @media print {
+    :root { color-scheme: light; }
     #utilities-section { display: none; }
     .dice-tray { display: none; }
     .roll-btn, .hp-adjust, .action-row { display: none; }
@@ -1954,8 +1983,8 @@
         </div>
         <span class="action-sep" aria-hidden="true"></span>
         <button class="action-btn" data-action="roll-recovery" title="Spend the next recovery: rolls your recovery dice and adds the result to current HP">🎲 Recovery</button>
-        <button class="action-btn" data-action="quick-rest" title="Clear all death-save skulls except the 1st">⛺ Quick Rest</button>
-        <button class="action-btn" data-action="full-heal" title="Clear all skulls, conditions and temp HP, restore all recoveries, set current HP to max">☀ Full Heal-Up</button>
+        <button class="action-btn" data-action="quick-rest" title="Between battles: refresh every per-battle ability and clear all death-save skulls except the 1st">⛺ Quick Rest</button>
+        <button class="action-btn" data-action="full-heal" title="Ends the arc: refresh every per-battle and per-arc ability and all icon relationships, clear all skulls, conditions and temp HP, restore all recoveries, set current HP to max">☀ Full Heal-Up</button>
       </div>
     </div>
   </div>
@@ -1971,7 +2000,7 @@
             <div class="attack-weapon"><input class="field-inline" data-field="melee_weapon" placeholder="Weapon" aria-label="Melee weapon"></div>
             <div class="attack-stats">
               <span class="attack-label">Hit Dmg</span>
-              <input class="field-inline" data-field="melee_damage" placeholder="1d8+4" aria-label="Melee hit damage">
+              <input class="field-inline field-grow" data-field="melee_damage" placeholder="1d8+4" aria-label="Melee hit damage">
               <button class="roll-btn" data-roll="melee_dmg" title="Roll melee damage" aria-label="Roll melee damage">🎲</button>
               <span class="attack-sep">/</span>
               <span class="attack-label">Avg</span>
@@ -1995,7 +2024,7 @@
             <div class="attack-weapon"><input class="field-inline" data-field="ranged_weapon" placeholder="Weapon" aria-label="Ranged weapon"></div>
             <div class="attack-stats">
               <span class="attack-label">Hit Dmg</span>
-              <input class="field-inline" data-field="ranged_damage" placeholder="1d6+2" aria-label="Ranged hit damage">
+              <input class="field-inline field-grow" data-field="ranged_damage" placeholder="1d6+2" aria-label="Ranged hit damage">
               <button class="roll-btn" data-roll="ranged_dmg" title="Roll ranged damage" aria-label="Roll ranged damage">🎲</button>
               <span class="attack-sep">/</span>
               <span class="attack-label">Avg</span>
@@ -2120,12 +2149,12 @@
     <div class="section-head"><span class="icon">🎒</span> Gear & Equipment</div>
     <div class="section-body gear-grid">
       <div class="gear-row">
-        <div class="hp-item"><span class="hp-label">Armor</span><input class="field-inline" data-field="armor_type" placeholder="None" aria-label="Armor type"></div>
+        <div class="hp-item"><span class="hp-label">Armor</span><input class="field-inline field-grow" data-field="armor_type" placeholder="None" aria-label="Armor type"></div>
         <div class="hp-item"><span class="hp-label">Base AC</span><input class="field-inline field-sm" data-field="base_ac" aria-label="Base AC"></div>
         <div class="hp-item"><span class="hp-label">Shield</span><input class="field-inline field-sm" data-field="shield" aria-label="Shield bonus"></div>
-        <div class="hp-item"><span class="hp-label">Melee</span><input class="field-inline" data-field="gear_melee" placeholder="Weapon" aria-label="Melee weapon gear"></div>
-        <div class="hp-item"><span class="hp-label">Ranged</span><input class="field-inline" data-field="gear_ranged" placeholder="Weapon" aria-label="Ranged weapon gear"></div>
-        <div class="hp-item"><span class="hp-label">Gold</span><input class="field-inline" data-field="gold" aria-label="Gold"></div>
+        <div class="hp-item"><span class="hp-label">Melee</span><input class="field-inline field-grow" data-field="gear_melee" placeholder="Weapon" aria-label="Melee weapon gear"></div>
+        <div class="hp-item"><span class="hp-label">Ranged</span><input class="field-inline field-grow" data-field="gear_ranged" placeholder="Weapon" aria-label="Ranged weapon gear"></div>
+        <div class="hp-item"><span class="hp-label">Gold</span><input class="field-inline field-grow" data-field="gold" aria-label="Gold"></div>
       </div>
       <textarea rows="1" class="field-block" data-field="gear_notes" placeholder="Other gear, equipment, and supplies…"></textarea>
     </div>
@@ -2135,7 +2164,7 @@
   <div class="section">
     <div class="section-head"><span class="icon">💎</span> Magic Items & Potions</div>
     <div class="section-body">
-      <div class="hp-item"><span class="hp-label">Max Attuned</span><input class="field-inline field-sm" data-field="max_magic" aria-label="Maximum attuned magic items"></div>
+      <div class="hp-item"><span class="hp-label">Max Attuned</span><input class="field-inline field-grow" data-field="max_magic" aria-label="Maximum attuned magic items"></div>
       <textarea rows="1" class="field-block" data-field="magic_items" placeholder="Magic items, potions, runes…"></textarea>
     </div>
   </div>
@@ -2650,6 +2679,20 @@
     document.querySelectorAll('textarea.field-block').forEach(autoGrow);
   }
 
+  // Deferring to the next frame is right for keystrokes, but wrong when a list
+  // has just been rebuilt: the browser lays out once *before* that frame, with
+  // every textarea still collapsed to one row. Near the bottom of the sheet the
+  // document is briefly short enough that the scroll position gets clamped, and
+  // growing the rows back afterwards doesn't restore it — the page jumps
+  // upwards and you lose the row you were editing. Rebuilds therefore measure
+  // straight away. It costs no extra layout: the queue is flushed in the same
+  // single batched write→read→write pass, just now instead of in a frame's time.
+  function autoGrowAllNow() {
+    autoGrowAll();
+    if (_growFrame) { cancelAnimationFrame(_growFrame); _growFrame = 0; }
+    flushAutoGrow();
+  }
+
   // Sequential-tracker enforcement for ordered checkbox rows (recoveries,
   // skulls). Only the boundary boxes are interactive — the first unchecked and
   // the last checked; the rest get `.disabled` + `aria-disabled` and leave the
@@ -2940,17 +2983,91 @@
   }
   function addIcon() { state.icons.push({ dice: '', mod: '', name: '', used: {}, available: {} }); renderIcons(); saveNow(); }
 
+  // ── USAGE MODES ───────────────────────────────────────────────────────
+  // Every ability row is exactly one of these, so a single <select> answers
+  // both "is this tracked?" and "when does it refresh?" — they aren't
+  // independent questions, and splitting them would allow states like
+  // "passive, refreshes per arc" that mean nothing.
+  //
+  // `track` is the TRACK_TYPES annotation, and doubles as the flag for both
+  // "shows use checkboxes" and "a rest clears it": a Passive class feature or
+  // an At-Will power has no tracker to draw and nothing to refresh.
+  //
+  // The stored value is the token, never the label, so renaming a label later
+  // isn't a data migration.
+  const USAGE_MODES = {
+    passive: { label: 'Passive' },
+    atwill:  { label: 'At-Will' },
+    battle:  { label: 'Battle', track: 'battle' },
+    arc:     { label: 'Arc',    track: 'arc'    },
+  };
+  const USAGE_KEYS = Object.keys(USAGE_MODES);
+  const USAGE_DEFAULT = 'passive';
+
+  // Every state array rendered by renderPowerLike. Used by the usage
+  // migration and by the rest hooks, both of which walk all five alike.
+  const ABILITY_LISTS = ['kinPowers', 'features', 'talents', 'powers', 'spells'];
+
+  // An unknown token reads as Passive rather than throwing, so a row from a
+  // future format degrades to the harmless mode instead of breaking the list.
+  function usageMode(item) {
+    return (item && USAGE_MODES[item.usage]) ? item.usage : USAGE_DEFAULT;
+  }
+  function usageTrack(item) { return USAGE_MODES[usageMode(item)].track; }
+
+  // Emptying a list drops the document's height by everything that was in it,
+  // and the browser clamps the scroll position to the new, much shorter page.
+  // Re-appending the rows restores the height but not the position. Chrome's
+  // scroll anchoring often papers over this, but it works by holding onto a
+  // node that stays put — and `innerHTML = ''` destroys every candidate inside
+  // the list, so when the viewport is filled by list rows there is nothing left
+  // to anchor to and the jump sticks. That's the view from the bottom of a long
+  // spell list, which is exactly where it was reported. Restore it explicitly
+  // rather than depending on the heuristic.
+  function captureScroll() { return { x: window.scrollX, y: window.scrollY }; }
+  function restoreScroll(pos) {
+    if (window.scrollX !== pos.x || window.scrollY !== pos.y) window.scrollTo(pos.x, pos.y);
+  }
+
+  // A rebuild also destroys whatever control the player was using — pick a
+  // usage mode and focus lands back on <body>, so the keyboard flow ends on
+  // the row you just changed. Note where focus was and put it back.
+  // `preventScroll` matters: re-focusing must not undo the position restored
+  // above.
+  function captureListFocus(list) {
+    const active = document.activeElement;
+    if (!active || !list.contains(active) || !active.className) return null;
+    const block = active.closest('.power-block');
+    return block ? { row: [...list.children].indexOf(block), cls: active.className } : null;
+  }
+  function restoreListFocus(list, mark) {
+    if (!mark || mark.row < 0) return;
+    const block = list.children[mark.row];
+    if (!block) return;
+    const node = block.querySelector('.' + mark.cls.trim().split(/\s+/).join('.'));
+    if (node) node.focus({ preventScroll: true });
+  }
+
   // Unified renderer for powers and spells. opts:
   //   listId, stateKey, namePlaceholder, descPlaceholder, withPrep
   function renderPowerLike(opts) {
     const { listId, stateKey, namePlaceholder, descPlaceholder, withPrep } = opts;
     const list = document.getElementById(listId);
+    const focusMark = captureListFocus(list);
+    const scrollPos = captureScroll();
     list.innerHTML = '';
     const rerender = () => renderPowerLike(opts);
     state[stateKey].forEach((item, i) => {
-      const maxU = parseInt(item.max_uses) || 0;
+      // A Passive or At-Will row has nothing to track, so the Uses count and
+      // its checkboxes aren't drawn. They are *hidden, never cleared* — set
+      // the row back to Battle or Arc and the same ticks come back.
+      const track = usageTrack(item);
+      const maxU = track ? (parseInt(item.max_uses) || 0) : 0;
       const useChecks = el('div', { class: 'use-checks' });
-      if (maxU > 0) appendUses(useChecks, stateKey, i, maxU, item.used);
+      if (maxU > 0) {
+        appendUses(useChecks, stateKey, i, maxU, item.used);
+        useChecks.appendChild(trackAnnotation(track));
+      }
       const prepBtn = withPrep ? el('div', {
         class: 'prep-btn' + (item.prepared !== false ? ' active' : ''),
         role: 'checkbox', tabindex: '0',
@@ -2958,6 +3075,21 @@
         'aria-label': 'Prepared', title: 'Prepared',
         onclick: ev => toggleSpellPrep(i, ev.currentTarget)
       }, '✦') : null;
+      const usageSel = el('select', {
+        class: 'field-inline power-usage', 'aria-label': 'Usage',
+        title: 'How this refreshes. Battle and Arc rows are cleared by the rest '
+             + 'buttons; Passive and At-Will rows are left alone.',
+        onchange: e => {
+          const row = state[stateKey][i];
+          row.usage = e.target.value;
+          // Battle and Arc almost always mean one use. Filling it in beats
+          // showing a tracked row with no boxes to tick.
+          if (usageTrack(row) && !(parseInt(row.max_uses) > 0)) row.max_uses = '1';
+          rerender();
+          saveNow();
+        }
+      }, USAGE_KEYS.map(k => el('option', { value: k }, USAGE_MODES[k].label)));
+      usageSel.value = usageMode(item);
       const header = el('div', { class: 'power-header' },
         el('span', { class: 'drag-handle', title: 'Drag to reorder' }, '⋮⋮'),
         prepBtn,
@@ -2969,18 +3101,14 @@
           class: 'field-inline power-action', value: item.action, placeholder: 'Action',
           oninput: e => { state[stateKey][i].action = e.target.value; }
         }),
-        el('input', {
-          class: 'field-inline power-usage', value: item.usage,
-          placeholder: 'At-Will / Battle / Arc',
-          oninput: e => { state[stateKey][i].usage = e.target.value; }
-        }),
+        usageSel,
         maxU > 0 ? useChecks : null,
-        el('input', {
+        track ? el('input', {
           class: 'field-inline field-sm', value: item.max_uses || '',
           placeholder: 'Uses', title: 'Number of use checkboxes',
           inputmode: 'numeric',
           onchange: e => { state[stateKey][i].max_uses = e.target.value; rerender(); saveNow(); }
-        }),
+        }) : null,
         el('button', {
           class: 'remove-btn',
           onclick: () => { state[stateKey].splice(i, 1); rerender(); saveNow(); }
@@ -2995,7 +3123,9 @@
       list.appendChild(el('div', { class: blockClasses }, header, desc));
     });
     enableReorder(listId, stateKey, rerender);
-    autoGrowAll();
+    autoGrowAllNow();
+    restoreScroll(scrollPos);
+    restoreListFocus(list, focusMark);
   }
 
   function renderKinPowers() {
@@ -3036,12 +3166,20 @@
       withPrep: true
     });
   }
-  function blankPowerRow() { return { name: '', action: '', usage: '', desc: '', max_uses: '', used: {} }; }
+  // The rest hooks clear use-trackers across every ability list, so they need
+  // to redraw all five.
+  function renderAbilityLists() {
+    renderKinPowers(); renderFeatures(); renderTalents(); renderPowers(); renderSpells();
+  }
+
+  function blankPowerRow() {
+    return { name: '', action: '', usage: USAGE_DEFAULT, desc: '', max_uses: '', used: {} };
+  }
   function addKinPower() { state.kinPowers.push(blankPowerRow()); renderKinPowers(); saveNow(); }
   function addFeature() { state.features.push(blankPowerRow()); renderFeatures(); saveNow(); }
   function addTalent() { state.talents.push(blankPowerRow()); renderTalents(); saveNow(); }
   function addPower() { state.powers.push(blankPowerRow()); renderPowers(); saveNow(); }
-  function addSpell() { state.spells.push({ name: '', action: '', usage: '', desc: '', max_uses: '', used: {}, prepared: true }); renderSpells(); saveNow(); }
+  function addSpell() { state.spells.push(Object.assign(blankPowerRow(), { prepared: true })); renderSpells(); saveNow(); }
 
   function toggleSpellPrep(i, btn) {
     state.spells[i].prepared = !state.spells[i].prepared;
@@ -3432,6 +3570,29 @@
     }
   }
 
+  // Usage was free text before it became a closed set. Map what's
+  // recognisable and drop the rest to Passive: the unrecognised values are
+  // exactly the rows the free-text field couldn't describe ("N/A", "always
+  // on"), which is why the closed set exists. Idempotent — a value that is
+  // already a token is left alone — so it can run on every load.
+  const USAGE_PATTERNS = [
+    [/at.?-?will/i, 'atwill'],
+    [/battle|encounter/i, 'battle'],
+    [/arc|daily/i, 'arc'],
+  ];
+  function migrateUsage(s) {
+    if (!s || typeof s !== 'object') return;
+    ABILITY_LISTS.forEach(key => {
+      if (!Array.isArray(s[key])) return;
+      s[key].forEach(item => {
+        if (!item || typeof item !== 'object') return;
+        if (USAGE_MODES[item.usage]) return;
+        const hit = USAGE_PATTERNS.find(([re]) => re.test(String(item.usage || '')));
+        item.usage = hit ? hit[1] : USAGE_DEFAULT;
+      });
+    });
+  }
+
   function loadFromFile(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -3460,6 +3621,7 @@
         if (!state.classData) state.classData = {};
         if (typeof state.escalation !== 'number') state.escalation = 0;
         if (!state.theme) state.theme = 'necromancer';
+        migrateUsage(state);
         normalizePrefs(state);
         applyState();
         autoSave();
@@ -3498,15 +3660,48 @@
   // `skull_3` / `rec_2`. We mutate that map and re-render the affected
   // trackers; the renderers read the same keys back out.
 
+  // Clear the use-trackers on every ability row whose usage mode refreshes
+  // here. Because usage is a closed set, this is exact: Passive and At-Will
+  // rows are skipped by definition, not by guessing at what the player typed.
+  // Returns how many rows actually had ticks, for the log line.
+  function clearUses(modes) {
+    let n = 0;
+    ABILITY_LISTS.forEach(key => {
+      (state[key] || []).forEach(item => {
+        if (!modes.includes(usageMode(item))) return;
+        if (Object.keys(item.used || {}).length) n++;
+        item.used = {};
+      });
+    });
+    return n;
+  }
+
+  // Icon relationship dice are rolled fresh each arc, so both tracks go with
+  // them — the rolled-but-unspent one and the spent one.
+  function clearIconTracks() {
+    let n = 0;
+    (state.icons || []).forEach(ic => {
+      if (Object.keys(ic.used || {}).length || Object.keys(ic.available || {}).length) n++;
+      ic.used = {};
+      ic.available = {};
+    });
+    return n;
+  }
+
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+
   function quickRest() {
     // skull_0 survives — a lasting wound that carries across rests.
     Object.keys(state.checkboxes).forEach(key => {
       const m = key.match(/^skull_(\d+)$/);
       if (m && parseInt(m[1], 10) > 0) delete state.checkboxes[key];
     });
+    const refreshed = clearUses(['battle']);
     renderSkulls();
+    renderAbilityLists();
     classHook('onQuickRest');
-    logAction('Quick Rest', 'Death-save skulls cleared (first preserved)');
+    logAction('Quick Rest', 'Death-save skulls cleared (first preserved)'
+      + (refreshed ? ` · ${plural(refreshed, 'per-battle ability', 'per-battle abilities')} refreshed` : ''));
     saveNow();
     showToast('Quick rest');
   }
@@ -3527,14 +3722,26 @@
     setFieldDom('temp_hp');
     state.activeConditions = {};
     state.escalation = 0;
+    // A full heal-up ends the arc, so per-battle *and* per-arc trackers go
+    // with it, icon relationships included.
+    const refreshed = clearUses(['battle', 'arc']);
+    const iconsReset = clearIconTracks();
     renderConditions();
     renderEscalation();
     renderSkulls();
     renderRecoveries();
+    renderAbilityLists();
+    renderIcons();
     classHook('onFullHeal');
     updateHpStatus();
-    logAction('Full Heal-Up',
-      `HP → ${max || '—'} · recoveries & skulls reset · conditions, temp HP & escalation cleared`);
+    const bits = [
+      `HP → ${max || '—'}`,
+      'recoveries & skulls reset',
+      'conditions, temp HP & escalation cleared',
+    ];
+    if (refreshed) bits.push(`${plural(refreshed, 'ability', 'abilities')} refreshed`);
+    if (iconsReset) bits.push(`${plural(iconsReset, 'icon relationship', 'icon relationships')} reset`);
+    logAction('Full Heal-Up', bits.join(' · '));
     saveNow();
     showToast('Fully healed');
   }
@@ -3891,6 +4098,7 @@
       if (!state.classData) state.classData = {};
       if (typeof state.escalation !== 'number') state.escalation = 0;
       if (!state.theme) state.theme = 'necromancer';
+      migrateUsage(state);
       normalizePrefs(state);
     }
   } catch(e) {}
