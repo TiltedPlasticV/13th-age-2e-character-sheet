@@ -438,6 +438,25 @@
   }
 
   /* ── SECTIONS ── */
+  /* Only a section carrying `data-section` folds; the attribute is both the
+     opt-in and the key its folded state is saved under. A class module's
+     sections stay put unless the module sets one itself. */
+  .section[data-section] > .section-head { cursor: pointer; user-select: none; }
+  .section[data-section] > .section-head:hover,
+  .section[data-section] > .section-head:focus-visible { color: var(--highlight); }
+
+  /* Same caret glyphs as the dice tray, so "this folds" reads the same way
+     wherever it appears. */
+  .section-caret { margin-left: auto; font-size: 12px; color: var(--ink-faint); }
+  .section[data-section] > .section-head:hover .section-caret { color: var(--highlight); }
+
+  /* Screen only: a printed sheet is a record, so it shows every section
+     whether or not it was folded away on screen. */
+  @media screen {
+    .section.collapsed > *:not(.section-head) { display: none; }
+    .section.collapsed > .section-head { border-bottom: none; }
+  }
+
   .section {
     margin-bottom: var(--section-gap, 8px);
     border: 1px solid var(--field-border);
@@ -1844,6 +1863,9 @@
   /* ── PRINT ── */
   @media print {
     :root { color-scheme: light; }
+    /* Folded sections still print (the collapse rule is @media screen), so the
+       carets would be the only trace of a control that does not apply here. */
+    .section-caret { display: none; }
     #utilities-section { display: none; }
     .dice-tray { display: none; }
     .roll-btn, .hp-adjust, .action-row { display: none; }
@@ -1892,7 +1914,7 @@
   <div class="sheet-columns">
 
   <!-- ONE UNIQUE THING -->
-  <div class="section">
+  <div class="section" data-section="unique">
     <div class="section-head"><span class="icon">✦</span> One Unique Thing</div>
     <div class="section-body">
       <textarea rows="1" class="field-block" data-field="unique_thing" placeholder="What makes your character singular in the world?"></textarea>
@@ -1901,7 +1923,7 @@
 
   <!-- ABILITY SCORES + DEFENSES (side by side) -->
   <div class="combo-row">
-    <div class="section">
+    <div class="section" data-section="abilities">
       <div class="section-head"><span class="icon">⬡</span> Ability Scores</div>
       <div class="section-body">
         <div class="stat-grid">
@@ -1915,7 +1937,7 @@
       </div>
     </div>
 
-    <div class="section">
+    <div class="section" data-section="defenses">
       <div class="section-head"><span class="icon">⛊</span> Defenses</div>
       <div class="section-body">
         <div class="defense-row">
@@ -1929,7 +1951,7 @@
   </div>
 
   <!-- HIT POINTS & RECOVERIES -->
-  <div class="section">
+  <div class="section" data-section="hp">
     <div class="section-head"><span class="icon">♥</span> Hit Points & Recoveries</div>
     <div class="section-body">
       <!-- Heart (Staggered/MaxHP/Dead) + Current + Temp HP all inline -->
@@ -1990,7 +2012,7 @@
   </div>
 
   <!-- ATTACKS -->
-  <div class="section">
+  <div class="section" data-section="attacks">
     <div class="section-head"><span class="icon">⚔</span> Basic Attacks</div>
     <div class="section-body">
       <div class="attack-cards">
@@ -2056,7 +2078,7 @@
   <div class="class-slot" data-class-slot="sections"></div>
 
   <!-- BACKGROUNDS -->
-  <div class="section">
+  <div class="section" data-section="backgrounds">
     <div class="section-head"><span class="icon">📜</span> Backgrounds</div>
     <div class="section-body">
       <div class="table-section" id="backgrounds-list"></div>
@@ -2066,7 +2088,7 @@
   </div>
 
   <!-- ICON RELATIONSHIPS -->
-  <div class="section">
+  <div class="section" data-section="icons">
     <div class="section-head"><span class="icon">👁</span> Icon Relationships</div>
     <div class="section-body">
       <div class="icon-rel-grid">
@@ -2085,7 +2107,7 @@
   </div>
 
   <!-- KIN POWERS -->
-  <div class="section">
+  <div class="section" data-section="kin-powers">
     <div class="section-head"><span class="icon">❦</span> Kin Powers</div>
     <div class="section-body">
       <div id="kin-powers-list" class="powers-list"></div>
@@ -2094,7 +2116,7 @@
   </div>
 
   <!-- CLASS FEATURES -->
-  <div class="section">
+  <div class="section" data-section="features">
     <div class="section-head"><span class="icon">🔥</span> Class Features</div>
     <div class="section-body">
       <div id="features-list" class="powers-list"></div>
@@ -2103,7 +2125,7 @@
   </div>
 
   <!-- TALENTS -->
-  <div class="section">
+  <div class="section" data-section="talents">
     <div class="section-head"><span class="icon">✧</span> Talents</div>
     <div class="section-body">
       <div id="talents-list" class="powers-list"></div>
@@ -2114,7 +2136,7 @@
   <!-- CLASS POWERS — the third ability section for classes whose powers
        aren't spells (rogue Powers, fighter Maneuvers). Heading, button and
        visibility all come from CLASS_ABILITY_SECTION. -->
-  <div class="section" id="powers-section">
+  <div class="section" id="powers-section" data-section="powers">
     <div class="section-head"><span class="icon">✸</span> <span id="powers-heading">Powers</span></div>
     <div class="section-body">
       <div id="powers-list" class="powers-list"></div>
@@ -2123,7 +2145,7 @@
   </div>
 
   <!-- SPELLS — the third ability section for casters (bard reads "Spells & Songs") -->
-  <div class="section" id="spells-section">
+  <div class="section" id="spells-section" data-section="spells">
     <div class="section-head"><span class="icon">✦</span> <span id="spells-heading">Spells</span></div>
     <div class="section-body">
       <div class="hp-item">
@@ -2136,7 +2158,7 @@
   </div>
 
   <!-- FEATS -->
-  <div class="section">
+  <div class="section" data-section="feats">
     <div class="section-head"><span class="icon">⚜</span> Feats</div>
     <div class="section-body">
 		<div id="feats-list"></div>
@@ -2145,7 +2167,7 @@
   </div>
 
   <!-- GEAR -->
-  <div class="section">
+  <div class="section" data-section="gear">
     <div class="section-head"><span class="icon">🎒</span> Gear & Equipment</div>
     <div class="section-body gear-grid">
       <div class="gear-row">
@@ -2161,7 +2183,7 @@
   </div>
 
   <!-- MAGIC ITEMS -->
-  <div class="section">
+  <div class="section" data-section="magic-items">
     <div class="section-head"><span class="icon">💎</span> Magic Items & Potions</div>
     <div class="section-body">
       <div class="hp-item"><span class="hp-label">Max Attuned</span><input class="field-inline field-grow" data-field="max_magic" aria-label="Maximum attuned magic items"></div>
@@ -2170,7 +2192,7 @@
   </div>
 
   <!-- CONDITIONS -->
-  <div class="section">
+  <div class="section" data-section="conditions">
     <div class="section-head"><span class="icon">⚡</span> Conditions & Ongoing Effects</div>
     <div class="section-body">
       <div class="cond-pills" id="cond-pills"></div>
@@ -2179,7 +2201,7 @@
   </div>
 
   <!-- NOTES -->
-  <div class="section">
+  <div class="section" data-section="notes">
     <div class="section-head"><span class="icon">✎</span> Session Notes</div>
     <div class="section-body">
       <textarea rows="1" class="field-block" data-field="notes" placeholder="Session notes, plans, reminders…"></textarea>
@@ -2187,7 +2209,7 @@
   </div>
 
   <!-- INCREMENTAL ADVANCES -->
-  <div class="section">
+  <div class="section" data-section="advances">
     <div class="section-head"><span class="icon">⬆</span> Incremental Advances</div>
     <div class="section-body">
       <div class="advances-grid" id="advances-grid"></div>
@@ -2195,7 +2217,7 @@
   </div>
 
   <!-- UTILITIES -->
-  <div class="section" id="utilities-section">
+  <div class="section" id="utilities-section" data-section="utilities">
     <div class="section-head"><span class="icon">⚙</span> Utilities</div>
     <div class="toolbar">
       <select id="theme-select">
@@ -2288,7 +2310,9 @@
     // Display preferences under one key, so the next one doesn't need
     // threading through the load and reset paths. Settings, not character
     // data: like the theme, they survive "New Sheet". See PREF_SWITCHES.
-    prefs: { animations: true, diceRoller: true }
+    // `collapsed` is a set of data-section keys, not a list of every section:
+    // absent means open, so a section added later opens by default.
+    prefs: { animations: true, diceRoller: true, collapsed: {} }
   };
 
   // ── AUTO-DERIVED FIELDS ───────────────────────────────────────────────
@@ -2597,7 +2621,11 @@
   // these switches existed loads with the behaviour it was written with.
   function normalizePrefs(s) {
     const p = (s && s.prefs && typeof s.prefs === 'object') ? s.prefs : {};
-    s.prefs = { animations: p.animations !== false, diceRoller: p.diceRoller !== false };
+    s.prefs = {
+      animations: p.animations !== false,
+      diceRoller: p.diceRoller !== false,
+      collapsed: (p.collapsed && typeof p.collapsed === 'object') ? p.collapsed : {},
+    };
   }
 
   function applyPrefs() {
@@ -2620,6 +2648,56 @@
     applyPrefs();
     showToast(state.prefs[key] ? PREF_SWITCHES[key].on : PREF_SWITCHES[key].off);
     saveNow();
+  }
+
+  // ── COLLAPSIBLE SECTIONS ────────────────────────────────────────────
+  // A section folds away when its heading is clicked. Which ones are folded is
+  // a display preference rather than character data, so it rides in
+  // state.prefs beside the animation and dice-roller switches and survives
+  // "New Sheet" for the same reason the theme does.
+  function collapsedMap() {
+    if (!state.prefs) normalizePrefs(state);
+    if (!state.prefs.collapsed) state.prefs.collapsed = {};
+    return state.prefs.collapsed;
+  }
+
+  function setSectionCollapsed(section, collapsed) {
+    const head = section.querySelector('.section-head');
+    const caret = head && head.querySelector('.section-caret');
+    section.classList.toggle('collapsed', collapsed);
+    if (head) head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    if (caret) caret.textContent = collapsed ? '▸' : '▾';
+    const map = collapsedMap();
+    if (collapsed) map[section.dataset.section] = true;
+    else delete map[section.dataset.section];
+    // Textareas measure zero while hidden, so the ones coming back into view
+    // need re-measuring — see the zero guard in flushAutoGrow.
+    if (!collapsed) section.querySelectorAll('textarea.field-block').forEach(autoGrow);
+  }
+
+  // Wires any section not yet wired, then pushes the saved state onto all of
+  // them. Idempotent, so it can run again whenever new sections appear —
+  // a class module mounting its own, for instance.
+  function refreshCollapsibleSections() {
+    const map = collapsedMap();
+    document.querySelectorAll('.section[data-section]').forEach(section => {
+      const head = section.querySelector('.section-head');
+      if (!head) return;
+      if (!head.dataset.collapsible) {
+        head.dataset.collapsible = '1';
+        head.setAttribute('role', 'button');
+        head.setAttribute('tabindex', '0');
+        head.title = 'Click to fold this section away';
+        // Space/Enter already reach this through the global keydown handler,
+        // which routes any focused role="button" to click().
+        head.appendChild(el('span', { class: 'section-caret', 'aria-hidden': 'true' }, '▾'));
+        head.addEventListener('click', () => {
+          setSectionCollapsed(section, !section.classList.contains('collapsed'));
+          saveNow();
+        });
+      }
+      setSectionCollapsed(section, !!map[section.dataset.section]);
+    });
   }
 
   function setTheme(t) {
@@ -2673,7 +2751,10 @@
     // read re-run layout for the whole document.
     list.forEach(ta => { ta.style.height = 'auto'; });
     const heights = list.map(ta => ta.scrollHeight);
-    list.forEach((ta, i) => { ta.style.height = heights[i] + 'px'; });
+    // A textarea inside a folded section measures zero. Writing that back
+    // would leave it collapsed when the section reopens, so keep the last
+    // good height and re-measure on expand instead.
+    list.forEach((ta, i) => { if (heights[i]) ta.style.height = heights[i] + 'px'; });
   }
   function autoGrowAll() {
     document.querySelectorAll('textarea.field-block').forEach(autoGrow);
@@ -3513,6 +3594,7 @@
     initLocks();          // skips inputs already wrapped; wires the new ones
     recomputeDerived();
     classHook('onMount');
+    refreshCollapsibleSections();
     autoGrowAll();
   }
 
@@ -3650,6 +3732,8 @@
       [renderRecoveries, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpStatus].forEach(fn => {
         try { fn(); } catch(e) { console.warn(fn.name, e); }
       });
+      // After renderClassContent, so a class module's own sections are wired.
+      refreshCollapsibleSections();
     } finally {
       _applying = false;
     }
