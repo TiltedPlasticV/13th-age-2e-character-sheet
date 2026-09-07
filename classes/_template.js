@@ -89,6 +89,17 @@
       /* .my-panel { … } */
     `,
 
+    // ── Battle helper entries (optional) ──
+    // Anything limited your class tracks outside the ability lists — a
+    // once-per-arc trigger, a per-battle check — so the Battle Helper panel
+    // can list it beside the player's spells and features. Return every
+    // tracker you own with how many uses are left; the panel drops the
+    // spent ones. `track` is 'battle' or 'arc'.
+    // battleHelper() {
+    //   const d = classData('template');
+    //   return [{ name: 'Second wind', track: 'battle', left: d.wind ? 0 : 1 }];
+    // },
+
     // ── Lifecycle hooks (all optional) ──
     // onMount:      class selected — arbitrary DOM work the slots can't do
     //               (hide a section, retitle a heading, …).

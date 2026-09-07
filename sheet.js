@@ -391,6 +391,7 @@ function renderBattleHelper() {
   if (rail) rail.setAttribute('aria-expanded', open ? 'true' : 'false');
   const caret = document.getElementById('bh-caret');
   if (caret) caret.textContent = open ? '▸' : '◂';
+  renderBattleHelperBody();
 }
 
 function toggleBattleHelper() {
@@ -398,6 +399,247 @@ function toggleBattleHelper() {
   state.prefs.battleHelperOpen = !state.prefs.battleHelperOpen;
   renderBattleHelper();
   saveNow();
+}
+
+// ── BATTLE HELPER CONTENTS ──────────────────────────────────────────
+// The panel owns no state: every line in it is read back out of `state`
+// and the whole body is rebuilt from scratch. That makes "keep it in step
+// with the sheet" a single call from saveNow() instead of a subscription
+// per widget, and it means the panel can never hold a stale copy of
+// anything. Nothing in it is interactive — it reports, the sheet edits.
+
+// Short source tag per ability list, so a line here can be traced back to
+// the section it came from. The class-dependent list takes its noun from
+// CLASS_ABILITY_SECTION, so a fighter's read "Maneuver".
+const ABILITY_TAGS = {
+  kinPowers: 'Kin', features: 'Feature', talents: 'Talent',
+  powers: 'Power', spells: 'Spell',
+};
+function abilityTag(listKey) {
+  if (listKey !== 'powers') return ABILITY_TAGS[listKey];
+  const spec = CLASS_ABILITY_SECTION[currentClassKey()];
+  return (spec && spec.list === 'powers') ? spec.noun : ABILITY_TAGS.powers;
+}
+
+// Only one of the two class-dependent lists is on the sheet at a time — a
+// rogue has Powers and no Spells — so the panel shows exactly what
+// applyAbilitySections() does. Spells left in the save data from a previous
+// class are hidden by that, not cleared: switch back and they return, here
+// and on the sheet alike.
+function abilityListVisible(listKey) {
+  if (listKey !== 'spells' && listKey !== 'powers') return true;
+  const spec = CLASS_ABILITY_SECTION[currentClassKey()];
+  return !!spec && spec.list === listKey;
+}
+
+// Unticked boxes on one ability row. Level 0 deletes its key, so an unspent
+// use is simply an absent one; useLevel also reads the old boolean form.
+function unspentUses(item) {
+  const total = usageUses(item);
+  let left = 0;
+  for (let u = 0; u < total; u++) if (!useLevel(item.used && item.used[u], 2)) left++;
+  return left;
+}
+
+// Every per-battle / per-arc use still unspent, in sheet order.
+// Two rows are deliberately absent:
+//   • an unprepared spell — it can't be cast, so it isn't available;
+//   • a nameless row — there would be nothing to show, and a row being
+//     typed shouldn't flicker into the list a character at a time.
+function availableAbilities() {
+  const out = [];
+  ABILITY_LISTS.forEach(key => {
+    if (!abilityListVisible(key)) return;
+    (state[key] || []).forEach(item => {
+      const track = usageTrack(item);
+      if (!track) return;
+      if (key === 'spells' && item.prepared === false) return;
+      const name = (item.name || '').trim();
+      if (!name) return;
+      // An unspent desperate box is one more use of the same ability, so it
+      // adds to the count rather than repeating the name on a second line —
+      // the ☠ says one of them is the one you get back by nearly dying.
+      const desperate = USAGE_MODES[usageMode(item)].desperate
+        && !useLevel(item.desperate && item.desperate[0], 2);
+      const left = unspentUses(item) + (desperate ? 1 : 0);
+      if (left) out.push({ name, tag: abilityTag(key), track, left, desperate });
+    });
+  });
+  return out;
+}
+
+// Is anything on the sheet tracked at all? Tells "you have spent
+// everything" apart from "you have marked nothing as tracked yet" — the
+// two empty lists want opposite advice.
+function hasTrackedAbilities() {
+  return ABILITY_LISTS.some(key => abilityListVisible(key)
+    && (state[key] || []).some(item => usageTrack(item) && usageUses(item) > 0));
+}
+
+// A class module can add its own trackers — the barbarian's free rage start
+// and its when-hit check are neither spells nor features, but they are
+// exactly the kind of thing this panel exists to stop you forgetting. The
+// hook returns every tracker the class owns and the panel does the
+// filtering, so a class never has to know the rule.
+function classAbilities() {
+  const mod = activeClassModule();
+  if (!mod || typeof mod.battleHelper !== 'function') return [];
+  let rows = [];
+  try { rows = mod.battleHelper() || []; } catch (e) { console.warn('class hook battleHelper', e); }
+  const key = currentClassKey();
+  const tag = key ? key[0].toUpperCase() + key.slice(1) : '';
+  return rows
+    .filter(r => r && r.name && TRACK_TYPES[r.track] && (r.left === undefined || r.left > 0))
+    .map(r => ({ name: r.name, tag, track: r.track, left: r.left === undefined ? 1 : r.left }));
+}
+
+// ── The blocks the panel draws ──
+// Each one folds away when its heading is clicked, and remembers that in
+// collapsedMap() — the same store the sheet's own sections use, so it is a
+// display preference that survives "New Sheet" like the theme does. The
+// keys are prefixed so they can't collide with a data-section name.
+//
+// The fold is re-implemented here rather than borrowed from
+// refreshCollapsibleSections(), which is bound to the `.section` chrome —
+// border, margin, heading band — that a 290px overlay panel has no room
+// for. What is worth sharing is the store and the caret, and both are.
+function bhSection(key, title, children) {
+  const mapKey = 'bh-' + key;
+  const collapsed = !!collapsedMap()[mapKey];
+  const caret = el('span', { class: 'section-caret', 'aria-hidden': 'true' },
+                   collapsed ? '▸' : '▾');
+  // Space/Enter reach this through the global keydown handler, which routes
+  // any focused role="button" to click().
+  const head = el('div', {
+    class: 'bh-head', role: 'button', tabindex: '0',
+    'aria-expanded': collapsed ? 'false' : 'true',
+    title: 'Click to fold this away',
+  }, title, caret);
+  const sec = el('div', { class: 'bh-section' + (collapsed ? ' collapsed' : '') },
+                 head, children);
+  head.addEventListener('click', () => {
+    const now = !sec.classList.contains('collapsed');
+    if (now) collapsedMap()[mapKey] = true; else delete collapsedMap()[mapKey];
+    // saveNow() redraws the panel off the map just updated, so the caret and
+    // the fold follow from that rather than being set twice.
+    saveNow();
+  });
+  return sec;
+}
+
+
+function bhItem(r) {
+  return el('div', { class: 'bh-item' },
+    el('span', { class: 'bh-item-name' }, r.name),
+    r.tag ? el('span', { class: 'bh-item-tag' }, r.tag) : null,
+    r.desperate ? el('span', { class: 'bh-item-mark', title: 'Desperate use' }, '☠') : null,
+    r.left > 1 ? el('span', { class: 'bh-item-count' }, '×' + r.left) : null
+  );
+}
+
+function buildBhUses() {
+  const rows = availableAbilities().concat(classAbilities());
+  const sec = bhSection('uses', 'Ready to use', []);
+  ['battle', 'arc'].forEach(track => {
+    const group = rows.filter(r => r.track === track);
+    if (!group.length) return;
+    sec.appendChild(el('div', { class: 'bh-group' },
+      trackAnnotation(track),
+      el('span', {}, track === 'battle' ? 'Per battle' : 'Per arc')));
+    group.forEach(r => sec.appendChild(bhItem(r)));
+  });
+  if (!rows.length) {
+    sec.appendChild(el('div', { class: 'note' }, hasTrackedAbilities()
+      ? 'Everything is spent — take a rest.'
+      : 'Set an ability to Battle or Arc and it shows up here.'));
+  }
+  return sec;
+}
+
+// Post-battle you must keep spending recoveries while you are still
+// staggered, so the two numbers that decide it belong side by side: what
+// you have left to spend, and how far you still have to climb.
+function buildBhStatus() {
+  const max = maxRecoveries();
+  let spent = 0;
+  for (let i = 0; i < max; i++) if (state.checkboxes['rec_' + i]) spent++;
+  const left = max - spent;
+  const sec = bhSection('status', 'After the battle', [
+    el('div', { class: 'bh-stat' },
+      el('span', { class: 'bh-stat-num' + (left ? '' : ' bh-spent') }, String(left)),
+      el('span', { class: 'bh-stat-label' },
+         (left === 1 ? 'recovery' : 'recoveries') + ' left'),
+      el('span', { class: 'note' }, 'of ' + max))
+  ]);
+  sec.appendChild(bhStaggerNode());
+  return sec;
+}
+
+function bhStaggerNode() {
+  const cur = intOrNull(state.fields.current_hp);
+  const stag = intOrNull(state.fields.staggered);
+  if (cur === null || stag === null) {
+    return el('div', { class: 'note' },
+      'Fill in current HP and the staggered value to track this.');
+  }
+  const need = stag + 1 - cur;
+  if (need <= 0) return el('div', { class: 'bh-ok' }, '✔ Not staggered');
+  // The average is what the recovery estimate is worth — a rough count of
+  // how many you are about to burn, not a promise.
+  const avg = intOrNull(state.fields.recovery_avg);
+  const recs = (avg !== null && avg > 0) ? Math.ceil(need / avg) : null;
+  return el('div', { class: 'bh-warn' },
+    el('div', { class: 'bh-warn-line' },
+      (cur > 0 ? '⚠ Staggered' : '☠ Down') + ' — regain ' + need + ' HP'),
+    el('div', { class: 'note' },
+      'Keep spending recoveries until you are above ' + stag + ' HP'
+      + (recs !== null ? ' · about ' + plural(recs, 'recovery', 'recoveries')
+                       + ' at ' + avg + ' avg' : ''))
+  );
+}
+
+// The one block that isn't read out of `state`: the turn structure is the
+// same for everybody. It is built here anyway rather than sitting in the
+// HTML, because the panel body is cleared and rebuilt on every change and
+// static markup inside it would not survive the first redraw.
+//
+// Condensed hard — a play aid gets read mid-turn, so the end-of-turn order
+// is the only part that earns numbered steps.
+function buildBhTurn() {
+  return bhSection('turn', 'Anatomy of a turn', [
+    el('div', { class: 'bh-turn' },
+      el('div', { class: 'note' }, el('b', {}, 'Start'), ' — rarely anything.'),
+      el('div', { class: 'note' }, el('b', {}, 'Middle'),
+         ' — 1 standard, 1 move and 1 quick action, in any order.'),
+      el('div', { class: 'note' }, el('b', {}, 'End'), ' — in this order:'),
+      el('ol', { class: 'note bh-turn-steps' },
+        el('li', {}, 'Take any ongoing damage.'),
+        el('li', {}, 'Save against ongoing damage and any other save-ends condition.'),
+        el('li', {}, 'Effects you created that end this turn end now.')),
+      el('div', { class: 'note' }, el('b', {}, 'Rest of round'),
+         ' — 1 interrupt action, any time until your next turn starts.'))
+  ]);
+}
+
+// Rebuilt whole, and only while the panel is on screen — reopening it draws
+// it fresh, so there is nothing to catch up on. The body is the scrolling
+// element, so its position is carried across the rebuild: an autosave
+// firing mid-scroll must not throw the player back to the top.
+function renderBattleHelperBody() {
+  if (!state.prefs) normalizePrefs(state);
+  const body = document.getElementById('bh-body');
+  if (!body) return;
+  if (state.prefs.battleHelper !== true || state.prefs.battleHelperOpen !== true) return;
+  const scrollTop = body.scrollTop;
+  body.innerHTML = '';
+  // What you need mid-battle comes first; the recovery block is what you
+  // read once the fighting stops, and the turn structure is reference text
+  // you stop needing, so both sit under the list rather than pushing it
+  // down.
+  body.appendChild(buildBhUses());
+  body.appendChild(buildBhStatus());
+  body.appendChild(buildBhTurn());
+  body.scrollTop = scrollTop;
 }
 
 // Toasted rather than logged: the log lives in the dice tray, which one of
@@ -1405,6 +1647,9 @@ function renderClassContent(opts = {}) {
   classHook('onMount');
   refreshCollapsibleSections();
   autoGrowAll();
+  // The class file arrives asynchronously and calls back through here, so
+  // this is where its battleHelper() rows first become reachable.
+  renderBattleHelperBody();
 }
 
 const STORAGE_KEY = '13a_sheet';
@@ -1415,6 +1660,10 @@ function saveNow() {
   clearTimeout(_saveTimer);
   if (_initializing || _applying) return;
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); } catch(e) {}
+  // Every mutation on the sheet ends here, which makes this the one place
+  // the battle helper has to be redrawn from — and it runs *after*
+  // collectState(), so state.fields is already current.
+  renderBattleHelperBody();
 }
 function autoSave() {
   clearTimeout(_saveTimer);
@@ -1952,7 +2201,12 @@ document.addEventListener('input', (e) => {
     // user picked this class, so say so if its file is missing.
     if (key === 'class') renderClassContent({ notify: true });
     // Not derived sources, but they drive the staggered/down badge.
-    if (['current_hp', 'temp_hp', 'staggered', 'dead', 'max_hp'].includes(key)) updateHpStatus();
+    // The autosave below redraws the battle helper too, but 400ms late.
+    // These are the fields it reads out loud, so they get it immediately.
+    if (['current_hp', 'temp_hp', 'staggered', 'dead', 'max_hp'].includes(key)) {
+      updateHpStatus();
+      renderBattleHelperBody();
+    }
   }
   autoSave();
 });

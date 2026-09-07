@@ -384,6 +384,17 @@
       unwatchSkulls();
     },
 
+    // The two rage trackers are the same kind of limited resource as a
+    // per-arc spell, so the battle helper lists them beside one. `left: 0`
+    // is what a ticked box reports — the panel drops those itself.
+    battleHelper() {
+      const d = classData('barbarian');
+      return [
+        { name: 'Rage: free start', track: 'arc',    left: d.freeUsed ? 0 : 1 },
+        { name: 'Rage: when hit',   track: 'battle', left: d.hitCheck ? 0 : 1 },
+      ];
+    },
+
     // A quick rest is post-battle: the rage ends and the when-hit check
     // is available again.
     onQuickRest() {

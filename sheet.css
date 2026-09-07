@@ -1902,6 +1902,82 @@ body.no-battle-helper .battle-helper { display: none; }
 }
 .battle-helper.collapsed .bh-body { display: none; }
 
+/* The panel's contents are built in JS and rebuilt whole on every change,
+   so a state class like `.collapsed` is set from the store when the node is
+   built, never toggled in place. */
+.bh-section + .bh-section { margin-top: 14px; }
+.bh-head {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--heading-font); font-size: var(--fs-label-sm);
+  letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+  padding-bottom: 4px; margin-bottom: 6px;
+  border-bottom: 1px solid var(--field-border);
+  cursor: pointer; user-select: none;
+}
+.bh-head:hover, .bh-head:focus-visible { color: var(--highlight); }
+.bh-head:hover .section-caret { color: var(--highlight); }
+/* Nothing else in the panel sets a display on these children, so the fold
+   needs neither !important nor a place at the end of the file — unlike the
+   sheet's own sections. */
+.bh-section.collapsed > *:not(.bh-head) { display: none; }
+.bh-section.collapsed > .bh-head { margin-bottom: 0; }
+
+/* Recoveries left: the count is the point, so it carries the size. */
+.bh-stat { display: flex; align-items: baseline; gap: 6px; }
+.bh-stat-num {
+  font-family: var(--heading-font); font-size: 26px; line-height: 1;
+  color: var(--highlight);
+}
+.bh-stat-num.bh-spent { color: var(--accent); }
+.bh-stat-label {
+  font-family: var(--heading-font); font-size: 11px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--ink-dim);
+}
+
+.bh-ok { font-size: 12px; color: var(--ink-faint); margin-top: 6px; }
+.bh-warn { margin-top: 6px; }
+.bh-warn-line { font-size: 13px; font-weight: 700; color: var(--accent); }
+
+/* Group heading for one refresh cadence — the ⚔ / ↺ annotation carries the
+   meaning, the words just spell it out. */
+.bh-group {
+  display: flex; align-items: center; gap: 5px;
+  margin: 9px 0 4px;
+  font-family: var(--heading-font); font-size: 10px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.bh-group:first-of-type { margin-top: 2px; }
+
+.bh-item {
+  display: flex; align-items: baseline; gap: 6px;
+  padding: 3px 5px;
+  border-left: 2px solid var(--field-border);
+  background: var(--bg-card-alt);
+  border-radius: 0 3px 3px 0;
+}
+.bh-item + .bh-item { margin-top: 3px; }
+.bh-item-name {
+  flex: 1; min-width: 0;
+  font-size: 12.5px; color: var(--ink-dim);
+  overflow-wrap: anywhere;
+}
+.bh-item-tag {
+  font-family: var(--heading-font); font-size: 9px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--ink-faint); flex-shrink: 0;
+}
+.bh-item-mark { font-size: 11px; color: var(--accent); flex-shrink: 0; }
+.bh-item-count {
+  font-family: var(--heading-font); font-size: 11px;
+  color: var(--highlight); flex-shrink: 0;
+}
+
+/* Turn structure: plain `.note` lines with a bold lead-in, the same shape
+   the class panels use for a rules reminder. Only the spacing and the
+   numbered list need saying. */
+.bh-turn > * + * { margin-top: 4px; }
+.bh-turn-steps { margin: 0; padding-left: 17px; }
+.bh-turn-steps li { margin-top: 2px; }
+
 /* The dice tray is fixed to the same corner, so it steps left by whatever
    the panel currently occupies instead of hiding behind it. */
 body:not(.no-battle-helper) .dice-tray { right: calc(var(--bh-rail) + 14px); }
