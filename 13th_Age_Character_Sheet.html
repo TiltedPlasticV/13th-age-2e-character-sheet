@@ -856,6 +856,24 @@
     text-decoration-thickness: 2px;
   }
 
+  /* The Arc / Desperate row's second box. Same size and behaviour as a use
+     box, deliberately not the same shape: it isn't one more of the same use,
+     it's the one you get back by nearly dying. Round and dashed while unspent,
+     filling with the theme accent rather than the check colour. */
+  .check-box.desperate {
+    border-radius: 50%;
+    border-style: dashed;
+    border-color: var(--ink-faint);
+    margin-left: 3px;
+  }
+  .check-box.desperate:hover { border-color: var(--accent); }
+  .check-box.desperate.checked {
+    background: var(--accent-dim);
+    border-style: solid;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
   /* Sequential-tracker rules — see corresponding .skull-box.disabled block. */
   .check-box.disabled { cursor: not-allowed; }
   .check-box.disabled:not(.checked) {
@@ -1734,6 +1752,54 @@
   body.no-dice .roll-btn,
   body.no-dice .dice-action { display: none; }
 
+  /* ── BATTLE HELPER (right-hand overlay panel) ──
+     A Utilities switch turns the whole module off, and when off the panel is
+     gone rather than tucked away — nothing is torn down in JS, so switching it
+     back restores it with the open/collapsed state it had. The rail keeps its
+     place when the body collapses, so the control never moves out from under
+     the cursor. The widths are variables because the dice tray, fixed to the
+     same corner, steps aside by them. */
+  :root { --bh-width: 320px; --bh-rail: 30px; }
+
+  .battle-helper {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 140;
+    display: flex; align-items: stretch;
+    font-family: var(--body-font);
+    background: var(--bg-card);
+    border-left: 1px solid var(--field-border);
+    box-shadow: -6px 0 24px rgba(0,0,0,0.45);
+    transition: background 0.4s, border-color 0.4s;
+  }
+  body.no-battle-helper .battle-helper { display: none; }
+
+  .bh-rail {
+    flex: 0 0 var(--bh-rail); width: var(--bh-rail);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 10px 0; cursor: pointer; user-select: none;
+    background: var(--bg-card-alt);
+    border-right: 1px solid var(--field-border);
+  }
+  .battle-helper.collapsed .bh-rail { border-right: none; }
+  .bh-rail:focus-visible { outline: 2px solid var(--highlight); outline-offset: -2px; }
+  .bh-rail-caret { color: var(--ink-faint); font-size: 11px; }
+  .bh-rail-title {
+    writing-mode: vertical-rl;
+    font-family: var(--heading-font); font-size: var(--fs-label-sm);
+    letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+  }
+
+  .bh-body {
+    width: calc(var(--bh-width) - var(--bh-rail));
+    overflow-y: auto;
+    padding: 12px;
+  }
+  .battle-helper.collapsed .bh-body { display: none; }
+
+  /* The dice tray is fixed to the same corner, so it steps left by whatever
+     the panel currently occupies instead of hiding behind it. */
+  body:not(.no-battle-helper) .dice-tray { right: calc(var(--bh-rail) + 14px); }
+  body:not(.no-battle-helper).bh-open .dice-tray { right: calc(var(--bh-width) + 14px); }
+
   .esc-row {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     padding: 8px 10px 6px;
@@ -1839,6 +1905,8 @@
     /* The 300px floor won't fit beside the tier badge at this width. */
     .char-name-row .field-inline { font-size: 24px; min-width: 0; }
     .dice-tray { right: 8px; bottom: 8px; width: min(272px, calc(100vw - 16px)); }
+    /* Redefined at the root so the dice-tray offsets shrink with it. */
+    :root { --bh-width: min(320px, calc(100vw - 48px)); }
   }
 
   /* ── REDUCED MOTION ──
@@ -1879,6 +1947,7 @@
     .section-caret { display: none; }
     #utilities-section { display: none; }
     .dice-tray { display: none; }
+    .battle-helper { display: none; }
     .roll-btn, .hp-adjust, .action-row { display: none; }
     body::before { display: none; }
     body { background: #fff; color: #1a1510; }
@@ -2260,6 +2329,11 @@
         <span class="class-switch-label">Dice Roller</span>
         <span class="class-switch-track"><span class="class-switch-knob"></span></span>
       </div>
+      <div class="class-switch" id="pref-battle-helper" role="switch" tabindex="0" aria-checked="false"
+           title="A side panel of at-the-table helpers — off by default, and gone entirely while it is off">
+        <span class="class-switch-label">Battle Helper</span>
+        <span class="class-switch-track"><span class="class-switch-knob"></span></span>
+      </div>
     </div>
   </div>
 
@@ -2295,6 +2369,18 @@
   </div>
 </div>
 
+<!-- BATTLE HELPER — right-hand overlay panel, collapses to its rail -->
+<div class="battle-helper collapsed" id="battle-helper">
+  <div class="bh-rail" id="bh-rail" role="button" tabindex="0" aria-expanded="false"
+       aria-controls="bh-body" title="Show or hide the battle helper">
+    <span class="bh-rail-caret" id="bh-caret" aria-hidden="true">◂</span>
+    <span class="bh-rail-title">Battle Helper</span>
+  </div>
+  <div class="bh-body" id="bh-body">
+    <!-- Contents go here. -->
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -2327,7 +2413,7 @@
     // `collapsed` is a set of data-section (or data-section-group) keys, not a
     // list of every section: absent means open, so one added later opens by
     // default.
-    prefs: { animations: true, diceRoller: true, collapsed: {} }
+    prefs: { animations: true, diceRoller: true, battleHelper: false, battleHelperOpen: false, collapsed: {} }
   };
 
   // ── AUTO-DERIVED FIELDS ───────────────────────────────────────────────
@@ -2630,6 +2716,10 @@
       id: 'pref-dice-roller', bodyClass: 'no-dice',
       on: 'Dice roller on', off: 'Dice roller hidden',
     },
+    battleHelper: {
+      id: 'pref-battle-helper', bodyClass: 'no-battle-helper',
+      on: 'Battle helper on', off: 'Battle helper off',
+    },
   };
 
   // A missing or malformed `prefs` reads as all-on, so a sheet saved before
@@ -2639,6 +2729,10 @@
     s.prefs = {
       animations: p.animations !== false,
       diceRoller: p.diceRoller !== false,
+      // The odd one out: opt-in rather than opt-out, so a sheet saved before
+      // the panel existed doesn't load with something new covering its edge.
+      battleHelper: p.battleHelper === true,
+      battleHelperOpen: p.battleHelperOpen === true,
       collapsed: (p.collapsed && typeof p.collapsed === 'object') ? p.collapsed : {},
     };
   }
@@ -2653,6 +2747,33 @@
       sw.classList.toggle('on', on);
       sw.setAttribute('aria-checked', on ? 'true' : 'false');
     });
+    renderBattleHelper();
+  }
+
+  // ── BATTLE HELPER ──
+  // The panel's own open/collapsed state, kept apart from the switch that
+  // makes it exist at all: turning the module off and back on brings it back
+  // the way it was left. `bh-open` on the body is what the dice tray reads to
+  // step out of the panel's way; the panel is never open while hidden.
+  function renderBattleHelper() {
+    if (!state.prefs) normalizePrefs(state);
+    const panel = document.getElementById('battle-helper');
+    if (!panel) return;
+    const on = state.prefs.battleHelper === true;
+    const open = on && state.prefs.battleHelperOpen === true;
+    panel.classList.toggle('collapsed', !open);
+    document.body.classList.toggle('bh-open', open);
+    const rail = document.getElementById('bh-rail');
+    if (rail) rail.setAttribute('aria-expanded', open ? 'true' : 'false');
+    const caret = document.getElementById('bh-caret');
+    if (caret) caret.textContent = open ? '▸' : '◂';
+  }
+
+  function toggleBattleHelper() {
+    if (!state.prefs) normalizePrefs(state);
+    state.prefs.battleHelperOpen = !state.prefs.battleHelperOpen;
+    renderBattleHelper();
+    saveNow();
   }
 
   // Toasted rather than logged: the log lives in the dice tray, which one of
@@ -2964,8 +3085,15 @@
   }
 
   // Shared "use" tracker: N check-boxes backed by state[stateKey][idx][prop][u],
-  // for powers, spells and icon relationships. `prop` defaults to 'used'; icons
-  // pass 'available' for their second track.
+  // for powers, spells and icon relationships. opts:
+  //   prop    which map on the row the ticks live in (default 'used'); icons
+  //           pass 'available' for their second track, a desperate power
+  //           'desperate' for its recharge box
+  //   glyph   what a ticked box shows (default '✕')
+  //   states  how many levels a box cycles through (see below)
+  //   variant extra class on the box, for a track that must read as a
+  //           different kind of tick rather than one more of the same
+  //   title   hover text, when the box needs explaining on its own
   //
   // `states` is how many levels a box cycles through:
   //   2 (default) — off / on
@@ -2979,39 +3107,40 @@
     if (n > states - 1) n = states - 1;
     return n;
   }
-  function boxClass(lvl) {
-    return 'check-box' + (lvl >= 1 ? ' checked' : '') + (lvl === 2 ? ' twist' : '');
+  function boxClass(lvl, variant) {
+    return 'check-box' + (variant ? ' ' + variant : '')
+      + (lvl >= 1 ? ' checked' : '') + (lvl === 2 ? ' twist' : '');
   }
   // 2 = "mixed" is the natural ARIA value for the partial/twist state.
   function boxAria(lvl) {
     return lvl === 2 ? 'mixed' : (lvl === 1 ? 'true' : 'false');
   }
 
-  function appendUses(parent, stateKey, idx, count, valuesObj, prop, glyph, states) {
-    prop = prop || 'used';
-    glyph = glyph || '✕';
-    states = states || 2;
+  function appendUses(parent, stateKey, idx, count, valuesObj, opts = {}) {
+    const states = opts.states || 2;
     for (let u = 0; u < count; u++) {
       const lvl = useLevel(valuesObj && valuesObj[u], states);
       const box = el('div', {
-        class: boxClass(lvl),
+        class: boxClass(lvl, opts.variant),
         role: 'checkbox', tabindex: '0',
-        'aria-checked': boxAria(lvl)
-      }, glyph);
-      box.addEventListener('click', () => cycleUse(stateKey, idx, u, box, prop, states));
+        'aria-checked': boxAria(lvl),
+        'aria-label': opts.label || null,
+        title: opts.title || null
+      }, opts.glyph || '✕');
+      box.addEventListener('click', () => cycleUse(stateKey, idx, u, box, opts));
       parent.appendChild(box);
     }
   }
 
-  function cycleUse(stateKey, idx, useIdx, boxEl, prop, states) {
-    prop = prop || 'used';
-    states = states || 2;
+  function cycleUse(stateKey, idx, useIdx, boxEl, opts = {}) {
+    const prop = opts.prop || 'used';
+    const states = opts.states || 2;
     const item = state[stateKey][idx];
     if (!item[prop]) item[prop] = {};
     const next = (useLevel(item[prop][useIdx], states) + 1) % states;
     if (next === 0) delete item[prop][useIdx];
     else item[prop][useIdx] = next;
-    boxEl.className = boxClass(next);
+    boxEl.className = boxClass(next, opts.variant);
     boxEl.setAttribute('aria-checked', boxAria(next));
     saveNow();
   }
@@ -3057,8 +3186,8 @@
       const availTrack = el('div', { class: 'icon-track' });
       const usedTrack  = el('div', { class: 'icon-track' });
       if (dice > 0) {
-        appendUses(availTrack, 'icons', i, dice, ic.available, 'available', '✓', 3);
-        appendUses(usedTrack,  'icons', i, dice, ic.used,      'used',      '✕');
+        appendUses(availTrack, 'icons', i, dice, ic.available, { prop: 'available', glyph: '✓', states: 3 });
+        appendUses(usedTrack,  'icons', i, dice, ic.used);
       }
       list.appendChild(el('div', { class: 'icon-rel-row' },
         el('input', {
@@ -3106,11 +3235,18 @@
   //
   // The stored value is the token, never the label, so renaming a label later
   // isn't a data migration.
+  //
+  // `uses` fixes the number of boxes and takes the Uses field away with it:
+  // a mode that is 1/arc by definition has nothing for the player to set.
+  // `desperate` adds the second, differently-drawn box beside it.
   const USAGE_MODES = {
-    passive: { label: 'Passive' },
-    atwill:  { label: 'At-Will' },
-    battle:  { label: 'Battle', track: 'battle' },
-    arc:     { label: 'Arc',    track: 'arc'    },
+    passive:   { label: 'Passive' },
+    atwill:    { label: 'At-Will' },
+    battle:    { label: 'Battle', track: 'battle' },
+    arc:       { label: 'Arc',    track: 'arc'    },
+    // 1/arc, plus one recharge per arc off a failed death save or the last
+    // recovery — two separate 1/arc uses, so two separate boxes.
+    desperate: { label: 'Arc / Desperate', track: 'arc', uses: 1, desperate: true },
   };
   const USAGE_KEYS = Object.keys(USAGE_MODES);
   const USAGE_DEFAULT = 'passive';
@@ -3125,6 +3261,13 @@
     return (item && USAGE_MODES[item.usage]) ? item.usage : USAGE_DEFAULT;
   }
   function usageTrack(item) { return USAGE_MODES[usageMode(item)].track; }
+  // How many use boxes a row draws: the mode's fixed count, else whatever the
+  // player typed into Uses (untracked modes draw none).
+  function usageUses(item) {
+    const mode = USAGE_MODES[usageMode(item)];
+    if (mode.uses) return mode.uses;
+    return mode.track ? (parseInt(item.max_uses) || 0) : 0;
+  }
 
   // Emptying a list drops the document's height by everything that was in it,
   // and the browser clamps the scroll position to the new, much shorter page.
@@ -3173,10 +3316,21 @@
       // its checkboxes aren't drawn. They are *hidden, never cleared* — set
       // the row back to Battle or Arc and the same ticks come back.
       const track = usageTrack(item);
-      const maxU = track ? (parseInt(item.max_uses) || 0) : 0;
+      const mode = USAGE_MODES[usageMode(item)];
+      const maxU = usageUses(item);
       const useChecks = el('div', { class: 'use-checks' });
       if (maxU > 0) {
         appendUses(useChecks, stateKey, i, maxU, item.used);
+        // Drawn as a skull rather than one more ✕ because it isn't one more of
+        // the same use: it's the one you get back by nearly dying.
+        if (mode.desperate) {
+          appendUses(useChecks, stateKey, i, 1, item.desperate, {
+            prop: 'desperate', glyph: '☠', variant: 'desperate',
+            label: 'Desperate use',
+            title: 'Desperate use — regained once per arc when you fail a death '
+                 + 'save or spend your last recovery'
+          });
+        }
         useChecks.appendChild(trackAnnotation(track));
       }
       const prepBtn = withPrep ? el('div', {
@@ -3195,7 +3349,8 @@
           row.usage = e.target.value;
           // Battle and Arc almost always mean one use. Filling it in beats
           // showing a tracked row with no boxes to tick.
-          if (usageTrack(row) && !(parseInt(row.max_uses) > 0)) row.max_uses = '1';
+          if (usageTrack(row) && !USAGE_MODES[usageMode(row)].uses
+              && !(parseInt(row.max_uses) > 0)) row.max_uses = '1';
           rerender();
           saveNow();
         }
@@ -3214,7 +3369,7 @@
         }),
         usageSel,
         maxU > 0 ? useChecks : null,
-        track ? el('input', {
+        (track && !mode.uses) ? el('input', {
           class: 'field-inline field-sm', value: item.max_uses || '',
           placeholder: 'Uses', title: 'Number of use checkboxes',
           inputmode: 'numeric',
@@ -3774,17 +3929,22 @@
   // `skull_3` / `rec_2`. We mutate that map and re-render the affected
   // trackers; the renderers read the same keys back out.
 
-  // Clear the use-trackers on every ability row whose usage mode refreshes
-  // here. Because usage is a closed set, this is exact: Passive and At-Will
-  // rows are skipped by definition, not by guessing at what the player typed.
+  // Clear the use-trackers on every ability row that refreshes here. Matched
+  // on refresh cadence rather than mode, so a mode added later refreshes with
+  // whichever track it declares and no call site needs updating — Arc /
+  // Desperate rides in on 'arc' that way. Because usage is a closed set this
+  // is exact: Passive and At-Will rows have no track and are skipped by
+  // definition, not by guessing at what the player typed.
   // Returns how many rows actually had ticks, for the log line.
-  function clearUses(modes) {
+  function clearUses(tracks) {
     let n = 0;
     ABILITY_LISTS.forEach(key => {
       (state[key] || []).forEach(item => {
-        if (!modes.includes(usageMode(item))) return;
-        if (Object.keys(item.used || {}).length) n++;
+        if (!tracks.includes(usageTrack(item))) return;
+        if (Object.keys(item.used || {}).length
+            || Object.keys(item.desperate || {}).length) n++;
         item.used = {};
+        item.desperate = {};
       });
     });
     return n;
@@ -4246,6 +4406,7 @@
       if (fn) btn.addEventListener('click', fn);
     });
     document.getElementById('dice-tray-head').addEventListener('click', toggleDiceTray);
+    document.getElementById('bh-rail').addEventListener('click', toggleBattleHelper);
     document.getElementById('esc-plus').addEventListener('click', () => bumpEscalation(1));
     document.getElementById('esc-minus').addEventListener('click', () => bumpEscalation(-1));
     document.getElementById('esc-reset').addEventListener('click', () => {
