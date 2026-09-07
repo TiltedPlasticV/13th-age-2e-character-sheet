@@ -625,9 +625,12 @@ function buildBhUses() {
   return sec;
 }
 
-// Post-battle you must keep spending recoveries while you are still
-// staggered, so the two numbers that decide it belong side by side: what
-// you have left to spend, and how far you still have to climb.
+// Post-battle healing, in the order you have to think about it: how many
+// recoveries you have to spend, then the healing the rules make you do,
+// then the healing you'd like to do. The last two are separate rows because
+// they answer different questions — one is a floor you cannot refuse, the
+// other is a ceiling you're working towards — and when you're staggered
+// both are true at once.
 function buildBhStatus() {
   const max = maxRecoveries();
   let spent = 0;
@@ -641,9 +644,24 @@ function buildBhStatus() {
       el('span', { class: 'note' }, 'of ' + max))
   ]);
   sec.appendChild(bhStaggerNode());
+  const toMax = bhToMaxNode();
+  if (toMax) sec.appendChild(toMax);
   return sec;
 }
 
+// "about 2 recoveries at 13 avg" — the same estimate both healing rows
+// want. An average is what it is worth: a rough count of what you are about
+// to burn, not a promise. Empty when the average isn't known, so the
+// sentence it sits in simply ends earlier rather than guessing.
+function bhRecoveryEstimate(hp) {
+  const avg = intOrNull(state.fields.recovery_avg);
+  if (avg === null || avg <= 0) return '';
+  return 'about ' + plural(Math.ceil(hp / avg), 'recovery', 'recoveries')
+       + ' at ' + avg + ' avg';
+}
+
+// The floor: 13th Age makes you keep healing until you are out of the
+// staggered range, so this row is about what you have no choice over.
 function bhStaggerNode() {
   const cur = intOrNull(state.fields.current_hp);
   const stag = intOrNull(state.fields.staggered);
@@ -652,18 +670,31 @@ function bhStaggerNode() {
       'Fill in current HP and the staggered value to track this.');
   }
   const need = stag + 1 - cur;
-  if (need <= 0) return el('div', { class: 'bh-ok' }, '✔ Not staggered');
-  // The average is what the recovery estimate is worth — a rough count of
-  // how many you are about to burn, not a promise.
-  const avg = intOrNull(state.fields.recovery_avg);
-  const recs = (avg !== null && avg > 0) ? Math.ceil(need / avg) : null;
-  return el('div', { class: 'bh-warn' },
-    el('div', { class: 'bh-warn-line' },
-      (cur > 0 ? '⚠ Staggered' : '☠ Down') + ' — regain ' + need + ' HP'),
+  if (need <= 0) {
+    return el('div', { class: 'bh-status ok' }, '✔ Not staggered — no mandatory healing');
+  }
+  const est = bhRecoveryEstimate(need);
+  return el('div', { class: 'bh-status warn' },
+    el('div', { class: 'bh-status-line' },
+      (cur > 0 ? '⚠ Staggered' : '☠ Down') + ' — you MUST heal ' + need + ' HP'),
     el('div', { class: 'note' },
-      'Keep spending recoveries until you are above ' + stag + ' HP'
-      + (recs !== null ? ' · about ' + plural(recs, 'recovery', 'recoveries')
-                       + ' at ' + avg + ' avg' : ''))
+      'Spells or recoveries, until you are above ' + stag + ' HP'
+      + (est ? ' · ' + est : ''))
+  );
+}
+
+// The ceiling: optional, so the row is simply absent at full HP rather than
+// saying so — there is nothing to decide then.
+function bhToMaxNode() {
+  const cur = intOrNull(state.fields.current_hp);
+  const maxHp = intOrNull(state.fields.max_hp);
+  if (cur === null || maxHp === null) return null;
+  const gap = maxHp - cur;
+  if (gap <= 0) return null;
+  const est = bhRecoveryEstimate(gap);
+  return el('div', { class: 'bh-status' },
+    el('div', { class: 'bh-status-line' }, gap + ' HP from maximum'),
+    est ? el('div', { class: 'note' }, est) : null
   );
 }
 

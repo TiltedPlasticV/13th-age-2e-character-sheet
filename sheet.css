@@ -1954,9 +1954,13 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
   text-transform: uppercase; color: var(--ink-dim);
 }
 
-.bh-ok { font-size: var(--fs-sm); color: var(--ink-faint); margin-top: 6px; }
-.bh-warn { margin-top: 6px; }
-.bh-warn-line { font-size: var(--fs-md); font-weight: 700; color: var(--accent); }
+/* One row of the healing block: a lead line and the working under it. The
+   modifiers are the only thing that differs — `warn` for healing the rules
+   make you do, `ok` for the one-liner that says you don't have to. */
+.bh-status { margin-top: 6px; }
+.bh-status-line { font-size: var(--fs-md); font-weight: 700; color: var(--ink-dim); }
+.bh-status.warn .bh-status-line { color: var(--ink); }
+.bh-status.ok { font-size: var(--fs-sm); color: var(--ink-faint); }
 
 /* Group heading for one refresh cadence — the ⚔ / ↺ annotation carries the
    meaning, the words just spell it out. */
