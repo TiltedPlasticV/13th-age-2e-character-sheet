@@ -1883,6 +1883,16 @@ body.no-dice .dice-action { display: none; }
 }
 body.no-battle-helper .battle-helper { display: none; }
 
+/* The rail is fixed over the right edge of the page, so wherever the sheet
+   reaches that edge — a phone, or just a window not much wider than the
+   container — it sits on top of the content and hides it. Reserve its strip
+   on the body instead and the sheet compresses to the left of it.
+   Deliberately tied to the module being on, not to the panel being open:
+   keying it to `open` would recentre the whole sheet on every toggle, and an
+   expanded panel is *meant* to sit over the sheet — you opened it to read
+   it, and it closes again. */
+body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
+
 .bh-rail {
   flex: 0 0 var(--bh-rail); width: var(--bh-rail);
   display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -2136,7 +2146,8 @@ body.no-anim, body.no-anim *, body.no-anim *::before, body.no-anim *::after {
   .battle-helper { display: none; }
   .roll-btn, .hp-adjust, .action-row { display: none; }
   body::before { display: none; }
-  body { background: #fff; color: #1a1510; }
+  /* The panel doesn't print, so neither does the strip reserved for it. */
+  body { background: #fff; color: #1a1510; padding-right: 0; }
   .field-inline, textarea.field-block {
     border: 1px solid #ccc; background: #fafafa; color: #1a1510;
   }
