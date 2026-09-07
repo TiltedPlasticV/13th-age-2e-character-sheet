@@ -450,12 +450,9 @@
   .section-caret { margin-left: auto; font-size: 12px; color: var(--ink-faint); }
   .section[data-section] > .section-head:hover .section-caret { color: var(--highlight); }
 
-  /* Screen only: a printed sheet is a record, so it shows every section
-     whether or not it was folded away on screen. */
-  @media screen {
-    .section.collapsed > *:not(.section-head) { display: none; }
-    .section.collapsed > .section-head { border-bottom: none; }
-  }
+  /* The rules that actually fold a section live at the end of the stylesheet —
+     any contextual layout rule setting `display` on a section's child would
+     otherwise tie them on specificity and win on source order. */
 
   .section {
     margin-bottom: var(--section-gap, 8px);
@@ -1860,6 +1857,20 @@
     transition: none !important;
   }
 
+  /* ── COLLAPSED SECTIONS ──
+     Screen only: a printed sheet is a record, so it shows every section
+     whether or not it was folded away on screen.
+
+     Last in the stylesheet, and !important, for the same reason the rules
+     above are: a fold has to beat every layout rule that gives a section's
+     body a display — `.combo-row > .section > .section-body` ties this on
+     specificity, and a class module's injected CSS lands after this file
+     entirely. */
+  @media screen {
+    .section.collapsed > *:not(.section-head) { display: none !important; }
+    .section.collapsed > .section-head { border-bottom: none; }
+  }
+
   /* ── PRINT ── */
   @media print {
     :root { color-scheme: light; }
@@ -1922,7 +1933,10 @@
   </div>
 
   <!-- ABILITY SCORES + DEFENSES (side by side) -->
-  <div class="combo-row">
+  <!-- Two half-width sections read as one band, so they fold as one:
+       data-section-group is both the key they share and the set of heads that
+       toggle each other. -->
+  <div class="combo-row" data-section-group="abilities-defenses">
     <div class="section" data-section="abilities">
       <div class="section-head"><span class="icon">⬡</span> Ability Scores</div>
       <div class="section-body">
@@ -2310,8 +2324,9 @@
     // Display preferences under one key, so the next one doesn't need
     // threading through the load and reset paths. Settings, not character
     // data: like the theme, they survive "New Sheet". See PREF_SWITCHES.
-    // `collapsed` is a set of data-section keys, not a list of every section:
-    // absent means open, so a section added later opens by default.
+    // `collapsed` is a set of data-section (or data-section-group) keys, not a
+    // list of every section: absent means open, so one added later opens by
+    // default.
     prefs: { animations: true, diceRoller: true, collapsed: {} }
   };
 
@@ -2661,18 +2676,33 @@
     return state.prefs.collapsed;
   }
 
+  // Sections sharing a `data-section-group` wrapper — the half-width pair in a
+  // combo-row — fold together and under one key, because half a folded band
+  // reads as a layout bug rather than a choice.
+  function sectionPeers(section) {
+    const group = section.closest('[data-section-group]');
+    return group ? Array.from(group.querySelectorAll('.section[data-section]')) : [section];
+  }
+
+  function sectionKey(section) {
+    const group = section.closest('[data-section-group]');
+    return group ? group.dataset.sectionGroup : section.dataset.section;
+  }
+
   function setSectionCollapsed(section, collapsed) {
-    const head = section.querySelector('.section-head');
-    const caret = head && head.querySelector('.section-caret');
-    section.classList.toggle('collapsed', collapsed);
-    if (head) head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    if (caret) caret.textContent = collapsed ? '▸' : '▾';
+    sectionPeers(section).forEach(peer => {
+      const head = peer.querySelector('.section-head');
+      const caret = head && head.querySelector('.section-caret');
+      peer.classList.toggle('collapsed', collapsed);
+      if (head) head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      if (caret) caret.textContent = collapsed ? '▸' : '▾';
+      // Textareas measure zero while hidden, so the ones coming back into view
+      // need re-measuring — see the zero guard in flushAutoGrow.
+      if (!collapsed) peer.querySelectorAll('textarea.field-block').forEach(autoGrow);
+    });
     const map = collapsedMap();
-    if (collapsed) map[section.dataset.section] = true;
-    else delete map[section.dataset.section];
-    // Textareas measure zero while hidden, so the ones coming back into view
-    // need re-measuring — see the zero guard in flushAutoGrow.
-    if (!collapsed) section.querySelectorAll('textarea.field-block').forEach(autoGrow);
+    if (collapsed) map[sectionKey(section)] = true;
+    else delete map[sectionKey(section)];
   }
 
   // Wires any section not yet wired, then pushes the saved state onto all of
@@ -2696,7 +2726,7 @@
           saveNow();
         });
       }
-      setSectionCollapsed(section, !!map[section.dataset.section]);
+      setSectionCollapsed(section, !!map[sectionKey(section)]);
     });
   }
 
