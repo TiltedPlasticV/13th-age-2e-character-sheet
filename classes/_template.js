@@ -90,14 +90,28 @@
     `,
 
     // ── Battle helper entries (optional) ──
-    // Anything limited your class tracks outside the ability lists — a
-    // once-per-arc trigger, a per-battle check — so the Battle Helper panel
-    // can list it beside the player's spells and features. Return every
-    // tracker you own with how many uses are left; the panel drops the
-    // spent ones. `track` is 'battle' or 'arc'.
+    // Anything your class can *do* that isn't in an ability list — a
+    // once-per-arc trigger, a per-battle check, an at-will attack that
+    // replaces the basic one — so the Battle Helper panel can list it
+    // beside the player's spells and features. A resource that isn't an
+    // action in itself (the rogue's bravado points) doesn't belong here.
+    //
+    // Return every entry you own and let the panel filter: `left` is how
+    // many uses remain, and 0 drops the row. `track` is 'atwill', 'battle'
+    // or 'arc' — an at-will has nothing to spend, so use `left` only to say
+    // whether it currently applies. `trigger` is what the action costs
+    // ('standard', 'free', 'hit'), and is what the panel's tag column shows
+    // — set it or the row reads as a standard action. `note` is an optional
+    // short reminder shown on the row; `title` an optional tooltip
+    // (otherwise the row hovers as your class name).
     // battleHelper() {
     //   const d = classData('template');
-    //   return [{ name: 'Second wind', track: 'battle', left: d.wind ? 0 : 1 }];
+    //   return [
+    //     { name: 'Focused strike', trigger: 'standard', track: 'atwill',
+    //       note: 'instead of a basic attack', left: d.focused ? 1 : 0 },
+    //     { name: 'Second wind', trigger: 'free', track: 'battle',
+    //       left: d.wind ? 0 : 1 },
+    //   ];
     // },
 
     // ── Lifecycle hooks (all optional) ──

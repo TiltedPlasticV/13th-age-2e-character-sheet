@@ -389,9 +389,31 @@
     // is what a ticked box reports — the panel drops those itself.
     battleHelper() {
       const d = classData('barbarian');
+      const raging = !!d.raging;
+      // All three ways in are ways to *start* raging, so none of them is
+      // worth listing once you already are — they come back, still unspent,
+      // the moment the rage ends. `start()` is that shared condition; each
+      // row adds whether its own use has gone.
+      const start = spent => (raging || spent) ? 0 : 1;
       return [
-        { name: 'Rage: free start', track: 'arc',    left: d.freeUsed ? 0 : 1 },
-        { name: 'Rage: when hit',   track: 'battle', left: d.hitCheck ? 0 : 1 },
+        // Free, at the start of every one of your turns, so it belongs with
+        // the at-will actions rather than with the two one-shot ways in.
+        { name: 'Rage die', note: 'start of turn · 9+', track: 'atwill',
+          trigger: 'free',
+          title: 'Free action at the start of your turn: roll d12 + the '
+               + 'escalation die, and on 9+ you start raging.',
+          left: start(false) },
+        // The other side of the same switch: while raging these are what
+        // you attack with, in place of a basic attack.
+        // No note: the name plus the two attack cards on the sheet say it,
+        // and a reminder here pushed the row onto a second line.
+        { name: 'Raging strike / throw', track: 'atwill', trigger: 'standard',
+          title: 'While raging, these replace your basic attacks.',
+          left: raging ? 1 : 0 },
+        { name: 'Rage: free start', track: 'arc',    trigger: 'free',
+          left: start(d.freeUsed) },
+        { name: 'Rage: when hit',   track: 'battle', trigger: 'hit',
+          left: start(d.hitCheck) },
       ];
     },
 

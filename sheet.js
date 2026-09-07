@@ -37,7 +37,7 @@ let state = {
   // `collapsed` is a set of data-section (or data-section-group) keys, not a
   // list of every section: absent means open, so one added later opens by
   // default.
-  prefs: { animations: true, diceRoller: true, battleHelper: false, battleHelperOpen: false, collapsed: {} }
+  prefs: { animations: true, diceRoller: true, battleHelper: false, battleHelperOpen: true, collapsed: {} }
 };
 
 // ── AUTO-DERIVED FIELDS ───────────────────────────────────────────────
@@ -356,7 +356,13 @@ function normalizePrefs(s) {
     // The odd one out: opt-in rather than opt-out, so a sheet saved before
     // the panel existed doesn't load with something new covering its edge.
     battleHelper: p.battleHelper === true,
-    battleHelperOpen: p.battleHelperOpen === true,
+    // The rail is only reachable while the module is on, so a stored
+    // "collapsed" from a sheet where it is off cannot be a choice anyone
+    // made — and an opt-in panel that arrives as a bare 30px rail is one
+    // nobody finds. So the collapse is remembered only alongside the module
+    // being on, which makes the first switch-on arrive expanded without
+    // needing a "have they seen it yet" flag that old saves wouldn't carry.
+    battleHelperOpen: p.battleHelper === true ? p.battleHelperOpen !== false : true,
     collapsed: (p.collapsed && typeof p.collapsed === 'object') ? p.collapsed : {},
   };
 }
@@ -377,8 +383,7 @@ function applyPrefs() {
 // ── BATTLE HELPER ──
 // The panel's own open/collapsed state, kept apart from the switch that
 // makes it exist at all: turning the module off and back on brings it back
-// the way it was left. `bh-open` on the body is what the dice tray reads to
-// step out of the panel's way; the panel is never open while hidden.
+// the way it was left. The panel is never open while hidden.
 function renderBattleHelper() {
   if (!state.prefs) normalizePrefs(state);
   const panel = document.getElementById('battle-helper');
@@ -386,7 +391,6 @@ function renderBattleHelper() {
   const on = state.prefs.battleHelper === true;
   const open = on && state.prefs.battleHelperOpen === true;
   panel.classList.toggle('collapsed', !open);
-  document.body.classList.toggle('bh-open', open);
   const rail = document.getElementById('bh-rail');
   if (rail) rail.setAttribute('aria-expanded', open ? 'true' : 'false');
   const caret = document.getElementById('bh-caret');
@@ -451,18 +455,29 @@ function availableAbilities() {
   ABILITY_LISTS.forEach(key => {
     if (!abilityListVisible(key)) return;
     (state[key] || []).forEach(item => {
-      const track = usageTrack(item);
+      // An At-Will row has no tracker to read — it is simply always there —
+      // so it lists unconditionally, under its own heading. A Passive row
+      // isn't an action at all and never lists.
+      const track = usageMode(item) === 'atwill' ? 'atwill' : usageTrack(item);
       if (!track) return;
       if (key === 'spells' && item.prepared === false) return;
+      // A skill check or a bit of roleplay isn't something to reach for
+      // mid-fight.
+      if (isOutOfBattle(item)) return;
       const name = (item.name || '').trim();
       if (!name) return;
+      const row = { name, trigger: triggerMode(item), source: abilityTag(key), track };
+      if (track === 'atwill') {
+        out.push(Object.assign(row, { left: 1 }));
+        return;
+      }
       // An unspent desperate box is one more use of the same ability, so it
       // adds to the count rather than repeating the name on a second line —
       // the ☠ says one of them is the one you get back by nearly dying.
       const desperate = USAGE_MODES[usageMode(item)].desperate
         && !useLevel(item.desperate && item.desperate[0], 2);
       const left = unspentUses(item) + (desperate ? 1 : 0);
-      if (left) out.push({ name, tag: abilityTag(key), track, left, desperate });
+      if (left) out.push(Object.assign(row, { left, desperate }));
     });
   });
   return out;
@@ -487,10 +502,12 @@ function classAbilities() {
   let rows = [];
   try { rows = mod.battleHelper() || []; } catch (e) { console.warn('class hook battleHelper', e); }
   const key = currentClassKey();
-  const tag = key ? key[0].toUpperCase() + key.slice(1) : '';
+  const source = key ? key[0].toUpperCase() + key.slice(1) : '';
   return rows
     .filter(r => r && r.name && TRACK_TYPES[r.track] && (r.left === undefined || r.left > 0))
-    .map(r => ({ name: r.name, tag, track: r.track, left: r.left === undefined ? 1 : r.left }));
+    .map(r => ({ name: r.name, note: r.note, title: r.title, source,
+                 trigger: TRIGGERS[r.trigger] ? r.trigger : TRIGGER_DEFAULT,
+                 track: r.track, left: r.left === undefined ? 1 : r.left }));
 }
 
 // ── The blocks the panel draws ──
@@ -528,10 +545,46 @@ function bhSection(key, title, children) {
 }
 
 
+// The actions everyone has, whatever their class. They are not on the
+// sheet and carry no tick box, on purpose: a basic attack has nothing to
+// spend, and rally's first use is free with every one after gated on a save
+// rather than on a box, so a spent/unspent tracker would misdescribe both.
+// The row states the price of a second rally; the counting is the player's,
+// and the full wording is in the tooltip.
+const BH_UNIVERSAL = [
+  { name: 'Basic attack', trigger: 'standard', track: 'atwill' },
+  { name: 'Rally', note: 'again: quick save 11+', trigger: 'standard', track: 'battle',
+    title: 'Rally — standard action, once per battle for free. To rally '
+         + 'again in the same battle, spend a quick action on a normal save '
+         + '(11+): succeed and you may rally with this turn’s standard '
+         + 'action; fail and the quick action is lost, with no retry until '
+         + 'next round. No limit beyond making those saves.' },
+];
+
+// The three headings, in the order they read during a turn: what you can
+// always do, then what you are spending down.
+const BH_GROUPS = [
+  { key: 'atwill', label: 'At-will'    },
+  { key: 'battle', label: 'Per battle' },
+  { key: 'arc',    label: 'Per arc'    },
+];
+
+// The tag column means one thing on every row: what the action costs you.
+// It used to be where the row came from — which left the rows that come
+// from nowhere in particular (a basic attack, rally) tagged with a trigger
+// while everything else was tagged with a section, so the column read as
+// two different things at once. The trigger is the half worth the width
+// mid-fight; provenance is still a hover away.
+//
+// `note` is a short rules reminder living on the row itself. A row that has
+// one gives it the slack instead of the name — see .bh-item.has-note.
 function bhItem(r) {
-  return el('div', { class: 'bh-item' },
+  const trigger = TRIGGERS[r.trigger] || TRIGGERS[TRIGGER_DEFAULT];
+  return el('div', { class: 'bh-item' + (r.note ? ' has-note' : ''),
+                     title: r.title || r.source || null },
     el('span', { class: 'bh-item-name' }, r.name),
-    r.tag ? el('span', { class: 'bh-item-tag' }, r.tag) : null,
+    r.note ? el('span', { class: 'bh-item-note' }, r.note) : null,
+    el('span', { class: 'bh-item-tag' }, trigger.short),
     r.desperate ? el('span', { class: 'bh-item-mark', title: 'Desperate use' }, '☠') : null,
     r.left > 1 ? el('span', { class: 'bh-item-count' }, '×' + r.left) : null
   );
@@ -539,19 +592,22 @@ function bhItem(r) {
 
 function buildBhUses() {
   const rows = availableAbilities().concat(classAbilities());
+  // The universal actions go in under the player's own, and are kept out of
+  // `rows` so they can't stand in for having any: an otherwise empty list
+  // still gets the note telling you how to fill it.
+  const listed = rows.concat(BH_UNIVERSAL);
   const sec = bhSection('uses', 'Ready to use', []);
-  ['battle', 'arc'].forEach(track => {
-    const group = rows.filter(r => r.track === track);
-    if (!group.length) return;
+  BH_GROUPS.forEach(group => {
+    const items = listed.filter(r => r.track === group.key);
+    if (!items.length) return;
     sec.appendChild(el('div', { class: 'bh-group' },
-      trackAnnotation(track),
-      el('span', {}, track === 'battle' ? 'Per battle' : 'Per arc')));
-    group.forEach(r => sec.appendChild(bhItem(r)));
+      trackAnnotation(group.key), el('span', {}, group.label)));
+    items.forEach(r => sec.appendChild(bhItem(r)));
   });
   if (!rows.length) {
     sec.appendChild(el('div', { class: 'note' }, hasTrackedAbilities()
       ? 'Everything is spent — take a rest.'
-      : 'Set an ability to Battle or Arc and it shows up here.'));
+      : 'Abilities set to At-Will, Battle or Arc show up here.'));
   }
   return sec;
 }
@@ -940,6 +996,10 @@ function el(tag, attrs = {}, ...children) {
 const TRACK_TYPES = {
   arc:    { symbol: '↺', title: 'Refreshes per arc' },
   battle: { symbol: '⚔', title: 'Refreshes per battle' },
+  // Nothing on the sheet draws this one — an at-will has no uses to tick,
+  // which is the whole point of it. It lives here so the battle helper can
+  // head its at-will group the same way it heads the other two.
+  atwill: { symbol: '∞', title: 'Always available' },
 };
 function trackAnnotation(type, opts = {}) {
   const t = TRACK_TYPES[type];
@@ -1106,7 +1166,9 @@ function addIcon() { state.icons.push({ dice: '', mod: '', name: '', used: {}, a
 // a mode that is 1/arc by definition has nothing for the player to set.
 // `desperate` adds the second, differently-drawn box beside it.
 const USAGE_MODES = {
-  passive:   { label: 'Passive' },
+  // The only mode with no trigger: a passive isn't set off by anything, so
+  // the control isn't drawn for it (the stored value stays put).
+  passive:   { label: 'Passive', trigger: false },
   atwill:    { label: 'At-Will' },
   battle:    { label: 'Battle', track: 'battle' },
   arc:       { label: 'Arc',    track: 'arc'    },
@@ -1116,6 +1178,38 @@ const USAGE_MODES = {
 };
 const USAGE_KEYS = Object.keys(USAGE_MODES);
 const USAGE_DEFAULT = 'passive';
+
+// ── TRIGGERS ──────────────────────────────────────────────────────────
+// What sets an ability off. Free text before, and it barely varied: rows
+// were a standard action or they were not really an action at all, so a
+// closed set says more in less space and gives the battle helper something
+// it can reason about.
+//
+// A Passive row has no trigger by definition and doesn't draw the control
+// — the stored value is hidden, never cleared, so setting the row back to
+// a usable mode brings the same trigger back.
+//
+// `outOfBattle` is the one flag anything reads: a skill check or a bit of
+// roleplay has no place in a battle helper.
+// `short` is what the battle helper's tag column shows — the same word
+// without the "action" the dropdown needs to read as a sentence.
+const TRIGGERS = {
+  standard:    { label: 'Standard action', short: 'Standard' },
+  free:        { label: 'Free action',     short: 'Free' },
+  hit:         { label: 'Getting hit',     short: 'Getting hit' },
+  outofbattle: { label: 'Out of battle',   short: 'Out of battle', outOfBattle: true },
+};
+const TRIGGER_KEYS = Object.keys(TRIGGERS);
+// Most abilities cost a standard action, and it is the reading that puts a
+// row *in* the battle helper rather than quietly out of it.
+const TRIGGER_DEFAULT = 'standard';
+// An unknown token reads as the default rather than throwing, exactly as
+// usageMode() does — a row from a future format degrades instead of
+// breaking the list.
+function triggerMode(item) {
+  return (item && TRIGGERS[item.trigger]) ? item.trigger : TRIGGER_DEFAULT;
+}
+function isOutOfBattle(item) { return TRIGGERS[triggerMode(item)].outOfBattle === true; }
 
 // Every state array rendered by renderPowerLike. Used by the usage
 // migration and by the rest hooks, both of which walk all five alike.
@@ -1222,6 +1316,13 @@ function renderPowerLike(opts) {
       }
     }, USAGE_KEYS.map(k => el('option', { value: k }, USAGE_MODES[k].label)));
     usageSel.value = usageMode(item);
+    const triggerSel = el('select', {
+      class: 'field-inline power-trigger', 'aria-label': 'Trigger',
+      title: 'What sets this off. An Out of battle row — a skill check, '
+           + 'a bit of roleplay — is left out of the battle helper.',
+      onchange: e => { state[stateKey][i].trigger = e.target.value; saveNow(); }
+    }, TRIGGER_KEYS.map(k => el('option', { value: k }, TRIGGERS[k].label)));
+    triggerSel.value = triggerMode(item);
     const header = el('div', { class: 'power-header' },
       el('span', { class: 'drag-handle', title: 'Drag to reorder' }, '⋮⋮'),
       prepBtn,
@@ -1229,10 +1330,7 @@ function renderPowerLike(opts) {
         class: 'field-inline power-name', value: item.name, placeholder: namePlaceholder,
         oninput: e => { state[stateKey][i].name = e.target.value; }
       }),
-      el('input', {
-        class: 'field-inline power-action', value: item.action, placeholder: 'Action',
-        oninput: e => { state[stateKey][i].action = e.target.value; }
-      }),
+      mode.trigger === false ? null : triggerSel,
       usageSel,
       maxU > 0 ? useChecks : null,
       (track && !mode.uses) ? el('input', {
@@ -1287,7 +1385,7 @@ function renderPowers() {
   renderPowerLike({
     listId: 'powers-list', stateKey: 'powers',
     namePlaceholder: noun + ' name',
-    descPlaceholder: 'Trigger, target, effect…'
+    descPlaceholder: 'Target, effect…'
   });
 }
 function renderSpells() {
@@ -1305,7 +1403,8 @@ function renderAbilityLists() {
 }
 
 function blankPowerRow() {
-  return { name: '', action: '', usage: USAGE_DEFAULT, desc: '', max_uses: '', used: {} };
+  return { name: '', trigger: TRIGGER_DEFAULT, usage: USAGE_DEFAULT, desc: '',
+           max_uses: '', used: {} };
 }
 function addKinPower() { state.kinPowers.push(blankPowerRow()); renderKinPowers(); saveNow(); }
 function addFeature() { state.features.push(blankPowerRow()); renderFeatures(); saveNow(); }
@@ -1733,6 +1832,39 @@ function migrateUsage(s) {
   });
 }
 
+// Triggers were free text before they became a closed set, and the real
+// sheets show what that looked like: "Std", "Skill check", "Interrupt
+// action (Getting hit)", "Miss with attack". Map what's recognisable and
+// let the rest read as the default.
+//
+// Note what this does *not* do: it never deletes `action`. The mapping is a
+// judgement call on rows the closed set can't describe exactly ("Multiple
+// triggers", "All actions"), and the sheet's first rule is that what the
+// player typed doesn't go missing — so the original text stays in the row,
+// unrendered, as the record of it. Idempotent, so it runs on every load.
+const TRIGGER_PATTERNS = [
+  // Anything that fires off being hit, interrupts included — that is very
+  // nearly the only thing an interrupt action is ever spent on. The
+  // look-ahead keeps "miss with attack" out of it.
+  [/hit(?!\s*with)|damaged|interrupt/i, 'hit'],
+  [/out.?of.?(battle|combat)|skill|ritual/i, 'outofbattle'],
+  [/free/i, 'free'],
+  [/standard|std|attack|melee|ranged/i, 'standard'],
+];
+function migrateTrigger(s) {
+  if (!s || typeof s !== 'object') return;
+  ABILITY_LISTS.forEach(key => {
+    if (!Array.isArray(s[key])) return;
+    s[key].forEach(item => {
+      if (!item || typeof item !== 'object') return;
+      if (TRIGGERS[item.trigger]) return;
+      const raw = String(item.trigger || item.action || '');
+      const hit = TRIGGER_PATTERNS.find(([re]) => re.test(raw));
+      item.trigger = hit ? hit[1] : TRIGGER_DEFAULT;
+    });
+  });
+}
+
 function loadFromFile(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1762,6 +1894,7 @@ function loadFromFile(event) {
       if (typeof state.escalation !== 'number') state.escalation = 0;
       if (!state.theme) state.theme = 'necromancer';
       migrateUsage(state);
+      migrateTrigger(state);
       normalizePrefs(state);
       applyState();
       autoSave();
@@ -2251,6 +2384,7 @@ try {
     if (typeof state.escalation !== 'number') state.escalation = 0;
     if (!state.theme) state.theme = 'necromancer';
     migrateUsage(state);
+    migrateTrigger(state);
     normalizePrefs(state);
   }
 } catch(e) {}
