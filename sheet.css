@@ -262,20 +262,20 @@
    beyond a single dot. The only two colours that carry meaning are the
    slate headings and the blue used for anything interactive or numeric. ── */
 [data-theme="light"] {
-  --bg:             #eceef1;
+  --bg:             #ffffff;
   --bg-card:        #ffffff;
   --bg-card-alt:    #f4f6f8;
-  --ink:            #14171c;
-  --ink-dim:        #4b5260;
-  --ink-faint:      #7b828f;
-  --accent:         #364152;
+  --ink:            #000;
+  --ink-dim:        #000;
+  --ink-faint:      #4f4f4f;
+  --accent:         #000;
   --accent-glow:    #1a2230;
   --accent-dim:     #e3e8ef;
   --highlight:      #1d4ed8;
   --highlight-dim:  #2f57c4;
   --bone:           #0b0e13;
   --field-bg:       #ffffff;
-  --field-border:   #c3c9d4;
+  --field-border:   #838383;
   --field-focus:    rgba(29,78,216,0.22);
   /* A tinted fill rather than a solid one: `.prep-btn.active` draws its tick
      in --accent over this same background, and a saturated fill would bury
@@ -300,9 +300,9 @@
   --bg:             #16181c;
   --bg-card:        #1e2126;
   --bg-card-alt:    #24272d;
-  --ink:            #eceef2;
-  --ink-dim:        #b6bcc6;
-  --ink-faint:      #868d99;
+  --ink:            #fff;
+  --ink-dim:        #fff;
+  --ink-faint:      #aeaeae;
   --accent:         #cfd6e0;
   --accent-glow:    #f0f3f8;
   --accent-dim:     #2b303a;
@@ -1966,7 +1966,19 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
   font-family: var(--heading-font); font-size: var(--fs-sm); letter-spacing: 1px;
   text-transform: uppercase; color: var(--ink-faint);
 }
-.bh-group:first-of-type { margin-top: 2px; }
+/* Not `:first-of-type` — that counts divs, and .bh-head is the first of
+   those, so the rule never matched the heading it was aimed at. */
+.bh-head + .bh-group { margin-top: 2px; }
+
+/* Rows inside a cadence cluster by trigger. No headings — the tag column
+   already names it on every row — so the frame is what says "these go
+   together", and the wider gap is where one cluster ends. */
+.bh-subgroup {
+  border: 1px solid var(--field-border);
+  border-radius: 4px;
+  padding: 4px;
+}
+.bh-subgroup + .bh-subgroup { margin-top: 8px; }
 
 .bh-item {
   display: flex; align-items: baseline; gap: 6px;

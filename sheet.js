@@ -578,8 +578,10 @@ const BH_GROUPS = [
 //
 // `note` is a short rules reminder living on the row itself. A row that has
 // one gives it the slack instead of the name — see .bh-item.has-note.
+function rowTrigger(r) { return TRIGGERS[r.trigger] ? r.trigger : TRIGGER_DEFAULT; }
+
 function bhItem(r) {
-  const trigger = TRIGGERS[r.trigger] || TRIGGERS[TRIGGER_DEFAULT];
+  const trigger = TRIGGERS[rowTrigger(r)];
   return el('div', { class: 'bh-item' + (r.note ? ' has-note' : ''),
                      title: r.title || r.source || null },
     el('span', { class: 'bh-item-name' }, r.name),
@@ -602,7 +604,18 @@ function buildBhUses() {
     if (!items.length) return;
     sec.appendChild(el('div', { class: 'bh-group' },
       trackAnnotation(group.key), el('span', {}, group.label)));
-    items.forEach(r => sec.appendChild(bhItem(r)));
+    // Inside a cadence, rows cluster by what they cost you: every standard
+    // action together, then the free ones, then the reactions. That is the
+    // order TRIGGERS is declared in, so the declaration order *is* the
+    // reading order and there's no second list to keep in step with it.
+    // The clusters carry no heading — the tag column already names the
+    // trigger on every row — so the box around them is what says they go
+    // together.
+    TRIGGER_KEYS.forEach(key => {
+      const cluster = items.filter(r => rowTrigger(r) === key);
+      if (!cluster.length) return;
+      sec.appendChild(el('div', { class: 'bh-subgroup' }, cluster.map(bhItem)));
+    });
   });
   if (!rows.length) {
     sec.appendChild(el('div', { class: 'note' }, hasTrackedAbilities()
