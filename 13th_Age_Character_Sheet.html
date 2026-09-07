@@ -10,6 +10,16 @@
      THEME SYSTEM
      ═══════════════════════════════════════════ */
 
+  /* Values shared by every theme, declared on the html element so a theme —
+     which sits on <body> — overrides them by inheritance rather than by
+     source order. Putting them in a `:root` block further down would beat any
+     `[data-theme]` override: equal specificity, later in the file. */
+  :root {
+    --ui-font:         'Cinzel', serif;     /* toolbar, toast — chrome, not sheet */
+    --hairline:        rgba(255,255,255,0.04);  /* list-row separators */
+    --hairline-strong: rgba(255,255,255,0.06);  /* column headers, log entries */
+  }
+
   /* ── NECROMANCER — toxic green headers, necrotic violet highlights ── */
   :root, [data-theme="necromancer"] {
     --bg:             #040804;
@@ -247,6 +257,76 @@
     --card-glow:      inset 0 0 16px -8px rgba(168, 200, 255, 0.1), inset 0 0 16px -8px rgba(255, 200, 64, 0.06);
   }
 
+  /* ── LIGHT — plain, quiet, high-contrast. For players who want the sheet to
+     get out of the way: system fonts, no glow, no animation, no ornament
+     beyond a single dot. The only two colours that carry meaning are the
+     slate headings and the blue used for anything interactive or numeric. ── */
+  [data-theme="light"] {
+    --bg:             #eceef1;
+    --bg-card:        #ffffff;
+    --bg-card-alt:    #f4f6f8;
+    --ink:            #14171c;
+    --ink-dim:        #4b5260;
+    --ink-faint:      #7b828f;
+    --accent:         #364152;
+    --accent-glow:    #1a2230;
+    --accent-dim:     #e3e8ef;
+    --highlight:      #1d4ed8;
+    --highlight-dim:  #2f57c4;
+    --bone:           #0b0e13;
+    --field-bg:       #ffffff;
+    --field-border:   #c3c9d4;
+    --field-focus:    rgba(29,78,216,0.22);
+    /* A tinted fill rather than a solid one: `.prep-btn.active` draws its tick
+       in --accent over this same background, and a saturated fill would bury
+       it. */
+    --check-active-bg:   #dbe7ff;
+    --check-active-bdr:  #1d4ed8;
+    --check-active-col:  #1d4ed8;
+    --header-ornament: '·';
+    --ui-font:        system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --display-font:   system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --heading-font:   system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --body-font:      system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --hairline:        rgba(15,23,42,0.10);
+    --hairline-strong: rgba(15,23,42,0.14);
+    --print-accent:   #33415c;
+    --print-card-bg:  #f6f7f9;
+    --card-glow:      0 1px 2px rgba(15, 23, 42, 0.06);
+  }
+
+  /* ── DARK — the same quiet sheet on a neutral grey ground. ── */
+  [data-theme="dark"] {
+    --bg:             #16181c;
+    --bg-card:        #1e2126;
+    --bg-card-alt:    #24272d;
+    --ink:            #eceef2;
+    --ink-dim:        #b6bcc6;
+    --ink-faint:      #868d99;
+    --accent:         #cfd6e0;
+    --accent-glow:    #f0f3f8;
+    --accent-dim:     #2b303a;
+    --highlight:      #7aa7ff;
+    --highlight-dim:  #6f9bec;
+    --bone:           #ffffff;
+    --field-bg:       rgba(255,255,255,0.05);
+    --field-border:   #3a4049;
+    --field-focus:    rgba(122,167,255,0.28);
+    --check-active-bg:   #23324e;
+    --check-active-bdr:  #7aa7ff;
+    --check-active-col:  #9dc0ff;
+    --header-ornament: '·';
+    --ui-font:        system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --display-font:   system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --heading-font:   system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --body-font:      system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --hairline:        rgba(255,255,255,0.07);
+    --hairline-strong: rgba(255,255,255,0.10);
+    --print-accent:   #33415c;
+    --print-card-bg:  #f6f7f9;
+    --card-glow:      0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
   /* ═══════════════════════════════════════════
      TYPOGRAPHIC SCALE — edit these to resize
      all text of each role in one place
@@ -269,11 +349,15 @@
      ═══════════════════════════════════════════ */
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* All eight themes are dark, but the browser can't infer that from CSS
+  /* Every theme but one is dark, and the browser can't infer that from CSS
      variables. Without this it paints every surface it owns — dropdown
      popups, scrollbars, autofill, spinners — on a light system background.
      Print flips back, since the print sheet is white. */
   :root { color-scheme: dark; }
+
+  /* The light theme has to flip it back, and the property only does its job on
+     the root element — the theme attribute lives on <body>, one level down. */
+  :root:has(> body[data-theme="light"]) { color-scheme: light; }
 
   body {
     background: var(--bg);
@@ -294,7 +378,7 @@
 
   /* ── TOOLBAR CONTROLS ── */
   .toolbar select {
-    font-family: 'Cinzel', serif;
+    font-family: var(--ui-font);
     font-size: var(--fs-label-sm);
     letter-spacing: 1px;
     padding: 5px 10px;
@@ -948,7 +1032,7 @@
   /* ── TABLE ROWS ── */
   .table-section .row {
     display: flex; align-items: center; gap: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid var(--hairline);
   }
   .table-section .row:last-child { border-bottom: none; }
 
@@ -975,7 +1059,7 @@
     align-items: center;
   }
   .icon-rel-header {
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid var(--hairline-strong);
     font-family: var(--heading-font); font-size: 10px;
     letter-spacing: 1px; text-transform: uppercase;
     color: var(--ink-faint); font-weight: 400;
@@ -987,7 +1071,7 @@
   .icon-rel-header .track-annotation { display: inline; font-size: inherit; }
   .icon-rel-row {
     padding: 2px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid var(--hairline);
   }
   .icon-rel-row:last-child { border-bottom: none; }
   .icon-rel-row .field-inline { text-align: center; }
@@ -1168,7 +1252,7 @@
   }
 
   .toolbar button {
-    font-family: 'Cinzel', serif; font-size: var(--fs-label-sm); letter-spacing: 2px;
+    font-family: var(--ui-font); font-size: var(--fs-label-sm); letter-spacing: 2px;
     text-transform: uppercase; padding: 8px 18px;
     border: 1px solid var(--accent); border-radius: 4px;
     cursor: pointer; transition: all 0.2s;
@@ -1187,7 +1271,7 @@
     transform: translateX(-50%) translateY(20px);
     background: var(--highlight-dim); color: var(--bone);
     padding: 8px 20px; border-radius: 4px;
-    font-family: 'Cinzel', serif; font-size: var(--fs-label-sm); letter-spacing: 2px;
+    font-family: var(--ui-font); font-size: var(--fs-label-sm); letter-spacing: 2px;
     opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 200;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -1520,7 +1604,30 @@
     pointer-events: none;
   }
 
-  /* One rule for all 8 themes; each sets its own `--card-glow`. */
+  /* ── LIGHT / DARK — no effects by design. The only rules here give the
+     sections a card of their own (elsewhere a section body sits straight on
+     the page ground, which needs the ground to be dark to read as depth), and
+     fix the two places where the shared stylesheet paints --bone text on a
+     background these palettes make the same tone. ── */
+  [data-theme="light"] .section,
+  [data-theme="dark"] .section {
+    background: var(--bg-card);
+    border-radius: 6px;
+  }
+
+  [data-theme="light"] .section-head,
+  [data-theme="dark"] .section-head {
+    background: var(--bg-card-alt);
+    border-radius: 5px 5px 0 0;
+  }
+
+  [data-theme="light"] .toast,
+  [data-theme="light"] .toolbar button.primary:hover { color: #ffffff; }
+
+  [data-theme="dark"] .toast,
+  [data-theme="dark"] .toolbar button.primary:hover { color: #16181c; }
+
+  /* One rule for all themes; each sets its own `--card-glow`. */
   .stat-card,
   .defense-card,
   .attack-card,
@@ -1851,7 +1958,7 @@
   .roll-entry {
     display: flex; align-items: center; gap: 8px;
     padding: 5px 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--hairline-strong);
     animation: roll-in 0.25s ease-out;
   }
   @keyframes roll-in {
@@ -2304,6 +2411,11 @@
     <div class="section-head"><span class="icon">⚙</span> Utilities</div>
     <div class="toolbar">
       <select id="theme-select">
+        <optgroup label="Plain">
+        <option value="light">○ Light</option>
+        <option value="dark">● Dark</option>
+        </optgroup>
+        <optgroup label="Class">
         <option value="barbarian">⚔ Barbarian</option>
         <option value="bard">♪ Bard</option>
         <option value="cleric">✙ Cleric</option>
@@ -2312,6 +2424,7 @@
         <option value="paladin">⛨ Paladin</option>
         <option value="rogue">🗡 Rogue</option>
         <option value="wizard">✦ Wizard</option>
+        </optgroup>
       </select>
       <button class="primary" id="btn-save">⤓ Save to File</button>
       <button id="btn-load">⤒ Load from File</button>

@@ -84,7 +84,7 @@
 
     // ── Styling that travels with this class ──
     // Injected once on load. Use the theme CSS variables (var(--accent),
-    // var(--ink-dim), …) so it works in all 8 themes.
+    // var(--ink-dim), …) so it works in every theme, light one included.
     css: `
       /* .my-panel { … } */
     `,
