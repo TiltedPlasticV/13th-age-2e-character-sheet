@@ -100,10 +100,10 @@
     // many uses remain, and 0 drops the row. `track` is 'atwill', 'battle'
     // or 'arc' — an at-will has nothing to spend, so use `left` only to say
     // whether it currently applies. `trigger` is what the action costs
-    // ('standard', 'free', 'hit'), and is what the panel's tag column shows
-    // — set it or the row reads as a standard action. `note` is an optional
-    // short reminder shown on the row; `title` an optional tooltip
-    // (otherwise the row hovers as your class name).
+    // ('standard', 'free', 'missed', 'hit') and is what the panel's tag
+    // column shows — set it, or the row reads as a standard action. `note`
+    // is an optional short reminder shown on the row; `title` an optional
+    // tooltip (otherwise the row hovers as your class name).
     // battleHelper() {
     //   const d = classData('template');
     //   return [

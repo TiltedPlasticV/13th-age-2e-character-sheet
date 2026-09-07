@@ -1206,9 +1206,13 @@ const USAGE_DEFAULT = 'passive';
 // roleplay has no place in a battle helper.
 // `short` is what the battle helper's tag column shows — the same word
 // without the "action" the dropdown needs to read as a sentence.
+// Declared in the order they happen in play, because that order is what the
+// battle helper reads down: what you choose to spend on your own turn, then
+// what fires off your own roll, then what fires on somebody else's.
 const TRIGGERS = {
   standard:    { label: 'Standard action', short: 'Standard' },
   free:        { label: 'Free action',     short: 'Free' },
+  missed:      { label: 'Missed attack',   short: 'Missed' },
   hit:         { label: 'Getting hit',     short: 'Getting hit' },
   outofbattle: { label: 'Out of battle',   short: 'Out of battle', outOfBattle: true },
 };
@@ -1856,10 +1860,12 @@ function migrateUsage(s) {
 // player typed doesn't go missing — so the original text stays in the row,
 // unrendered, as the record of it. Idempotent, so it runs on every load.
 const TRIGGER_PATTERNS = [
+  // Before the /attack/ fallback below, which would otherwise swallow
+  // "Miss with attack" into a standard action.
+  [/miss/i, 'missed'],
   // Anything that fires off being hit, interrupts included — that is very
-  // nearly the only thing an interrupt action is ever spent on. The
-  // look-ahead keeps "miss with attack" out of it.
-  [/hit(?!\s*with)|damaged|interrupt/i, 'hit'],
+  // nearly the only thing an interrupt action is ever spent on.
+  [/hit|damaged|interrupt/i, 'hit'],
   [/out.?of.?(battle|combat)|skill|ritual/i, 'outofbattle'],
   [/free/i, 'free'],
   [/standard|std|attack|melee|ranged/i, 'standard'],
