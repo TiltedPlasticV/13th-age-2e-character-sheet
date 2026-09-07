@@ -329,19 +329,25 @@
 
 /* ═══════════════════════════════════════════
    TYPOGRAPHIC SCALE — edit these to resize
-   all text of each role in one place
+   all text of a given size in one place
    ═══════════════════════════════════════════ */
+/* One token per step, named for how big it is and nothing else. A size gets
+   reused by whatever happens to want it, so naming a step after the first
+   thing that asked for it ("--fs-field", "--fs-tag") only ever described one
+   of its callers — and left the dense overlays with no name to ask for at
+   all. The ladder runs 4xs → 4xl with no gaps; --fs-xl is the body text. */
 :root {
-  --fs-display:   32px;   /* character name                        */
-  --fs-title:     15px;   /* page-level heading                    */
-  --fs-section:   16px;   /* section headings (e.g. "Basic Attacks") */
-  --fs-value-lg:  26px;   /* big numbers: stat scores, defenses    */
-  --fs-value-md:  20px;   /* medium numbers: stat mods, HP values  */
-  --fs-field:     15px;   /* standard input / textarea text        */
-  --fs-field-sm:  13px;   /* compact inputs (power action / usage) */
-  --fs-label:     14px;   /* prominent labels (attack rows, subtitle) */
-  --fs-label-sm:  12px;   /* compact labels, stat names, buttons   */
-  --fs-body:      16px;   /* base body text                        */
+  --fs-4xs:  9px;
+  --fs-3xs: 10px;
+  --fs-2xs: 11px;
+  --fs-xs:  12px;
+  --fs-sm:  13px;
+  --fs-md:  14px;
+  --fs-lg:  15px;
+  --fs-xl:  16px;
+  --fs-2xl: 20px;
+  --fs-3xl: 26px;
+  --fs-4xl: 32px;
 }
 
 /* ═══════════════════════════════════════════
@@ -363,7 +369,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--body-font);
-  font-size: var(--fs-body);
+  font-size: var(--fs-xl);
   line-height: 1.45;
   min-height: 100vh;
   transition: background 0.5s, color 0.4s;
@@ -379,7 +385,7 @@ body {
 /* ── TOOLBAR CONTROLS ── */
 .toolbar select {
   font-family: var(--ui-font);
-  font-size: var(--fs-label-sm);
+  font-size: var(--fs-xs);
   letter-spacing: 1px;
   padding: 5px 10px;
   border: 1px solid var(--field-border);
@@ -439,7 +445,7 @@ body {
   grid-column: 2;
   justify-self: center;
   font-family: var(--display-font);
-  font-size: var(--fs-display);
+  font-size: var(--fs-4xl);
   color: var(--bone);
   text-align: center;
   field-sizing: content;
@@ -483,7 +489,7 @@ body {
 
 .char-subtitle {
   font-family: var(--heading-font);
-  font-size: var(--fs-label);
+  font-size: var(--fs-md);
   letter-spacing: 3px;
   color: var(--highlight-dim);
   display: flex;
@@ -495,7 +501,7 @@ body {
 
 .char-subtitle .field-inline {
   font-family: var(--heading-font);
-  font-size: var(--fs-label);
+  font-size: var(--fs-md);
   letter-spacing: 2px;
   color: var(--highlight);
   text-align: center;
@@ -518,7 +524,7 @@ body {
   color: var(--ink-dim);
   text-align: center;
   width: 100%;
-  font-size: var(--fs-field);
+  font-size: var(--fs-lg);
 }
 
 /* ── SECTIONS ── */
@@ -548,7 +554,7 @@ body {
 .section-head {
   font-family: var(--heading-font);
   font-weight: 700;
-  font-size: var(--fs-section);
+  font-size: var(--fs-xl);
   letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--accent);
@@ -623,18 +629,18 @@ textarea.field-block {
 }
 
 .stat-label {
-  font-family: var(--heading-font); font-size: var(--fs-label-sm);
+  font-family: var(--heading-font); font-size: var(--fs-xs);
   letter-spacing: 2px; text-transform: uppercase;
   color: var(--ink-dim); margin-bottom: 2px;
 }
 
 .stat-mod .field-inline {
-  font-size: var(--fs-value-lg); font-weight: 700; color: var(--bone);
+  font-size: var(--fs-3xl); font-weight: 700; color: var(--bone);
   width: 48px; text-align: center; font-family: var(--heading-font);
 }
 
 .stat-score .field-inline {
-  font-size: var(--fs-value-md); color: var(--highlight); width: 44px;
+  font-size: var(--fs-2xl); color: var(--highlight); width: 44px;
   text-align: center; font-family: var(--heading-font);
 }
 
@@ -650,7 +656,7 @@ textarea.field-block {
 .defense-card .stat-label { margin-bottom: 2px; }
 
 .defense-card .field-inline {
-  font-family: var(--heading-font); font-size: var(--fs-value-lg);
+  font-family: var(--heading-font); font-size: var(--fs-3xl);
   font-weight: 700; color: var(--highlight); width: 48px; text-align: center;
 }
 
@@ -685,7 +691,7 @@ textarea.field-block {
 .combo-row .stat-card    { padding: 4px 4px; gap: 2px; }
 .combo-row .defense-card { padding: 6px 4px; gap: 4px; position: relative; }
 .combo-row .defense-card .field-inline {
-  font-size: calc(var(--fs-value-lg) * 1.2);
+  font-size: calc(var(--fs-3xl) * 1.2);
   padding: 2px 0;
 }
 /* Out of flow deliberately: in-flow the die stacks under the input, and the
@@ -735,14 +741,14 @@ textarea.field-block {
 .hp-item { display: flex; align-items: center; gap: 6px; }
 
 .hp-label {
-  font-family: var(--heading-font); font-size: var(--fs-label-sm);
+  font-family: var(--heading-font); font-size: var(--fs-xs);
   letter-spacing: 1px; text-transform: uppercase;
   color: var(--ink-dim); white-space: nowrap;
 }
 
 .hp-item .field-inline {
   width: 60px; text-align: center;
-  font-family: var(--heading-font); font-weight: 700; font-size: var(--fs-value-lg);
+  font-family: var(--heading-font); font-weight: 700; font-size: var(--fs-3xl);
 }
 
 /* heart-shaped max HP display + current/temp HP all inline */
@@ -799,7 +805,7 @@ textarea.field-block {
 .hp-heart-side .field-inline {
   width: 48px; text-align: center;
   font-family: var(--heading-font); font-weight: 700;
-  font-size: var(--fs-value-md); color: var(--ink-dim);
+  font-size: var(--fs-2xl); color: var(--ink-dim);
   padding: 0;
 }
 .hp-heart-side .hp-label { font-size: 9px; letter-spacing: 1px; }
@@ -816,11 +822,11 @@ textarea.field-block {
   padding: 0;
 }
 .hp-current-card .hp-label {
-  font-size: var(--fs-label-sm); color: var(--highlight-dim);
+  font-size: var(--fs-xs); color: var(--highlight-dim);
 }
 
 .hp-current-card.hp-temp .field-inline {
-  width: 64px; height: 44px; font-size: var(--fs-value-lg);
+  width: 64px; height: 44px; font-size: var(--fs-3xl);
 }
 
 .hp-divider {
@@ -828,7 +834,7 @@ textarea.field-block {
 }
 
 .gear-grid .hp-item .field-inline {
-  font-size: var(--fs-field); font-weight: 400;
+  font-size: var(--fs-lg); font-weight: 400;
 }
 
 /* Armour and weapon names are unpredictably long, so this row uses the same
@@ -989,13 +995,13 @@ textarea.field-block {
 .attack-card-body { flex: 1; min-width: 0; }
 
 .attack-title {
-  font-family: var(--heading-font); font-size: var(--fs-title);
+  font-family: var(--heading-font); font-size: var(--fs-lg);
   letter-spacing: 2px; text-transform: uppercase; color: var(--highlight);
   margin-bottom: 4px; font-weight: 700;
 }
 
 .attack-weapon { margin-bottom: 4px; }
-.attack-weapon .field-inline { width: 100%; font-size: var(--fs-field); }
+.attack-weapon .field-inline { width: 100%; font-size: var(--fs-lg); }
 /* A derived weapon name is wrapped in `.has-lock` for its padlock. That
    wrapper is inline-block, so the `100%` above would resolve against a
    shrink-wrapped box instead of the card. Block makes it span the card. */
@@ -1008,8 +1014,8 @@ textarea.field-block {
   font-family: var(--heading-font); font-size: 10px;
   letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim);
 }
-.attack-stats .field-inline { width: 70px; font-size: var(--fs-value-md); font-weight: 700; text-align: center; }
-.attack-stats .attack-sep { color: var(--ink-faint); font-size: var(--fs-field); }
+.attack-stats .field-inline { width: 70px; font-size: var(--fs-2xl); font-weight: 700; text-align: center; }
+.attack-stats .attack-sep { color: var(--ink-faint); font-size: var(--fs-lg); }
 
 .attack-ac-group { display: flex; gap: 8px; flex-shrink: 0; }
 
@@ -1023,7 +1029,7 @@ textarea.field-block {
 .attack-ac-badge .field-inline {
   width: 52px; height: 52px; border-radius: 50%;
   text-align: center; font-family: var(--heading-font);
-  font-size: var(--fs-value-lg); font-weight: 700;
+  font-size: var(--fs-3xl); font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   border: 2px solid var(--highlight-dim); color: var(--bone);
   padding: 0;
@@ -1088,7 +1094,7 @@ textarea.field-block {
 .add-row-btn {
   display: inline-flex; align-self: flex-start;
   align-items: center; gap: 4px; margin-top: 0px;
-  padding: 4px 10px; font-family: var(--heading-font); font-size: var(--fs-label-sm);
+  padding: 4px 10px; font-family: var(--heading-font); font-size: var(--fs-xs);
   letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim);
   background: var(--field-bg); border: 1px dashed var(--field-border);
   border-radius: 3px; cursor: pointer; transition: all 0.2s;
@@ -1110,7 +1116,7 @@ textarea.field-block {
   gap: 4px;
   padding: 5px 14px;
   font-family: var(--heading-font);
-  font-size: var(--fs-label-sm);
+  font-size: var(--fs-xs);
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--ink-dim);
@@ -1140,7 +1146,7 @@ textarea.field-block {
 
 .remove-btn {
   width: 20px; height: 20px; border: none; background: none;
-  color: var(--ink-faint); cursor: pointer; font-size: var(--fs-label);
+  color: var(--ink-faint); cursor: pointer; font-size: var(--fs-md);
   border-radius: 50%; display: flex; align-items: center;
   justify-content: center; transition: all 0.15s; flex-shrink: 0;
 }
@@ -1165,16 +1171,16 @@ textarea.field-block {
 }
 
 .power-header .field-inline.power-name {
-  font-family: var(--heading-font); font-size: var(--fs-field); font-weight: 700;
+  font-family: var(--heading-font); font-size: var(--fs-lg); font-weight: 700;
   color: var(--highlight); min-width: 140px; flex: 1;
 }
 
 .power-header .field-inline.power-trigger {
-  font-size: var(--fs-field-sm); color: var(--highlight); min-width: 60px; text-align: center;
+  font-size: var(--fs-sm); color: var(--highlight); min-width: 60px; text-align: center;
 }
 
 .power-header .field-inline.power-usage {
-  font-size: var(--fs-field-sm); color: var(--accent-glow); min-width: 70px; text-align: center;
+  font-size: var(--fs-sm); color: var(--accent-glow); min-width: 70px; text-align: center;
 }
 /* Both controls are <select>s; leave room for the native arrow and let each
    size to its widest label rather than stretching. */
@@ -1184,9 +1190,9 @@ textarea.field-block {
 }
 /* "Uses" input sits among the trigger/usage fields, so match their font-size
    (otherwise field-sm inherits the larger default and renders a taller box). */
-.power-header .field-inline.field-sm { font-size: var(--fs-field-sm); }
+.power-header .field-inline.field-sm { font-size: var(--fs-sm); }
 
-.power-block textarea.field-block { font-size: var(--fs-field); }
+.power-block textarea.field-block { font-size: var(--fs-lg); }
 
 .power-block.unprepared { opacity: 0.4; }
 
@@ -1234,7 +1240,7 @@ textarea.field-block {
 }
 .advance-label {
   font-family: var(--heading-font);
-  font-size: calc(var(--fs-label-sm) + 2px);
+  font-size: calc(var(--fs-xs) + 2px);
   color: var(--ink-dim);
   white-space: nowrap;
 }
@@ -1253,7 +1259,7 @@ textarea.field-block {
 }
 
 .toolbar button {
-  font-family: var(--ui-font); font-size: var(--fs-label-sm); letter-spacing: 2px;
+  font-family: var(--ui-font); font-size: var(--fs-xs); letter-spacing: 2px;
   text-transform: uppercase; padding: 8px 18px;
   border: 1px solid var(--accent); border-radius: 4px;
   cursor: pointer; transition: all 0.2s;
@@ -1272,7 +1278,7 @@ textarea.field-block {
   transform: translateX(-50%) translateY(20px);
   background: var(--highlight-dim); color: var(--bone);
   padding: 8px 20px; border-radius: 4px;
-  font-family: var(--ui-font); font-size: var(--fs-label-sm); letter-spacing: 2px;
+  font-family: var(--ui-font); font-size: var(--fs-xs); letter-spacing: 2px;
   opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 200;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -1704,7 +1710,7 @@ body[data-theme="paladin"] {
 .hp-adjust .field-inline {
   width: 56px; text-align: center;
   font-family: var(--heading-font); font-weight: 700;
-  font-size: var(--fs-value-md);
+  font-size: var(--fs-2xl);
 }
 
 /* ── CLASS MODULES (per-class add-on UI) ──
@@ -1745,7 +1751,7 @@ body[data-theme="paladin"] {
 }
 .class-panel-head {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  font-family: var(--heading-font); font-size: var(--fs-label-sm);
+  font-family: var(--heading-font); font-size: var(--fs-xs);
   letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
 }
 .class-panel .action-btn { padding: 3px 8px; font-size: 11px; }
@@ -1844,7 +1850,7 @@ body[data-theme="paladin"] {
 .dice-tray-head {
   display: flex; align-items: center; gap: 8px;
   padding: 7px 12px; cursor: pointer; user-select: none;
-  font-family: var(--heading-font); font-size: var(--fs-label-sm);
+  font-family: var(--heading-font); font-size: var(--fs-xs);
   letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
 }
 .dice-tray-head .esc-mini {
@@ -1902,10 +1908,10 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 }
 .battle-helper.collapsed .bh-rail { border-right: none; }
 .bh-rail:focus-visible { outline: 2px solid var(--highlight); outline-offset: -2px; }
-.bh-rail-caret { color: var(--ink-faint); font-size: 11px; }
+.bh-rail-caret { color: var(--ink-faint); font-size: var(--fs-sm); }
 .bh-rail-title {
   writing-mode: vertical-rl;
-  font-family: var(--heading-font); font-size: var(--fs-label-sm);
+  font-family: var(--heading-font); font-size: var(--fs-md);
   letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
 }
 
@@ -1922,7 +1928,7 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 .bh-section + .bh-section { margin-top: 14px; }
 .bh-head {
   display: flex; align-items: center; gap: 6px;
-  font-family: var(--heading-font); font-size: var(--fs-label-sm);
+  font-family: var(--heading-font); font-size: var(--fs-md);
   letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
   padding-bottom: 4px; margin-bottom: 6px;
   border-bottom: 1px solid var(--field-border);
@@ -1939,25 +1945,25 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 /* Recoveries left: the count is the point, so it carries the size. */
 .bh-stat { display: flex; align-items: baseline; gap: 6px; }
 .bh-stat-num {
-  font-family: var(--heading-font); font-size: 26px; line-height: 1;
+  font-family: var(--heading-font); font-size: var(--fs-3xl); line-height: 1;
   color: var(--highlight);
 }
 .bh-stat-num.bh-spent { color: var(--accent); }
 .bh-stat-label {
-  font-family: var(--heading-font); font-size: 11px; letter-spacing: 1px;
+  font-family: var(--heading-font); font-size: var(--fs-xs); letter-spacing: 1px;
   text-transform: uppercase; color: var(--ink-dim);
 }
 
-.bh-ok { font-size: 12px; color: var(--ink-faint); margin-top: 6px; }
+.bh-ok { font-size: var(--fs-sm); color: var(--ink-faint); margin-top: 6px; }
 .bh-warn { margin-top: 6px; }
-.bh-warn-line { font-size: 13px; font-weight: 700; color: var(--accent); }
+.bh-warn-line { font-size: var(--fs-md); font-weight: 700; color: var(--accent); }
 
 /* Group heading for one refresh cadence — the ⚔ / ↺ annotation carries the
    meaning, the words just spell it out. */
 .bh-group {
   display: flex; align-items: center; gap: 5px;
   margin: 9px 0 4px;
-  font-family: var(--heading-font); font-size: 10px; letter-spacing: 1px;
+  font-family: var(--heading-font); font-size: var(--fs-sm); letter-spacing: 1px;
   text-transform: uppercase; color: var(--ink-faint);
 }
 .bh-group:first-of-type { margin-top: 2px; }
@@ -1972,26 +1978,31 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 .bh-item + .bh-item { margin-top: 3px; }
 .bh-item-name {
   flex: 1; min-width: 0;
-  font-size: 12.5px; color: var(--ink-dim);
+  font-size: var(--fs-lg); color: var(--ink-dim);
   overflow-wrap: anywhere;
 }
 .bh-item-tag {
-  font-family: var(--heading-font); font-size: 9px; letter-spacing: 1px;
+  font-family: var(--heading-font); font-size: var(--fs-sm); letter-spacing: 1px;
   text-transform: uppercase; color: var(--ink-faint); flex-shrink: 0;
 }
-.bh-item-mark { font-size: 11px; color: var(--accent); flex-shrink: 0; }
+.bh-item-mark { font-size: var(--fs-sm); color: var(--accent); flex-shrink: 0; }
 /* A row carrying a reminder leads with its name and gives the slack to the
    reminder beside it, where every other row gives that slack to the name. */
 .bh-item.has-note .bh-item-name { flex: 0 0 auto; }
-.bh-item-note { flex: 1; min-width: 0; font-size: 11px; color: var(--ink-faint); }
+.bh-item-note { flex: 1; min-width: 0; font-size: var(--fs-xs); color: var(--ink-faint); }
 .bh-item-count {
-  font-family: var(--heading-font); font-size: 11px;
+  font-family: var(--heading-font); font-size: var(--fs-xs);
   color: var(--highlight); flex-shrink: 0;
 }
 
 /* Turn structure: plain `.note` lines with a bold lead-in, the same shape
    the class panels use for a rules reminder. Only the spacing and the
    numbered list need saying. */
+/* `.note` is the sheet's shared small-print primitive, so it isn't touched
+   globally — but the panel is read at arm's length off a phone, and one
+   step up is the difference between skimming it and squinting at it. */
+.bh-body .note { font-size: var(--fs-md); }
+
 .bh-turn > * + * { margin-top: 4px; }
 .bh-turn-steps { margin: 0; padding-left: 17px; }
 .bh-turn-steps li { margin-top: 2px; }
