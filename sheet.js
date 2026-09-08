@@ -694,7 +694,13 @@ function bhItem(r) {
                      role: linked ? 'button' : null,
                      tabindex: linked ? '0' : null,
                      onclick: linked ? () => bhReveal(r) : null },
-    el('span', { class: 'bh-item-name' }, r.name),
+    el('span', { class: 'bh-item-name' }, r.name,
+      // Spells earn a mark of their own: mid-fight the thing worth seeing at
+      // a glance is which of these costs a spell rather than a talent. Same
+      // glyph the Spells section head wears, so the two read as one thing.
+      // Decorative — the row's own title already says "Spell".
+      r.list === 'spells'
+        ? el('span', { class: 'bh-item-mark', 'aria-hidden': 'true' }, '✦') : null),
     r.note ? el('span', { class: 'bh-item-note' }, r.note) : null,
     el('span', { class: 'bh-item-tag' }, trigger.short),
     r.desperate ? el('span', { class: 'bh-item-mark', title: 'Desperate use' }, '☠') : null,

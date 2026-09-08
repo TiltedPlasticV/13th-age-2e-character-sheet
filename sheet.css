@@ -1879,7 +1879,11 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
   font-family: var(--heading-font); font-size: var(--fs-sm); letter-spacing: 1px;
   text-transform: uppercase; color: var(--ink-faint); flex-shrink: 0;
 }
+/* Small accent marks on a row — the ✦ saying it is a spell, which rides
+   with the name, and the ☠ for a desperate use, which sits at the end.
+   One treatment; only the spacing differs. */
 .bh-item-mark { font-size: var(--fs-sm); color: var(--accent); flex-shrink: 0; }
+.bh-item-name .bh-item-mark { margin-left: 5px; }
 /* A row carrying a reminder leads with its name and gives the slack to the
    reminder beside it, where every other row gives that slack to the name. */
 .bh-item.has-note .bh-item-name { flex: 0 0 auto; }
