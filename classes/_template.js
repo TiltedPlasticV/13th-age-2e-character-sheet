@@ -104,11 +104,21 @@
     // column shows — set it, or the row reads as a standard action. `note`
     // is an optional short reminder shown on the row; `title` an optional
     // tooltip (otherwise the row hovers as your class name).
+    //
+    // `target` is a CSS selector for whatever on the sheet the row is
+    // about. Give one and the row becomes clickable: the sheet scrolls to
+    // it and outlines it. Every element the selector matches is outlined,
+    // so one row can point at a pair (the barbarian's two raging attacks
+    // are one choice); the scroll goes to the first. It is looked up when
+    // the row is clicked, so a selector for something your slots rebuild is
+    // fine — point it at your own elements, not at a node you are holding
+    // on to. Omit it and the row is simply not clickable.
     // battleHelper() {
     //   const d = classData('template');
     //   return [
     //     { name: 'Focused strike', trigger: 'standard', track: 'atwill',
-    //       note: 'instead of a basic attack', left: d.focused ? 1 : 0 },
+    //       note: 'instead of a basic attack', target: '.my-panel',
+    //       left: d.focused ? 1 : 0 },
     //     { name: 'Second wind', trigger: 'free', track: 'battle',
     //       left: d.wind ? 0 : 1 },
     //   ];

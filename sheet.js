@@ -454,7 +454,7 @@ function availableAbilities() {
   const out = [];
   ABILITY_LISTS.forEach(key => {
     if (!abilityListVisible(key)) return;
-    (state[key] || []).forEach(item => {
+    (state[key] || []).forEach((item, i) => {
       // An At-Will row has no tracker to read — it is simply always there —
       // so it lists unconditionally, under its own heading. A Passive row
       // isn't an action at all and never lists.
@@ -466,7 +466,10 @@ function availableAbilities() {
       if (isOutOfBattle(item)) return;
       const name = (item.name || '').trim();
       if (!name) return;
-      const row = { name, trigger: triggerMode(item), source: abilityTag(key), track };
+      // `list` + `index` is the handle click-to-reveal points back with —
+      // see bhTargetEls() for the invariant that makes an index enough.
+      const row = { name, trigger: triggerMode(item), source: abilityTag(key), track,
+                    list: key, index: i };
       if (track === 'atwill') {
         out.push(Object.assign(row, { left: 1 }));
         return;
@@ -506,6 +509,7 @@ function classAbilities() {
   return rows
     .filter(r => r && r.name && TRACK_TYPES[r.track] && (r.left === undefined || r.left > 0))
     .map(r => ({ name: r.name, note: r.note, title: r.title, source,
+                 target: r.target,
                  trigger: TRIGGERS[r.trigger] ? r.trigger : TRIGGER_DEFAULT,
                  track: r.track, left: r.left === undefined ? 1 : r.left }));
 }
@@ -552,7 +556,8 @@ function bhSection(key, title, children) {
 // The row states the price of a second rally; the counting is the player's,
 // and the full wording is in the tooltip.
 const BH_UNIVERSAL = [
-  { name: 'Basic attack', trigger: 'standard', track: 'atwill' },
+  { name: 'Basic attack', trigger: 'standard', track: 'atwill',
+    target: '[data-section="attacks"]' },
   { name: 'Rally', note: 'again: quick save 11+', trigger: 'standard', track: 'battle',
     title: 'Rally — standard action, once per battle for free. To rally '
          + 'again in the same battle, spend a quick action on a normal save '
@@ -580,10 +585,99 @@ const BH_GROUPS = [
 // one gives it the slack instead of the name — see .bh-item.has-note.
 function rowTrigger(r) { return TRIGGERS[r.trigger] ? r.trigger : TRIGGER_DEFAULT; }
 
+// ── CLICK TO REVEAL ─────────────────────────────────────────────────
+// A row that has somewhere to point at scrolls the sheet to it and outlines
+// it for a moment. Targets are resolved when the row is clicked, never when
+// it is drawn: the ability lists and a class module's panels are both torn
+// down and rebuilt whenever anything changes, so an element captured at
+// render time would be a node that has since left the document.
+const ABILITY_LIST_IDS = {
+  kinPowers: 'kin-powers-list', features: 'features-list',
+  talents: 'talents-list', powers: 'powers-list', spells: 'spells-list',
+};
+// Matches the breakpoint in sheet.css, by hand — a stylesheet's media
+// queries can't be read back out. Below it the panel covers most of the
+// sheet, so a jump would land on something still hidden behind it.
+const BH_NARROW = '(max-width: 600px)';
+const BH_TARGET_MS = 1500;
+let _bhTargetEls = [];
+let _bhTargetTimer = 0;
+
+// Whether to draw the row as clickable. Deliberately doesn't resolve the
+// target: that would put a DOM query in every row of every redraw, and a
+// declared target that fails to resolve is already handled — the click
+// simply does nothing.
+function bhHasTarget(r) { return r.list !== undefined || !!r.target; }
+
+// Every element the row is about, in document order — a selector target
+// matches all of them, not just the first, because one row can legitimately
+// be about a pair: the barbarian's raging strike and raging throw are two
+// cards and one choice. The sheet scrolls to the first; all of them light.
+//
+// renderPowerLike draws `.power-block`s straight from the state array in
+// order, so an ability row's index in that array is its block's index in
+// the list. That is the invariant the ability half of this rests on.
+function bhTargetEls(r) {
+  if (r.list !== undefined) {
+    const list = document.getElementById(ABILITY_LIST_IDS[r.list]);
+    const block = list && list.querySelectorAll('.power-block')[r.index];
+    return block ? [block] : [];
+  }
+  return r.target ? [...document.querySelectorAll(r.target)] : [];
+}
+
+// One row's worth of targets at a time, cleared on a timer rather than on
+// animationend — see .bh-target in the stylesheet for why the animation
+// can't be trusted to fire at all.
+function bhFlash(nodes) {
+  clearTimeout(_bhTargetTimer);
+  _bhTargetEls.forEach(n => n.classList.remove('bh-target'));
+  _bhTargetEls = nodes;
+  nodes.forEach(n => n.classList.add('bh-target'));
+  _bhTargetTimer = setTimeout(() => {
+    nodes.forEach(n => n.classList.remove('bh-target'));
+    if (_bhTargetEls === nodes) _bhTargetEls = [];
+  }, BH_TARGET_MS);
+}
+
+function bhReveal(r) {
+  const nodes = bhTargetEls(r);
+  // The row was drawn against a state that has since moved on — the ability
+  // deleted, the list reordered, the class switched. Nothing to point at.
+  if (!nodes.length) return;
+  const node = nodes[0];
+  // A folded section hides its children outright, and scrollIntoView does
+  // nothing for a display:none element. Open it, and leave it open — you
+  // asked to see what is in there.
+  const section = node.closest('.section[data-section]');
+  if (section && section.classList.contains('collapsed')) {
+    setSectionCollapsed(section, false);
+    saveNow();
+  }
+  // Collapsing the panel doesn't reflow the sheet: the rail's strip is
+  // reserved whether it is open or not.
+  if (state.prefs.battleHelperOpen && window.matchMedia(BH_NARROW).matches) {
+    state.prefs.battleHelperOpen = false;
+    renderBattleHelper();
+    saveNow();
+  }
+  const still = state.prefs.animations === false
+    || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  node.scrollIntoView({ block: 'center', behavior: still ? 'auto' : 'smooth' });
+  bhFlash(nodes);
+}
+
 function bhItem(r) {
   const trigger = TRIGGERS[rowTrigger(r)];
-  return el('div', { class: 'bh-item' + (r.note ? ' has-note' : ''),
-                     title: r.title || r.source || null },
+  // role=button is what makes this keyboard-operable: the global keydown
+  // handler already routes Space/Enter on a focused role=button to click().
+  const linked = bhHasTarget(r);
+  return el('div', { class: 'bh-item' + (r.note ? ' has-note' : '')
+                            + (linked ? ' linked' : ''),
+                     title: r.title || r.source || null,
+                     role: linked ? 'button' : null,
+                     tabindex: linked ? '0' : null,
+                     onclick: linked ? () => bhReveal(r) : null },
     el('span', { class: 'bh-item-name' }, r.name),
     r.note ? el('span', { class: 'bh-item-note' }, r.note) : null,
     el('span', { class: 'bh-item-tag' }, trigger.short),

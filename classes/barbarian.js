@@ -398,8 +398,11 @@
       return [
         // Free, at the start of every one of your turns, so it belongs with
         // the at-will actions rather than with the two one-shot ways in.
+        // `target` is where the battle helper scrolls to when the row is
+        // clicked. The rage rows all live in one compact panel, so they
+        // point at the panel rather than at a tracker box inside it.
         { name: 'Rage die', note: 'start of turn · 9+', track: 'atwill',
-          trigger: 'free',
+          trigger: 'free', target: '.rage-panel',
           title: 'Free action at the start of your turn: roll d12 + the '
                + 'escalation die, and on 9+ you start raging.',
           left: start(false) },
@@ -408,12 +411,13 @@
         // No note: the name plus the two attack cards on the sheet say it,
         // and a reminder here pushed the row onto a second line.
         { name: 'Raging strike / throw', track: 'atwill', trigger: 'standard',
+          target: '.rage-attack',
           title: 'While raging, these replace your basic attacks.',
           left: raging ? 1 : 0 },
         { name: 'Rage: free start', track: 'arc',    trigger: 'free',
-          left: start(d.freeUsed) },
+          target: '.rage-panel', left: start(d.freeUsed) },
         { name: 'Rage: when hit',   track: 'battle', trigger: 'hit',
-          left: start(d.hitCheck) },
+          target: '.rage-panel', left: start(d.hitCheck) },
       ];
     },
 

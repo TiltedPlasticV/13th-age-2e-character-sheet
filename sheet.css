@@ -1360,47 +1360,20 @@ body[data-theme="necromancer"] {
   );
 }
 
-/* ── WIZARD — arcane shimmer, gentle pulsing glow ── */
+/* ── WIZARD — deep indigo ground, arcane blue borders ── */
 body[data-theme="wizard"] {
   background: radial-gradient(ellipse at center, #06061a 40%, #020208 100%);
 }
 
-@keyframes arcane-pulse {
-  0%, 100% { box-shadow: 0 0 12px -2px rgba(128, 168, 255, 0.25), 0 0 4px -1px rgba(255, 200, 64, 0.05); }
-  50%      { box-shadow: 0 0 6px -2px rgba(128, 168, 255, 0.08), 0 0 14px -2px rgba(255, 200, 64, 0.2); }
-}
-
 [data-theme="wizard"] .section {
-  animation: arcane-pulse 16s ease-in-out infinite;
   border-color: rgba(96, 128, 255, 0.25);
 }
 
 [data-theme="wizard"] .section-head {
-  position: relative;
-  overflow: hidden;
   background: linear-gradient(90deg, rgba(128, 168, 255, 0.10) 0%, var(--bg-card) 35%, var(--bg-card) 65%, rgba(255, 200, 64, 0.08) 100%);
 }
 
-@keyframes shimmer {
-  0% { opacity: 1; background-position: -200% center; }
-  100% { opacity: 1; background-position: 200% center; }
-}
-
-[data-theme="wizard"] .section-head::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg,
-    transparent 0%, rgba(255, 200, 64, 0.04) 40%,
-    rgba(255, 200, 64, 0.10) 50%, rgba(255, 200, 64, 0.04) 60%,
-    transparent 100%);
-  background-size: 200% 100%;
-  opacity: 0;
-  animation: shimmer 24s linear infinite;
-  pointer-events: none;
-}
-
-/* ── ROGUE — deep asymmetric shadows, dagger slash, emerging from darkness ── */
+/* ── ROGUE — deep asymmetric shadows, emerging from darkness ── */
 body[data-theme="rogue"] {
   background: radial-gradient(ellipse at center, #0a0606 35%, #020101 100%);
 }
@@ -1410,122 +1383,49 @@ body[data-theme="rogue"] {
     -1px -1px 3px rgba(200, 180, 160, 0.04),
     4px 5px 16px -4px rgba(0, 0, 0, 0.6);
   border-color: rgba(160, 60, 60, 0.2);
-  position: relative;
-  overflow: hidden;
-}
-
-@keyframes dagger-slash {
-  0%, 85%, 100% { opacity: 0; transform: translateX(-200%) skewX(-20deg); }
-  90% { opacity: 1; transform: translateX(0%) skewX(-20deg); }
-  95% { opacity: 0; transform: translateX(200%) skewX(-20deg); }
-}
-
-[data-theme="rogue"] .section::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg,
-    transparent 30%, rgba(232, 192, 80, 0.06) 48%,
-    rgba(255, 96, 112, 0.08) 52%, transparent 70%);
-  opacity: 0;
-  animation: dagger-slash 16s ease-in-out infinite;
-  pointer-events: none;
 }
 
 [data-theme="rogue"] .section-head {
   background: linear-gradient(90deg, rgba(255, 96, 112, 0.12) 0%, var(--bg-card) 40%, rgba(232, 192, 80, 0.06) 100%);
 }
 
-/* ── BARBARIAN — rage pulse between fire and blood, smoldering borders ── */
+/* ── BARBARIAN — fire and blood gradients, smoldering borders ── */
 body[data-theme="barbarian"] {
   background: radial-gradient(ellipse at center, #0c0804 40%, #040201 100%);
 }
 
-@keyframes rage-pulse {
-  0%, 100% { box-shadow: 0 0 8px -3px rgba(255, 152, 48, 0.25); border-color: rgba(255, 152, 48, 0.25); }
-  50%      { box-shadow: 0 0 14px -2px rgba(255, 64, 64, 0.4); border-color: rgba(255, 64, 64, 0.3); }
-}
-
 [data-theme="barbarian"] .section {
-  animation: rage-pulse 6s ease-in-out infinite;
+  border-color: rgba(255, 152, 48, 0.25);
 }
 
 [data-theme="barbarian"] .section-head {
   background: linear-gradient(90deg, rgba(255, 64, 64, 0.12) 0%, var(--bg-card) 30%, var(--bg-card) 70%, rgba(255, 152, 48, 0.12) 100%);
 }
 
-/* ── BARD — traveling spotlight, theatrical curtain gradient ── */
+/* ── BARD — theatrical curtain gradient ── */
 body[data-theme="bard"] {
   background: radial-gradient(ellipse at center, #0e0618 40%, #040208 100%);
 }
 
-@keyframes spotlight-sweep {
-  0%   { opacity: 1; background-position: -100% center; }
-  100% { opacity: 1; background-position: 200% center; }
-}
-
 [data-theme="bard"] .section {
   border-color: rgba(180, 100, 240, 0.2);
-  position: relative;
-  overflow: hidden;
-}
-
-[data-theme="bard"] .section::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg,
-    transparent 0%, rgba(192, 112, 255, 0.05) 30%,
-    rgba(255, 144, 128, 0.07) 50%, rgba(192, 112, 255, 0.05) 70%,
-    transparent 100%);
-  background-size: 200% 100%;
-  opacity: 0;
-  animation: spotlight-sweep 20s ease-in-out infinite;
-  pointer-events: none;
 }
 
 [data-theme="bard"] .section-head {
   background: linear-gradient(90deg, rgba(192, 112, 255, 0.14) 0%, var(--bg-card) 35%, var(--bg-card) 65%, rgba(255, 144, 128, 0.10) 100%);
 }
 
-/* ── CLERIC — divine radiance, stained-glass light, halo glow ── */
+/* ── CLERIC — divine gold and sacred blue headers ── */
 body[data-theme="cleric"] {
   background: radial-gradient(ellipse at center top, #0c0a16 30%, #040308 100%);
 }
 
-@keyframes divine-radiance {
-  0%, 100% { box-shadow: 0 -2px 14px -4px rgba(240, 200, 72, 0.25), 0 0 6px -2px rgba(104, 184, 255, 0.06); }
-  50%      { box-shadow: 0 -2px 8px -4px rgba(240, 200, 72, 0.08), 0 0 14px -2px rgba(104, 184, 255, 0.25); }
-}
-
 [data-theme="cleric"] .section {
-  animation: divine-radiance 12s ease-in-out infinite;
   border-color: rgba(220, 200, 120, 0.2);
 }
 
 [data-theme="cleric"] .section-head {
-  position: relative;
-  overflow: hidden;
   background: linear-gradient(90deg, rgba(240, 200, 72, 0.10) 0%, var(--bg-card) 35%, var(--bg-card) 65%, rgba(104, 184, 255, 0.08) 100%);
-}
-
-@keyframes stained-glass {
-  0%, 100% { opacity: 0.4; }
-  33%      { opacity: 0.7; }
-  66%      { opacity: 0.5; }
-}
-
-[data-theme="cleric"] .section-head::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg,
-    rgba(255, 100, 80, 0.03) 0%, rgba(255, 220, 100, 0.04) 20%,
-    rgba(100, 200, 100, 0.03) 40%, rgba(100, 160, 255, 0.04) 60%,
-    rgba(180, 100, 255, 0.03) 80%, rgba(255, 100, 80, 0.03) 100%);
-  opacity: 0;
-  animation: stained-glass 18s ease-in-out infinite;
-  pointer-events: none;
 }
 
 /* ── FIGHTER — steel rivets, forged border, weapon-rack discipline ── */
@@ -1536,7 +1436,6 @@ body[data-theme="fighter"] {
 [data-theme="fighter"] .section {
   border-color: rgba(140, 160, 200, 0.25);
   border-width: 2px;
-  position: relative;
 }
 
 [data-theme="fighter"] .section-head {
@@ -1557,58 +1456,17 @@ body[data-theme="fighter"] {
   pointer-events: none;
 }
 
-@keyframes steel-glint {
-  0%, 90%, 100% { opacity: 0; transform: translateX(-100%); }
-  95% { opacity: 1; transform: translateX(100%); }
-}
-
-[data-theme="fighter"] .section-head::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg,
-    transparent 40%, rgba(220, 230, 255, 0.08) 50%, transparent 60%);
-  opacity: 0;
-  animation: steel-glint 12s ease-in-out infinite;
-  pointer-events: none;
-}
-
-/* ── PALADIN — holy aura, ascending light, sanctified shield ── */
+/* ── PALADIN — celestial blue-white headers, sanctified gold ── */
 body[data-theme="paladin"] {
   background: radial-gradient(ellipse at center bottom, #0a0c1a 30%, #030408 100%);
 }
 
-@keyframes holy-aura {
-  0%, 100% { box-shadow: 0 0 12px -3px rgba(168, 200, 255, 0.25), 0 0 4px -1px rgba(255, 200, 64, 0.05); }
-  50%      { box-shadow: 0 0 8px -3px rgba(168, 200, 255, 0.08), 0 0 14px -1px rgba(255, 200, 64, 0.25); }
-}
-
 [data-theme="paladin"] .section {
-  animation: holy-aura 10s ease-in-out infinite;
   border-color: rgba(200, 216, 255, 0.2);
 }
 
 [data-theme="paladin"] .section-head {
-  position: relative;
-  overflow: hidden;
   background: linear-gradient(90deg, rgba(168, 200, 255, 0.10) 0%, var(--bg-card) 40%, var(--bg-card) 60%, rgba(255, 200, 64, 0.08) 100%);
-}
-
-@keyframes ascending-light {
-  0%   { opacity: 1; background-position: center 100%; }
-  100% { opacity: 1; background-position: center -100%; }
-}
-
-[data-theme="paladin"] .section-head::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center,
-    rgba(255, 240, 200, 0.06) 0%, transparent 70%);
-  background-size: 100% 200%;
-  opacity: 0;
-  animation: ascending-light 30s linear infinite;
-  pointer-events: none;
 }
 
 /* ── LIGHT / DARK — no effects by design. The only rules here give the
@@ -1992,6 +1850,17 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
   border-radius: 0 3px 3px 0;
 }
 .bh-item + .bh-item { margin-top: 3px; }
+
+/* Only a row with somewhere to point at reads as clickable — the rest of
+   the list must not promise a jump it can't make. */
+.bh-item.linked { cursor: pointer; }
+.bh-item.linked:hover {
+  border-left-color: var(--highlight);
+  background: var(--field-bg);
+}
+.bh-item.linked:focus-visible {
+  outline: 2px solid var(--highlight); outline-offset: 1px;
+}
 .bh-item-name {
   flex: 1; min-width: 0;
   font-size: var(--fs-lg); color: var(--ink-dim);
@@ -2022,6 +1891,26 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 .bh-turn > * + * { margin-top: 4px; }
 .bh-turn-steps { margin: 0; padding-left: 17px; }
 .bh-turn-steps li { margin-top: 2px; }
+
+/* Where a battle-helper row points, for a moment after it is clicked.
+   The outline is *static*, with the fade laid over it: the reduced-motion
+   rules kill every animation with !important, so a highlight that existed
+   only as a keyframe would be invisible to exactly the people who most need
+   the sheet to be legible. The class is removed on a timer in JS, never on
+   animationend, for the same reason.
+
+   One rule covers every kind of target — a power block, a class panel, an
+   attack card, a whole section — because an outline needs no layout and
+   follows whatever border-radius the element already has. */
+.bh-target {
+  outline: 2px solid var(--highlight);
+  outline-offset: 2px;
+  animation: bh-target-fade 1.5s ease-out;
+}
+@keyframes bh-target-fade {
+  from { box-shadow: 0 0 0 5px var(--highlight-dim); }
+  to   { box-shadow: 0 0 0 0 transparent; }
+}
 
 .esc-row {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -2133,10 +2022,14 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 }
 
 /* ── REDUCED MOTION ──
-   Theme animations repaint whole sections continuously, which on a slow
-   machine competes with typing. Both rules below stop that — one on the OS
-   setting, one on the Utilities switch. Last in the stylesheet, and
-   !important, so they beat every theme rule above. */
+   The themes are static: colour, gradient and border only, with no glow or
+   sweep that repaints on a timer. What these rules actually stop is the
+   smooth scrolling and the colour cross-fade when the theme changes, plus
+   the three small pieces of feedback that are left — the staggered badge,
+   a new roll arriving in the log, and the outline on whatever a battle
+   helper row points at. One rule follows the OS setting, one the Utilities
+   switch. Last in the stylesheet, and !important, so they beat everything
+   above. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation: none !important;
