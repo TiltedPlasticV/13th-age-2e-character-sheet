@@ -982,6 +982,30 @@ textarea.field-block {
   outline-offset: 2px;
 }
 
+/* ── HEALING POTIONS ──
+   One row per tier: the stock (level-derived, overridable), the unspent
+   ticks, what a drink does, and the button that does it. A tier the level
+   grants none of dims and drops its ticks, but keeps its number box — that
+   box is where a potion bought or looted mid-arc gets typed in. */
+/* An even split rather than the 3fr/2fr the row defaults to: a potion row
+   carries a name, a stock box, its ticks, the effect and a button, and the
+   items list is a free-text box that takes whatever it is given. */
+.combo-row[data-section-group="items-potions"] { grid-template-columns: 1fr 1fr; }
+.potions-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.potion-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* A column so the three stock boxes line up under each other. `.hp-label`
+   is nowrap with visible overflow, so this has to be a floor and not a
+   width: at 70px the longest name ran 12px past its box and over the field
+   beside it. A fallback font that renders wider than this pushes its row
+   along instead of spilling. */
+.potion-name { min-width: 88px; flex-shrink: 0; }
+.potion-row .field-inline { font-family: var(--heading-font); font-weight: 700; }
+.potion-drink { font-size: 14px; }
+.potion-row.empty { opacity: 0.5; }
+/* An empty track would still collect the row's flex gap. */
+.potion-row.empty .potion-ticks,
+.potion-row.empty .potion-drink { display: none; }
+
 /* ── ATTACK CARDS ── */
 .attack-cards { display: flex; flex-direction: column; gap: 4px; }
 

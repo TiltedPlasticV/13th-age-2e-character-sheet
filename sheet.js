@@ -176,6 +176,73 @@ function defenseCalc(f, defenseKey, modA, modB, modC) {
   return ci.defenses[defenseKey] + mid + intOrZero(f.level);
 }
 
+// ── HEALING POTIONS ─────────────────────────────────────
+// 13A 2e allocates healing potions per arc off the character's level, and
+// they are *replaced* rather than added to — an unused potion doesn't bank.
+// So the stock is a derived field per tier: the level table fills it, and a
+// potion bought or looted mid-arc is typed straight over it, locking that
+// tier alone. Spent ticks live in state.checkboxes under `potion_<tier>_N`,
+// beside `rec_` and `skull_`, so they save, load and reset for free.
+//
+// `cap` is a ceiling on the hp one drink restores, not on the character.
+const POTION_TIERS = [
+  { key: 'adventurer', label: 'Adventurer', bonus: '1d8', cap: 30 },
+  { key: 'champion',   label: 'Champion',   bonus: '2d8', cap: 60 },
+  { key: 'epic',       label: 'Epic',       bonus: '4d8', cap: null },
+];
+// Level → what that level is handed. Levels outside 1–10 have no entry, so
+// the stock fields stay blank and hand-typed exactly as max HP does.
+const POTIONS_BY_LEVEL = {
+  1:  { adventurer: 1 },
+  2:  { adventurer: 2 },
+  3:  { adventurer: 1, champion: 1 },
+  4:  { champion: 2 },
+  5:  { adventurer: 1, champion: 2 },
+  6:  { champion: 1, epic: 1 },
+  7:  { epic: 2 },
+  8:  { champion: 1, epic: 2 },
+  9:  { epic: 3 },
+  10: { epic: 4 },
+};
+function potionsAtLevel(f, tier) {
+  const row = POTIONS_BY_LEVEL[intOrNull(f.level)];
+  return row === undefined ? '' : (row[tier] || 0);
+}
+// How many of a tier the character has, ticked or not. A typo like "99" is
+// capped rather than drawing a hundred boxes — maxRecoveries' reasoning.
+function potionStock(tier) {
+  const n = intOrNull(state.fields['potions_' + tier]);
+  if (n === null || n < 0) return 0;
+  return Math.min(n, 20);
+}
+function potionKey(tier, i) { return 'potion_' + tier + '_' + i; }
+// Unspent potions of one tier — what the battle helper counts, and what
+// drinking one needs at least one of.
+function potionsLeft(tier) {
+  const stock = potionStock(tier);
+  let left = 0;
+  for (let i = 0; i < stock; i++) if (!state.checkboxes[potionKey(tier, i)]) left++;
+  return left;
+}
+// Two numbers and nothing else: the section head names them, the ticks
+// count them, and the row has to fit beside the magic items in a combo row.
+function potionEffect(t) {
+  return '+' + t.bonus + ' · ' + (t.cap === null ? 'no cap' : 'max ' + t.cap);
+}
+// The long form, for a tooltip — where there is room to say what the dice
+// are added to and what drinking one costs.
+function potionTitle(t) {
+  return t.label + ' healing potion — heal a recovery +' + t.bonus + ' hp'
+       + (t.cap === null ? '' : ', to a maximum of ' + t.cap)
+       + '. Drinking is a standard action and spends a recovery too.';
+}
+// "1 adventurer, 2 champion" — the restocked allocation, for the heal-up log.
+function potionSummary() {
+  return POTION_TIERS
+    .map(t => { const n = potionStock(t.key); return n ? n + ' ' + t.key : null; })
+    .filter(Boolean).join(', ');
+}
+
 // Order matters: dependents come after their sources so one pass resolves
 // chains like dex_score → dex_mod → initiative. `sources` lists the fields
 // each calc reads and gates recomputation (typing in `notes` shouldn't walk
@@ -230,6 +297,11 @@ const DERIVED_FIELDS = {
     const lvl = intOrNull(f.level);
     return lvl === null ? '' : lvl;
   }},
+  // Healing potions, one entry per tier so that overriding the tier you
+  // bought a potion of leaves the other two tracking your level.
+  potions_adventurer: { sources: ['level'], calc: f => potionsAtLevel(f, 'adventurer') },
+  potions_champion:   { sources: ['level'], calc: f => potionsAtLevel(f, 'champion') },
+  potions_epic:       { sources: ['level'], calc: f => potionsAtLevel(f, 'epic') },
 };
 // The *active* derived set: DERIVED_FIELDS plus the current class module's
 // (see refreshDerivedIndex). Everything downstream reads these, so a class
@@ -257,6 +329,7 @@ function recomputeDerived() {
   });
   updateTierBadge();
   updateHpStatus();
+  renderPotions();
 }
 
 // Display-only tier label next to the character name.
@@ -514,6 +587,25 @@ function classAbilities() {
                  track: r.track, left: r.left === undefined ? 1 : r.left }));
 }
 
+// Potions are neither an ability nor a class's, but drinking one is a
+// standard action off a per-arc stock — the exact shape of what this panel
+// is for. The row points back at the Healing Potions section, where the
+// ticks and the drink buttons are.
+function potionAbilities() {
+  return POTION_TIERS.map(t => {
+    const left = potionsLeft(t.key);
+    if (!left) return null;
+    // No `note`: the panel is 290px wide and the dice, the cap and the
+    // price are all one click away on the sheet this row points at.
+    return {
+      name: t.label + ' potion',
+      trigger: 'standard', track: 'arc', left,
+      title: potionTitle(t),
+      target: '[data-section="potions"]',
+    };
+  }).filter(Boolean);
+}
+
 // ── The blocks the panel draws ──
 // Each one folds away when its heading is clicked, and remembers that in
 // collapsedMap() — the same store the sheet's own sections use, so it is a
@@ -709,7 +801,7 @@ function bhItem(r) {
 }
 
 function buildBhUses() {
-  const rows = availableAbilities().concat(classAbilities());
+  const rows = availableAbilities().concat(classAbilities(), potionAbilities());
   // The universal actions go in under the player's own, and are kept out of
   // `rows` so they can't stand in for having any: an otherwise empty list
   // still gets the note telling you how to fill it.
@@ -1078,6 +1170,55 @@ function renderRecoveries() {
   }
   applySequentialState(boxes, 'rec_');
   row.insertAdjacentHTML('beforeend', trackAnnotationHtml('arc'));
+}
+
+// Draws each tier row's tick track from its stock field, and dims a tier
+// the character has none of. The number box stays on a dimmed row on
+// purpose: it is where a potion bought mid-arc gets typed in.
+//
+// Reached from recomputeDerived (the level moved) and from the `change`
+// handler (a stock typed over) — the two paths that keep the recovery
+// boxes in step, for the same reason.
+function renderPotions() {
+  const arc = document.getElementById('potions-arc');
+  if (!arc) return;
+  arc.innerHTML = trackAnnotationHtml('arc');
+  POTION_TIERS.forEach(t => {
+    const row = document.querySelector('.potion-row[data-potion-tier="' + t.key + '"]');
+    if (!row) return;
+    const stock = potionStock(t.key);
+    row.classList.toggle('empty', stock === 0);
+    const effect = row.querySelector('.potion-effect');
+    if (effect) effect.textContent = potionEffect(t);
+    const track = row.querySelector('.potion-ticks');
+    if (!track) return;
+    track.innerHTML = '';
+    const prefix = 'potion_' + t.key + '_';
+    const boxes = [];
+    for (let i = 0; i < stock; i++) {
+      const key = potionKey(t.key, i);
+      const box = el('div', {
+        class: 'check-box' + (state.checkboxes[key] ? ' checked' : ''),
+        role: 'checkbox',
+        'aria-checked': state.checkboxes[key] ? 'true' : 'false',
+        'aria-label': t.label + ' potion ' + (i + 1),
+      }, '✕');
+      box.addEventListener('click', () => {
+        // The disabled class is the authoritative gate — Space/Enter come
+        // through el.click() too, so this one check covers both.
+        if (box.classList.contains('disabled')) return;
+        const next = !state.checkboxes[key];
+        state.checkboxes[key] = next;
+        box.classList.toggle('checked', next);
+        box.setAttribute('aria-checked', next ? 'true' : 'false');
+        applySequentialState(boxes, prefix);
+        saveNow();
+      });
+      boxes.push(box);
+      track.appendChild(box);
+    }
+    applySequentialState(boxes, prefix);
+  });
 }
 
 function renderSkulls() {
@@ -2089,7 +2230,7 @@ function applyState() {
       const key = input.dataset.field;
       if (key) setLockVisual(toggle, input, !!state.locks[key]);
     });
-    [renderRecoveries, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpStatus].forEach(fn => {
+    [renderRecoveries, renderPotions, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpStatus].forEach(fn => {
       try { fn(); } catch(e) { console.warn(fn.name, e); }
     });
     // After renderClassContent, so a class module's own sections are wired.
@@ -2156,9 +2297,12 @@ function quickRest() {
 }
 
 function fullHealUp() {
-  // Clear every skull and recovery checkbox, and refill current HP.
+  // Clear every skull, recovery and potion checkbox, and refill current HP.
+  // Potions are restocked rather than refreshed — the allocation comes off
+  // the level-derived stock fields, so clearing the ticks *is* the restock,
+  // and a level gained between arcs restocks at the new level.
   Object.keys(state.checkboxes).forEach(key => {
-    if (/^(skull|rec)_\d+$/.test(key)) delete state.checkboxes[key];
+    if (/^(skull|rec|potion_[a-z]+)_\d+$/.test(key)) delete state.checkboxes[key];
   });
   // Set current HP from max HP. If max is blank, leave current blank
   // rather than writing "undefined" or stale data into the field.
@@ -2179,6 +2323,7 @@ function fullHealUp() {
   renderEscalation();
   renderSkulls();
   renderRecoveries();
+  renderPotions();
   renderAbilityLists();
   renderIcons();
   classHook('onFullHeal');
@@ -2190,6 +2335,8 @@ function fullHealUp() {
   ];
   if (refreshed) bits.push(`${plural(refreshed, 'ability', 'abilities')} refreshed`);
   if (iconsReset) bits.push(`${plural(iconsReset, 'icon relationship', 'icon relationships')} reset`);
+  const potions = potionSummary();
+  if (potions) bits.push(`potions restocked (${potions})`);
   logAction('Full Heal-Up', bits.join(' · '));
   saveNow();
   showToast('Fully healed');
@@ -2392,6 +2539,52 @@ function rollRecovery() {
   saveNow();
 }
 
+// Drinking a potion is a standard action that spends a potion *and* a
+// recovery: you heal the recovery's worth plus the potion's dice, and the
+// tier's cap limits what that one drink can restore. With no recoveries
+// left it declines rather than half-working, the same call rollRecovery
+// makes — the potion is still on the sheet to spend by hand.
+function drinkPotion(tier) {
+  const t = POTION_TIERS.find(x => x.key === tier);
+  if (!t) return;
+  collectState();
+  const expr = (state.fields.recovery_dice || '').trim();
+  const rec = rollExpr(expr);
+  if (!rec) { showToast('Set Recovery Dice (e.g. "3d8+2") first'); return; }
+  const stock = potionStock(tier);
+  let slot = -1;
+  for (let i = 0; i < stock; i++) {
+    if (!state.checkboxes[potionKey(tier, i)]) { slot = i; break; }
+  }
+  if (slot === -1) { showToast('No ' + t.label.toLowerCase() + ' potions left!'); return; }
+  const maxRec = maxRecoveries();
+  let recSlot = -1;
+  for (let i = 0; i < maxRec; i++) {
+    if (!state.checkboxes['rec_' + i]) { recSlot = i; break; }
+  }
+  if (recSlot === -1) { showToast('No recoveries left — a potion spends one'); return; }
+  const potion = rollExpr(t.bonus);
+  const rolled = rec.total + potion.total;
+  const healed = t.cap === null ? rolled : Math.min(rolled, t.cap);
+  state.checkboxes[potionKey(tier, slot)] = true;
+  state.checkboxes['rec_' + recSlot] = true;
+  const maxHp = intOrNull(state.fields.max_hp);
+  let cur = intOrZero(state.fields.current_hp) + healed;
+  if (maxHp !== null && cur > maxHp) cur = maxHp;
+  state.fields.current_hp = String(cur);
+  setFieldDom('current_hp');
+  renderPotions();
+  renderRecoveries();
+  updateHpStatus();
+  logRoll(`${t.label} potion (${stock - slot - 1} left)`,
+          `${exprDetail(expr, rec)} · ${exprDetail(t.bonus, potion)}`
+          + (healed < rolled ? ` · capped at ${t.cap}` : '')
+          + ` · HP → ${hpFraction(cur)}`
+          + ` · ${plural(maxRec - recSlot - 1, 'recovery', 'recoveries')} left`,
+          '+' + healed);
+  saveNow();
+}
+
 // Icon relationship roll: Nd6, each 5 or 6 earning a use. Whether a use
 // comes with a twist is decided when it's played, not here — that's what
 // the 3-state "available" track is for.
@@ -2531,6 +2724,7 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('change', (e) => {
   if (!e.target.dataset) return;
   if (e.target.dataset.field === 'max_recoveries') renderRecoveries();
+  if (/^potions_/.test(e.target.dataset.field || '')) renderPotions();
 });
 
 // Load from localStorage on init
@@ -2577,6 +2771,9 @@ function wireStaticHandlers() {
     'hp-heal':        applyHeal,
     'roll-recovery':  rollRecovery,
   };
+  // One drink action per tier, generated so that adding a tier stays a
+  // single edit in POTION_TIERS rather than three scattered ones.
+  POTION_TIERS.forEach(t => { ACTIONS['drink-' + t.key] = () => drinkPotion(t.key); });
   document.querySelectorAll('[data-action]').forEach(btn => {
     const fn = ACTIONS[btn.dataset.action];
     if (fn) btn.addEventListener('click', fn);
@@ -2619,6 +2816,7 @@ const NUMERIC_FIELDS = [
   'max_recoveries','recovery_avg',
   'melee_avg','melee_miss','ranged_avg','ranged_miss',
   'max_spells','max_magic','base_ac','shield',
+  'potions_adventurer','potions_champion','potions_epic',
 ];
 function applyInputModes() {
   NUMERIC_FIELDS.forEach(key => {

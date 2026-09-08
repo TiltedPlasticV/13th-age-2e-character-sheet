@@ -308,12 +308,48 @@
     </div>
   </div>
 
-  <!-- MAGIC ITEMS -->
-  <div class="section" data-section="magic-items">
-    <div class="section-head"><span class="icon">💎</span> Magic Items & Potions</div>
-    <div class="section-body">
-      <div class="hp-item"><span class="hp-label">Max Attuned</span><input class="field-inline field-grow" data-field="max_magic" aria-label="Maximum attuned magic items"></div>
-      <textarea rows="1" class="field-block" data-field="magic_items" placeholder="Magic items, potions, runes…"></textarea>
+  <!-- MAGIC ITEMS + HEALING POTIONS -->
+  <div class="combo-row" data-section-group="items-potions">
+    <div class="section" data-section="magic-items">
+      <div class="section-head"><span class="icon">💎</span> Magic Items</div>
+      <div class="section-body">
+        <div class="hp-item"><span class="hp-label">Max Attuned</span><input class="field-inline field-grow" data-field="max_magic" aria-label="Maximum attuned magic items"></div>
+        <textarea rows="1" class="field-block" data-field="magic_items" placeholder="Magic items, runes, wondrous gear…"></textarea>
+      </div>
+    </div>
+
+    <!-- The stock boxes are auto-derived from level (POTIONS_BY_LEVEL) and
+         overridable per tier; renderPotions() fills the tick tracks, the
+         effect notes and the ↺, so the rules numbers live in one place. -->
+    <div class="section" data-section="potions">
+      <div class="section-head"><span class="icon">🧪</span> Healing Potions</div>
+      <div class="section-body">
+        <div class="potions-head">
+          <span id="potions-arc"></span>
+          <span class="note">Restocked each arc</span>
+        </div>
+        <div class="potion-row" data-potion-tier="adventurer">
+          <span class="hp-label potion-name">Adventurer</span>
+          <input class="field-inline field-sm" data-field="potions_adventurer" aria-label="Adventurer healing potions">
+          <div class="check-row potion-ticks"></div>
+          <span class="note potion-effect"></span>
+          <button class="roll-btn potion-drink" data-action="drink-adventurer" title="Drink one: spends this potion and a recovery, rolls both, and heals up to this tier&#39;s cap" aria-label="Drink one Adventurer healing potion">🧪</button>
+        </div>
+        <div class="potion-row" data-potion-tier="champion">
+          <span class="hp-label potion-name">Champion</span>
+          <input class="field-inline field-sm" data-field="potions_champion" aria-label="Champion healing potions">
+          <div class="check-row potion-ticks"></div>
+          <span class="note potion-effect"></span>
+          <button class="roll-btn potion-drink" data-action="drink-champion" title="Drink one: spends this potion and a recovery, rolls both, and heals up to this tier&#39;s cap" aria-label="Drink one Champion healing potion">🧪</button>
+        </div>
+        <div class="potion-row" data-potion-tier="epic">
+          <span class="hp-label potion-name">Epic</span>
+          <input class="field-inline field-sm" data-field="potions_epic" aria-label="Epic healing potions">
+          <div class="check-row potion-ticks"></div>
+          <span class="note potion-effect"></span>
+          <button class="roll-btn potion-drink" data-action="drink-epic" title="Drink one: spends this potion and a recovery, rolls both, and heals up to this tier&#39;s cap" aria-label="Drink one Epic healing potion">🧪</button>
+        </div>
+      </div>
     </div>
   </div>
 
