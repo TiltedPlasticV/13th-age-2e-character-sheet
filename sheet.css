@@ -382,11 +382,6 @@ body {
   padding: 0px 20px 20px;
 }
 
-/* One column: the wrappers get out of the way entirely, so the sections
-   stack in document order exactly as they did before there were columns.
-   They only become boxes at the two-column breakpoint below. */
-.sheet-col { display: contents; }
-
 /* ── TOOLBAR CONTROLS ── */
 .toolbar select {
   font-family: var(--ui-font);
@@ -574,12 +569,6 @@ body {
 }
 
 .section-head .icon { font-size: 1em; opacity: 0.7; }
-
-/* The body is a flex column, so shrinking its height during a fold would
-   compress the rows rather than slide them out of sight — Gear's second row
-   squashed from 53px to 32px on the way past. Nothing shrinks at its
-   natural height, so this only ever applies while folding. */
-.section-body > * { flex-shrink: 0; }
 
 .section-body {
   display: flex;
@@ -1758,8 +1747,7 @@ body.no-dice .dice-action { display: none; }
 }
 /* Collapsing slides the panel out by exactly the width of its body, so the
    rail comes to rest where it sits today and the contents never reflow — a
-   width transition would re-wrap every row on the way past. 0.22s matches
-   SECTION_FOLD_MS in sheet.js, so the two folds on screen move alike. */
+   width transition would re-wrap every row on the way past. */
 .battle-helper.collapsed { transform: translateX(calc(var(--bh-width) - var(--bh-rail))); }
 body.no-battle-helper .battle-helper { display: none; }
 
@@ -2017,21 +2005,18 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
     max-width: 1600px;
     padding: 0px 48px 20px;
   }
-  /* Two explicit columns, not `column-count: 2`. Multicol has to re-balance
-     the entire block whenever anything in it changes size, and with
-     `break-inside: avoid` on every section that came to more than a frame's
-     worth of layout — which made the fold animation drop frames on any
-     section tall enough to notice. A grid column only ever re-lays-out
-     itself. It also means a section's column is a decision in the markup
-     rather than whatever balancing happened to produce.
-     `align-items: start` keeps each column as tall as its own contents. */
+  /* Multicol, so the two columns balance themselves as sections are folded,
+     added and removed — an explicit two-column grid can't, and leaves one
+     side visibly longer than the other. `break-inside: avoid` keeps a
+     section whole rather than splitting it across the gap. */
   .sheet-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 18px;
-    align-items: start;
+    column-count: 2;
+    column-gap: 18px;
   }
-  .sheet-col { display: flex; flex-direction: column; }
+  .sheet-columns > .section,
+  .sheet-columns > .combo-row {
+    break-inside: avoid;
+  }
 }
 
 @media (max-width: 600px) {
@@ -2069,6 +2054,12 @@ body.no-anim, body.no-anim *, body.no-anim *::before, body.no-anim *::after {
 /* ── COLLAPSED SECTIONS ──
    Screen only: a printed sheet is a record, so it shows every section
    whether or not it was folded away on screen.
+
+   A fold is an instant display toggle, deliberately. Animating it has been
+   tried twice — once on the Web Animations API, once as a `1fr` → `0fr`
+   grid row — and both read as jerky. The battle helper gets away with its
+   slide because a transform moves nothing but the panel; a section can't,
+   because the whole column below it has to move with it.
 
    Last in the stylesheet, and !important, for the same reason the rules
    above are: a fold has to beat every layout rule that gives a section's

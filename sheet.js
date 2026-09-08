@@ -667,7 +667,7 @@ function bhReveal(r) {
   // asked to see what is in there.
   const section = node.closest('.section[data-section]');
   if (section && section.classList.contains('collapsed')) {
-    setSectionCollapsed(section, false, { animate: true });
+    setSectionCollapsed(section, false);
     saveNow();
   }
   // Collapsing the panel doesn't reflow the sheet: the rail's strip is
@@ -886,102 +886,19 @@ function sectionKey(section) {
   return group ? group.dataset.sectionGroup : section.dataset.section;
 }
 
-// How long a section takes to fold, and the one place that says so. The
-// battle helper's own slide is a CSS transition of the same length — see
-// .battle-helper in the stylesheet.
-const SECTION_FOLD_MS = 220;
-
-// Motion is a preference, and the Web Animations API doesn't answer to the
-// stylesheet's `animation: none !important` — so this asks directly, the
-// same way the battle helper's scroll does.
-function foldMotionOK() {
-  return state.prefs && state.prefs.animations !== false
-    && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
-// Slide one section's body open or shut, calling `settle` when the motion
-// is over. Returns false when it can't animate — no body, no Web
-// Animations, motion switched off — and the caller settles immediately.
-//
-// `display: none` stays the resting collapsed state: it is what keeps a
-// folded section out of the tab order and lets the print stylesheet show
-// every section regardless. So the motion happens either side of that
-// class, never instead of it.
-//
-// The clip is inline and lasts only as long as the animation. A permanent
-// `overflow: hidden` — which the CSS-only version of this trick needs —
-// would slice the padlocks on derived fields, which deliberately overhang
-// the body's box by a few pixels.
-function slideSectionBody(section, collapse, settle) {
-  const body = section.querySelector('.section-body');
-  if (!body || typeof body.animate !== 'function' || !foldMotionOK()) return false;
-  // A second click mid-slide replaces the first outright rather than
-  // letting two animations fight over the same height.
-  if (body._foldAnim) {
-    body._foldAnim.onfinish = body._foldAnim.oncancel = null;
-    clearTimeout(body._foldAnim._backstop);
-    body._foldAnim.cancel();
-  }
-  const cs = getComputedStyle(body);
-  const open = {
-    height: body.getBoundingClientRect().height + 'px',
-    marginTop: cs.marginTop, marginBottom: cs.marginBottom, opacity: 1,
-  };
-  const shut = { height: '0px', marginTop: '0px', marginBottom: '0px', opacity: 0 };
-  body.style.overflow = 'hidden';
-  // `forwards` holds the last frame instead of snapping back to the natural
-  // height for the frame between the animation ending and settle() applying
-  // the class — the same flash the battle helper's outline had. It is
-  // cancelled the moment the class takes over, so nothing is left pinning
-  // the element's height.
-  const anim = body.animate(collapse ? [open, shut] : [shut, open],
-                            { duration: SECTION_FOLD_MS, easing: 'ease', fill: 'forwards' });
-  // The animation is the decoration; this is what actually finishes the
-  // fold. A browser throttles animations in a tab that isn't being painted,
-  // so `onfinish` alone would leave a section that was collapsed just
-  // before switching tabs stuck half-shut, inline clip and all. Whichever
-  // arrives first wins, and the other is a no-op.
-  let done = false;
-  const finish = () => {
-    if (done) return;
-    done = true;
-    clearTimeout(anim._backstop);
-    anim.onfinish = anim.oncancel = null;
-    settle();
-    anim.cancel();
-    body.style.overflow = '';
-    if (body._foldAnim === anim) body._foldAnim = null;
-  };
-  anim._backstop = setTimeout(finish, SECTION_FOLD_MS + 80);
-  anim.onfinish = anim.oncancel = finish;
-  body._foldAnim = anim;
-  return true;
-}
-
-// `opts.animate` is off by default: refreshCollapsibleSections() pushes the
-// saved state onto every section on load, and that must not play as
-// nineteen sections folding themselves.
-function setSectionCollapsed(section, collapsed, opts = {}) {
+// Folding is the class and nothing else — see the COLLAPSED SECTIONS block
+// at the end of the stylesheet, which hides the body outright rather than
+// animating it away.
+function setSectionCollapsed(section, collapsed) {
   sectionPeers(section).forEach(peer => {
     const head = peer.querySelector('.section-head');
     const caret = head && head.querySelector('.section-caret');
+    peer.classList.toggle('collapsed', collapsed);
     if (head) head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     if (caret) caret.textContent = collapsed ? '▸' : '▾';
-    const settle = () => {
-      peer.classList.toggle('collapsed', collapsed);
-      // Textareas measure zero while hidden, so the ones coming back into
-      // view need re-measuring — see the zero guard in flushAutoGrow.
-      if (!collapsed) peer.querySelectorAll('textarea.field-block').forEach(autoGrow);
-    };
-    if (!opts.animate) { settle(); return; }
-    if (collapsed) {
-      // Measure while it is still open, slide shut, then hide it.
-      if (!slideSectionBody(peer, true, settle)) settle();
-    } else {
-      // Show it first, so there is a height to slide out to.
-      settle();
-      slideSectionBody(peer, false, () => {});
-    }
+    // Textareas measure zero while hidden, so the ones coming back into view
+    // need re-measuring — see the zero guard in flushAutoGrow.
+    if (!collapsed) peer.querySelectorAll('textarea.field-block').forEach(autoGrow);
   });
   const map = collapsedMap();
   if (collapsed) map[sectionKey(section)] = true;
@@ -1005,8 +922,7 @@ function refreshCollapsibleSections() {
       // which routes any focused role="button" to click().
       head.appendChild(el('span', { class: 'section-caret', 'aria-hidden': 'true' }, '▾'));
       head.addEventListener('click', () => {
-        setSectionCollapsed(section, !section.classList.contains('collapsed'),
-                            { animate: true });
+        setSectionCollapsed(section, !section.classList.contains('collapsed'));
         saveNow();
       });
     }

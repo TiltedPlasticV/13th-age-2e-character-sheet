@@ -30,17 +30,11 @@
     </div>
   </div>
 
-  <!-- Two real columns rather than CSS multi-column. Multicol re-balanced
-       the whole block on every layout — which is fine when nothing moves,
-       but folding a section animates its height, and re-deciding which
-       sections live in which column every frame cost more than a frame is
-       worth. These wrappers vanish (display:contents) below the two-column
-       breakpoint, so on a narrow screen the sections still stack in plain
-       document order. Split after Icon Relationships: stats and combat on
-       the left, everything the character *does* on the right. -->
+  <!-- CSS multi-column: the sections balance themselves across two columns
+       at the wide breakpoint and stack in document order below it. Each
+       section is `break-inside: avoid`, so a fold only ever moves whole
+       sections between the columns. -->
   <div class="sheet-columns">
-
-  <div class="sheet-col">
 
   <!-- ONE UNIQUE THING -->
   <div class="section" data-section="unique">
@@ -238,10 +232,6 @@
     </div>
   </div>
 
-  </div><!-- .sheet-col -->
-
-  <div class="sheet-col">
-
   <!-- KIN POWERS -->
   <div class="section" data-section="kin-powers">
     <div class="section-head"><span class="icon">❦</span> Kin Powers</div>
@@ -395,8 +385,6 @@
       </div>
     </div>
   </div>
-
-  </div><!-- .sheet-col -->
 
   </div><!-- .sheet-columns -->
 
