@@ -382,6 +382,11 @@ body {
   padding: 0px 20px 20px;
 }
 
+/* One column: the wrappers get out of the way entirely, so the sections
+   stack in document order exactly as they did before there were columns.
+   They only become boxes at the two-column breakpoint below. */
+.sheet-col { display: contents; }
+
 /* ── TOOLBAR CONTROLS ── */
 .toolbar select {
   font-family: var(--ui-font);
@@ -569,6 +574,12 @@ body {
 }
 
 .section-head .icon { font-size: 1em; opacity: 0.7; }
+
+/* The body is a flex column, so shrinking its height during a fold would
+   compress the rows rather than slide them out of sight — Gear's second row
+   squashed from 53px to 32px on the way past. Nothing shrinks at its
+   natural height, so this only ever applies while folding. */
+.section-body > * { flex-shrink: 0; }
 
 .section-body {
   display: flex;
@@ -1743,8 +1754,13 @@ body.no-dice .dice-action { display: none; }
   background: var(--bg-card);
   border-left: 1px solid var(--field-border);
   box-shadow: -6px 0 24px rgba(0,0,0,0.45);
-  transition: background 0.4s, border-color 0.4s;
+  transition: background 0.4s, border-color 0.4s, transform 0.22s ease;
 }
+/* Collapsing slides the panel out by exactly the width of its body, so the
+   rail comes to rest where it sits today and the contents never reflow — a
+   width transition would re-wrap every row on the way past. 0.22s matches
+   SECTION_FOLD_MS in sheet.js, so the two folds on screen move alike. */
+.battle-helper.collapsed { transform: translateX(calc(var(--bh-width) - var(--bh-rail))); }
 body.no-battle-helper .battle-helper { display: none; }
 
 /* The rail is fixed over the right edge of the page, so wherever the sheet
@@ -1777,8 +1793,13 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
   width: calc(var(--bh-width) - var(--bh-rail));
   overflow-y: auto;
   padding: 12px;
+  transition: visibility 0s;
 }
-.battle-helper.collapsed .bh-body { display: none; }
+/* Off-screen is not the same as hidden: without this the tab order would
+   still walk every control in a panel nobody can see. Visibility flips only
+   once the slide out is over, and comes back the instant it starts in —
+   hence the delay on one rule and not the other. */
+.battle-helper.collapsed .bh-body { visibility: hidden; transition: visibility 0s 0.22s; }
 
 /* The panel's contents are built in JS and rebuilt whole on every change,
    so a state class like `.collapsed` is set from the store when the node is
@@ -1996,17 +2017,21 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
     max-width: 1600px;
     padding: 0px 48px 20px;
   }
-  .sheet-header {
-    column-span: all;
-  }
+  /* Two explicit columns, not `column-count: 2`. Multicol has to re-balance
+     the entire block whenever anything in it changes size, and with
+     `break-inside: avoid` on every section that came to more than a frame's
+     worth of layout — which made the fold animation drop frames on any
+     section tall enough to notice. A grid column only ever re-lays-out
+     itself. It also means a section's column is a decision in the markup
+     rather than whatever balancing happened to produce.
+     `align-items: start` keeps each column as tall as its own contents. */
   .sheet-columns {
-    column-count: 2;
-    column-gap: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 18px;
+    align-items: start;
   }
-  .sheet-columns > .section,
-  .sheet-columns > .combo-row {
-    break-inside: avoid;
-  }
+  .sheet-col { display: flex; flex-direction: column; }
 }
 
 @media (max-width: 600px) {
