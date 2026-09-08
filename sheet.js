@@ -599,6 +599,8 @@ const ABILITY_LIST_IDS = {
 // queries can't be read back out. Below it the panel covers most of the
 // sheet, so a jump would land on something still hidden behind it.
 const BH_NARROW = '(max-width: 600px)';
+// Matches the .bh-target fade in sheet.css, which holds the final,
+// transparent frame until this fires. The two have to agree.
 const BH_TARGET_MS = 1500;
 let _bhTargetEls = [];
 let _bhTargetTimer = 0;
@@ -629,11 +631,25 @@ function bhTargetEls(r) {
 // One row's worth of targets at a time, cleared on a timer rather than on
 // animationend — see .bh-target in the stylesheet for why the animation
 // can't be trusted to fire at all.
+//
+// Clicking a row that is already lit has to start the fade over, and that
+// is the whole reason for the reflow below. Removing a class and re-adding
+// it in one task is invisible to the animation: the browser compares
+// computed style only at the end of the task, sees `.bh-target` before and
+// after, and lets the running fade carry on to transparent — where
+// `forwards` then holds it. The row looked dead, and every further click
+// did the same nothing. Reading a layout property between the two commits
+// the removal, so the re-add is a genuine restart.
+//
+// Everything else here is already idempotent: the pending timer is
+// cancelled rather than stacked, and a browser's smooth scroll replaces an
+// in-flight one instead of queueing behind it. So a click is always the
+// same click, however fast they come.
 function bhFlash(nodes) {
   clearTimeout(_bhTargetTimer);
   _bhTargetEls.forEach(n => n.classList.remove('bh-target'));
   _bhTargetEls = nodes;
-  nodes.forEach(n => n.classList.add('bh-target'));
+  nodes.forEach(n => { void n.offsetWidth; n.classList.add('bh-target'); });
   _bhTargetTimer = setTimeout(() => {
     nodes.forEach(n => n.classList.remove('bh-target'));
     if (_bhTargetEls === nodes) _bhTargetEls = [];

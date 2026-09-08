@@ -1905,11 +1905,11 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 .bh-target {
   outline: 2px solid var(--highlight);
   outline-offset: 2px;
-  animation: bh-target-fade 1.5s ease-out;
+  animation: bh-target-fade 1.5s ease-out forwards;
 }
 @keyframes bh-target-fade {
-  from { box-shadow: 0 0 0 5px var(--highlight-dim); }
-  to   { box-shadow: 0 0 0 0 transparent; }
+  0%, 40% { outline-color: var(--highlight); box-shadow: 0 0 0 5px var(--highlight-dim); }
+  100%    { outline-color: transparent;      box-shadow: 0 0 0 5px transparent; }
 }
 
 .esc-row {
