@@ -22,9 +22,9 @@
     "pd": "15",
     "md": "14",
     "initiative": "+6",
-    "armor_type": "Light armor",
+    "armor_type": "light",
     "base_ac": "12",
-    "shield": "0",
+    "shield": "",
     "max_hp": "24",
     "current_hp": "24",
     "staggered": "12",
@@ -33,16 +33,16 @@
     "recovery_avg": "9",
     "max_recoveries": "8",
     "melee_weapon": "Dagger",
-    "melee_damage": "1d8 + 4",
-    "melee_avg": "8",
+    "melee_damage": "2d8+4",
+    "melee_avg": "13",
     "melee_miss": "2",
     "melee_vs_ac": "+6",
     "ranged_weapon": "Dagger",
-    "ranged_damage": "1d6 + 4",
-    "ranged_avg": "7",
+    "ranged_damage": "2d6+4",
+    "ranged_avg": "11",
     "ranged_miss": "2",
     "ranged_vs_ac_near": "+6",
-    "ranged_vs_ac_far": "+6",
+    "ranged_vs_ac_far": "N/A",
     "gear_melee": "Dagger",
     "gear_ranged": "Dagger",
     "gold": "",
@@ -54,21 +54,39 @@
     "dead": "-12",
     "max_skulls": 5,
     "max_spells": "4",
-    "barb_rs_weapon": "Molten arm (fire dmg)",
-    "barb_rs_damage": "1d10 + 4",
-    "barb_rs_avg": "9",
+    "barb_rs_weapon": "Dagger",
+    "barb_rs_damage": "2d8+4",
+    "barb_rs_avg": "13",
     "barb_rs_miss": "4",
     "barb_rs_vs_ac": "+6",
-    "barb_rt_weapon": "Magma throw (fire dmg - near only)",
-    "barb_rt_damage": "1d6 + 4",
-    "barb_rt_avg": "7",
+    "barb_rt_weapon": "Dagger",
+    "barb_rt_damage": "2d6+4",
+    "barb_rt_avg": "11",
     "barb_rt_miss": "4",
     "barb_rt_vs_ac_near": "+6",
-    "barb_rt_vs_ac_far": "N/A",
+    "barb_rt_vs_ac_far": "+6",
     "barb_rs_crit": "",
-    "barb_rt_crit": ""
+    "barb_rt_crit": "",
+    "potions_adventurer": "2",
+    "potions_champion": "0",
+    "potions_epic": "0",
+    "melee_atk_ability": "dex",
+    "melee_dmg_ability": "dex",
+    "ranged_atk_ability": "dex",
+    "ranged_dmg_ability": "dex",
+    "melee_weapon_die": "d8",
+    "melee_atk_misc": "",
+    "melee_dmg_misc": "",
+    "ranged_weapon_die": "d6",
+    "ranged_atk_misc": "",
+    "ranged_dmg_misc": "",
+    "bard_recovery_ability": "str",
+    "armor_name": "",
+    "ac_misc": ""
   },
-  "checkboxes": {},
+  "checkboxes": {
+    "rec_0": false
+  },
   "backgrounds": [
     {
       "name": "Semi-repentant former con artist",
@@ -88,10 +106,10 @@
       "dice": "2",
       "mod": "+",
       "name": "Shadow Prince",
-      "used": {
-        "0": false
-      },
-      "available": {}
+      "used": {},
+      "available": {
+        "0": 1
+      }
     },
     {
       "dice": "1",
@@ -105,34 +123,39 @@
     {
       "name": "Evasive Strike",
       "action": "Standard action",
-      "usage": "At-Will",
+      "usage": "atwill",
       "desc": "Same as rogue basic melee attack except...\nHit: Same basic attack damage, and you can pop free from the target",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     },
     {
       "name": "Flying Blade (1 bravado point optional)",
       "action": "Standard action",
-      "usage": "At-Will",
+      "usage": "atwill",
       "desc": "Same as rogue basic ranged attack except...\nSpecial: You must use a small, bladed weapon or a hand crossbow with this attack.\nBravado: Spend 1 bravado to add your Rush Attack or Sneak Attack damage to the hit, even if the target would not normally be eligible for that damage. (feats give you benefits to using this without spending bravado)\nTarget: One nearby enemy",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     },
     {
       "name": "Roll With It (1 bravado point optional)",
       "action": "Interrupt action (Getting hit)",
-      "usage": "Battle",
+      "usage": "battle",
       "desc": "Trigger: A melee attack that targets AC hits you\nEffect: Reduce the damage from the attack by double your level.\nBravado: Spend 1 bravado to take half damage instead.",
       "max_uses": "1",
-      "used": {}
+      "used": {},
+      "trigger": "hit",
+      "desperate": {}
     },
     {
       "name": "Sure Cut (1 bravado point)",
       "action": "Standard action",
-      "usage": "At-Will",
+      "usage": "atwill",
       "desc": "Special: You must be able to deal your Sneak Attack or Rush Attack damage to the target.\nTarget: One enemy\nAttack: Same as normal melee attack\nHit: Weapon damage + level + Sneak/Rush damage (same as normal Sneak/Rush attack)\nMiss: Level + Sneak/Rush damage (no base weapon damage)",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     }
   ],
   "feats": [
@@ -143,52 +166,58 @@
       "name": "ADV: Smooth Talk"
     }
   ],
-  "theme": "rogue",
+  "theme": "dark",
   "spells": [
     {
       "name": "Chant of Endings",
       "action": "Std",
-      "usage": "At-will",
+      "usage": "atwill",
       "desc": "Target: The nearby enemy with the fewest hit points (you choose if there’s a tie; you also don’t have to be able to see that enemy)\nAttack: Intelligence + Level vs. MD (+5)\nHit: 1d10 + Intelligence necro damage.",
       "max_uses": "",
       "used": {},
-      "prepared": true
+      "prepared": true,
+      "trigger": "standard"
     },
     {
       "name": "Command Undead",
       "action": "Std",
-      "usage": "Battle",
+      "usage": "battle",
       "desc": "Target: One nearby undead creature with 64 hp or fewer\nAttack: Intelligence + Level vs. MD\nHit: The target is confused (hard save ends, 16+).\nADV FEAT: Miss does not expend spell",
       "max_uses": "1",
       "used": {},
-      "prepared": true
+      "prepared": true,
+      "trigger": "standard",
+      "desperate": {}
     },
     {
       "name": "Unholy Blast",
       "action": "Std",
-      "usage": "Arc",
+      "usage": "arc",
       "desc": "Target: One nearby enemy\nAttack: Intelligence + Level vs. PD\nHit: 4d6 + Intelligence negative energy damage.\nFirst Miss: Half damage, and make the attack again against an\nenemy you haven’t already targeted with unholy blast this turn.\nSecond Miss: Half damage, or full damage if the escalation die is\n1+ and you choose to decrease it by 1.",
       "max_uses": "1",
       "used": {},
-      "prepared": true
+      "prepared": true,
+      "trigger": "standard"
     },
     {
       "name": "Summon Undead",
       "action": "Std",
-      "usage": "Arc",
+      "usage": "arc",
       "desc": "Effect: You summon a mob of 1d3 + 1 crumbling skeleton mooks, as per the summoning rules on page 11. These skeletons fight for you until the end of the battle or until they drop to 0 hp, whichever comes first.\n\n1st level mook [undead]\nInitiative: +6 Vulnerability: holy\nSword +6 vs. AC—3 damage+CHA (First attack extra +CHA (3) vs AC)\nResist weapons 16+: When a weapon attack targets this creature, the attacker must roll a natural 16+ on the attack roll or it only deals half damage.\nAC 16, PD 14, MD 10, HP 6 (mook)\nMook: Kill one crumbling skeleton mook for every 6 damage you deal to the mob.",
       "max_uses": "1",
       "used": {},
-      "prepared": true
+      "prepared": true,
+      "trigger": "standard"
     },
     {
       "name": "Terror",
       "action": "Std",
-      "usage": "Arc",
+      "usage": "arc",
       "desc": "One nearby enemy <= 50hp\nAttack: Intelligence + Level vs. MD\nHit: The target uses all its actions during its turn to move away from the battle, disengaging from enemies to do so (hard save ends, 16+). If it fails to disengage with all of its actions, it won’t take opportunity attacks by moving. The effect also ends when you or one of your allies attacks the target.\nMiss: 1d10 + Intelligence psychic damage",
       "max_uses": "1",
       "used": {},
-      "prepared": true
+      "prepared": true,
+      "trigger": "standard"
     }
   ],
   "showSpells": true,
@@ -205,83 +234,103 @@
     "class_feature": false,
     "feat": false
   },
-  "locks": {},
+  "locks": {
+    "ranged_vs_ac_far": true
+  },
   "defensesMigrated": true,
   "activeConditions": {},
   "escalation": 0,
   "classData": {
-    "barbarian": {}
+    "barbarian": {},
+    "rogue": {}
   },
   "features": [
     {
       "name": "Bravado",
       "action": "Passive",
-      "usage": "N/A",
+      "usage": "passive",
       "desc": "Bravado has no limit. It resets 0 when you take a quick rest or a full heal-up.\nYou can gain bravado in 2 ways:\n- Initiative: You gain a point of Bravado when your natural initiative roll is even.\n- Hitting: You also gain a point of Bravado the first time you hit with a rogue attack on each of your turns. (Hitting with an opportunity attack won’t give you a point of Bravado.)",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     },
     {
       "name": "Rush Attack",
       "action": "Standard action",
-      "usage": "At-Will",
+      "usage": "atwill",
       "desc": "Once on each of your turns, your rogue melee weapon attack deals an additional +1d6 damage against an enemy you were not engaged with at the start of your turn if you hit. Decide whether you are using Rush Attack before rolling an eligible attack.\n2nd +5 (2d4) damage\n3rd +7 (2d6) damage\n4th +9 (2d8) damage\n5th +11 (2d10) damage\n6th +14 (4d6) damage\n7th +18 (4d8) damage\n8th +22 damage\n9th +30 damage\n10th +40 damage\n11th +50 damage\n12th +60 damage\n\nADV FEAT: When the escalation die is 2+, bump up your Rush Attack damage by two levels.",
-      "max_uses": "",
+      "max_uses": "1",
       "used": {
         "0": false
-      }
+      },
+      "trigger": "standard"
     },
     {
       "name": "Sneak Attack",
       "action": "Standard action",
-      "usage": "At-Will",
+      "usage": "atwill",
       "desc": "Once on your turn, when you make a rogue melee weapon attack against an enemy engaged with one or more of your allies, you can deal +3 (1d4) damage if your attack hits.\nSpecial: For each Sneak Attack feat you choose, bump up your Sneak Attack damage by one level. For example, if you’re 5th level with both the adventurer-tier and champion-tier feats, you deal Sneak Attack damage at 7th level.\n2nd +4 (1d6) damage\n3rd +5 (1d8) damage\n4th +7 (2d6) damage\n5th +9 (2d8) damage\n6th +11 (3d6) damage\n7th +14 (4d6) damage\n8th +20 damage\n9th +25 damage\n10th +30 damage\n11th +40 damage\n12th +50 damage\n13th +60 damage",
-      "max_uses": "",
-      "used": {}
+      "max_uses": "1",
+      "used": {},
+      "trigger": "standard"
     }
   ],
   "talents": [
     {
       "name": "Both Styles Now",
       "action": "Passive",
-      "usage": "N/A",
+      "usage": "passive",
       "desc": "You have both Rush Attack and Sneak Attack class features.\nYou can’t use both Rush Attack and Sneak Attack at the same time.\nChoose as you make an attack whether you are using Rush Attack or Sneak Attack",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     },
     {
       "name": "Murderous",
       "action": "Passive",
-      "usage": "N/A",
+      "usage": "passive",
       "desc": "Your crit range against staggered enemies expands by 2.",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     },
     {
       "name": "Shift, Wriggle, and Roll",
       "action": "Getting hit",
-      "usage": "Battle",
+      "usage": "battle",
       "desc": "Once per battle, when you are hit by a nearby enemy, you can force the enemy to reroll the attack with an attack penalty equal to your highest mental ability modifier",
       "max_uses": "1",
-      "used": {}
+      "used": {},
+      "trigger": "hit",
+      "desperate": {}
     },
     {
       "name": "Smooth Talk (feat)",
       "action": "Skill check",
-      "usage": "Arc",
+      "usage": "arc",
       "desc": "3x uses /arc increasing to 4x uses arc at epic-tier.\nReroll a failed skill check involving social interaction, diplomacy, or other personal interactions between free-willed beings. Similarly, for a single use of Social Skill, a bard can allow a nearby ally to reroll such a skill check.\nFor an additional use of Social Skill (i.e. 2 uses total), decided before the reroll, the bard tells everyone how something they do, or did before, or arranged ahead of time, is now providing a +3 bonus on the skill reroll.",
       "max_uses": "3",
-      "used": {}
+      "used": {},
+      "trigger": "outofbattle"
     }
   ],
   "kinPowers": [
     {
       "name": "Evasive",
       "action": "Getting hit",
-      "usage": "Battle",
+      "usage": "battle",
       "desc": "Once per battle, force an enemy that hits you with an attack to reroll the attack with a –2 penalty and keep the second result",
       "max_uses": "1",
-      "used": {}
+      "used": {},
+      "trigger": "hit",
+      "desperate": {}
     }
-  ]
+  ],
+  "prefs": {
+    "animations": true,
+    "diceRoller": true,
+    "battleHelper": true,
+    "battleHelperOpen": true,
+    "collapsed": {}
+  }
 }

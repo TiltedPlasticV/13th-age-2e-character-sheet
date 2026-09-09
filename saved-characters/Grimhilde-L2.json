@@ -22,7 +22,7 @@
     "pd": "14",
     "md": "16",
     "initiative": "+3",
-    "armor_type": "None",
+    "armor_type": "light",
     "base_ac": "10",
     "shield": "0",
     "max_hp": "24",
@@ -33,30 +33,60 @@
     "recovery_avg": "7",
     "max_recoveries": "8",
     "melee_weapon": "Dagger",
-    "melee_damage": "1d4 + 1",
-    "melee_avg": "3",
+    "melee_damage": "2d4+1",
+    "melee_avg": "6",
     "melee_miss": "2",
     "melee_vs_ac": "+3",
     "ranged_weapon": "Dagger",
-    "ranged_damage": "1d4 + 1",
-    "ranged_avg": "3",
-    "ranged_miss": "0",
+    "ranged_damage": "2d4+1",
+    "ranged_avg": "6",
+    "ranged_miss": "",
     "ranged_vs_ac_near": "+3",
     "ranged_vs_ac_far": "N/A",
     "gear_melee": "Dagger",
     "gear_ranged": "Dagger",
     "gold": "",
-    "gear_notes": "Flap of demonic neck skin\nRusty nail",
+    "gear_notes": "Flap of demonic neck skin\nRusty nail / small black stone bottle\nDave's coins with address",
     "max_magic": "2",
-    "magic_items": "# 2 healing potion (Recovery + 1d8)\n\n# Stalwart Cloak +1 PD (2/arc force reroll when atk vs your PD hits)",
+    "magic_items": "# Stalwart Cloak +1 PD (2/arc force reroll when atk vs your PD hits)",
     "conditions": "",
     "notes": "",
     "dead": "-12",
     "max_skulls": 6,
-    "max_spells": "4"
+    "max_spells": "4",
+    "potions_adventurer": "2",
+    "potions_champion": "0",
+    "potions_epic": "0",
+    "melee_atk_ability": "str",
+    "melee_dmg_ability": "str",
+    "ranged_atk_ability": "dex",
+    "ranged_dmg_ability": "dex",
+    "melee_weapon_die": "d4",
+    "melee_atk_misc": "",
+    "melee_dmg_misc": "",
+    "ranged_weapon_die": "d4",
+    "ranged_atk_misc": "",
+    "ranged_dmg_misc": "",
+    "armor_name": "None",
+    "ac_misc": "",
+    "barb_rs_weapon": "Dagger",
+    "barb_rs_damage": "2d4+1",
+    "barb_rs_avg": "6",
+    "barb_rs_miss": "4",
+    "barb_rs_vs_ac": "+3",
+    "barb_rt_weapon": "Dagger",
+    "barb_rt_damage": "2d4+1",
+    "barb_rt_avg": "6",
+    "barb_rt_miss": "4",
+    "barb_rt_vs_ac_near": "+3",
+    "barb_rt_vs_ac_far": "N/A"
   },
   "checkboxes": {
-    "rec_0": false
+    "rec_0": true,
+    "skull_0": true,
+    "rec_1": true,
+    "rec_2": true,
+    "rec_3": true
   },
   "backgrounds": [
     {
@@ -76,7 +106,9 @@
       "used": {
         "0": false
       },
-      "available": {}
+      "available": {
+        "0": 2
+      }
     },
     {
       "dice": "1",
@@ -90,10 +122,11 @@
     {
       "name": "",
       "action": "",
-      "usage": "",
+      "usage": "passive",
       "desc": "",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     }
   ],
   "feats": [
@@ -112,38 +145,43 @@
     {
       "name": "Chant of Endings",
       "action": "Standard action",
-      "usage": "At-will",
+      "usage": "atwill",
       "desc": "Target: The nearby enemy with the fewest hit points (you choose if there’s a tie; you also don’t have to be able to see that enemy)\nAttack: Intelligence + Level vs. MD (+5)\nHit: 1d10 + Intelligence necro damage.",
       "max_uses": "",
       "used": {},
-      "prepared": true
+      "prepared": true,
+      "trigger": "standard"
     },
     {
       "name": "Command Undead",
       "action": "Standard action",
-      "usage": "Battle",
+      "usage": "battle",
       "desc": "Target: One nearby undead creature with 64 hp or fewer\n3rd level spell Target with 96 hp or fewer.\n5th level spell Target with 160 hp or fewer.\n7th level spell Target with 266 hp or fewer.\n9th level spell Target with 460 hp or fewer.\n\nAttack: Intelligence + Level vs. MD\nHit: The target is confused (hard save ends, 16+).\nADV FEAT: Miss does not expend spell",
       "max_uses": "1",
       "used": {},
-      "prepared": true
+      "prepared": true,
+      "trigger": "standard",
+      "desperate": {}
     },
     {
       "name": "Unholy Blast",
       "action": "Standard action",
-      "usage": "Arc",
+      "usage": "arc",
       "desc": "Target: One nearby enemy\nAttack: Intelligence + Level vs. PD\nHit: 4d6 + Intelligence negative energy damage.\nFirst Miss: Half damage, and make the attack again against an enemy you haven’t already targeted with unholy blast this turn.\nSecond Miss: Half damage, or full damage if the escalation die is 1+ and you choose to decrease it by 1.",
       "max_uses": "1",
       "used": {},
-      "prepared": true
+      "prepared": true,
+      "trigger": "standard"
     },
     {
       "name": "Summon Undead",
       "action": "Standard action",
-      "usage": "Arc",
+      "usage": "arc",
       "desc": "Effect: You summon a mob of 1d3 + 1 crumbling skeleton mooks. These skeletons fight for you until the end of the battle or until they drop to 0 hp, whichever comes first.\n\n1st level mook [undead]\nInitiative: +6 / Vulnerability: holy\nAttack: Sword +6 vs. AC  (ADV FEAT: First attack gets extra +CHA vs AC)\nHit: 3 dmg +CHA\nResist weapons 16+: When a weapon attack targets this creature, the attacker must roll a natural 16+ on the attack roll or it only deals half damage.\nAC 16, PD 14, MD 10, HP 6 (mook)\nMook: One mook dies for every 6 damage you dealt to the mob",
       "max_uses": "1",
       "used": {},
-      "prepared": true
+      "prepared": true,
+      "trigger": "standard"
     }
   ],
   "showSpells": true,
@@ -161,7 +199,8 @@
     "feat": false
   },
   "locks": {
-    "pd": true
+    "pd": true,
+    "ranged_vs_ac_far": true
   },
   "defensesMigrated": true,
   "activeConditions": {},
@@ -170,67 +209,77 @@
     {
       "name": "Wasting Away",
       "action": "Passive",
-      "usage": "N/A",
+      "usage": "passive",
       "desc": "You have 6 skulls instead of 5",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     },
     {
       "name": "Summoning",
       "action": "Passive",
-      "usage": "N/A",
+      "usage": "passive",
       "desc": "You are able to summon creatures",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     }
   ],
   "talents": [
     {
       "name": "Cackling Soliloquist",
       "action": "All actions",
-      "usage": "At-will",
+      "usage": "atwill",
       "desc": "Spend all actions when casting a /arc spell, spell recharges 18+ after battle + invent a slight improvement to spell.\nADV FEAT: Also gain 1d6 + LVL + CHA temp HP.",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     },
     {
       "name": "Redeemer",
       "action": "Minion atk / death",
-      "usage": "N/A",
+      "usage": "passive",
       "desc": "Summoned undead are released from service > fight harder for you.\nMinions: On death release CHA * 1d4 holy burst to all engaged, atks deal +CHA holy dmg.\nADV FEAT: The first time each battle an undead creature you have summoned attacks, it gains an attack bonus equal to your Charisma modifier",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     },
     {
       "name": "Death Priest",
       "action": "Out of battle",
-      "usage": "Arc",
+      "usage": "arc",
       "desc": "Icon connections can be conversations with the dead. Also can use Seance 1/arc when not in battle.\nSeance: Short rite to contact dead related to random non-Lich Queen icon. GM rolls in secret, on 1-2 info is wrong",
       "max_uses": "1",
-      "used": {}
+      "used": {},
+      "trigger": "outofbattle"
     },
     {
       "name": "Stalwart Cloak (ITEM)",
       "action": "When atk vs my PD hits",
-      "usage": "Arc",
-      "desc": "Force reroll of the attack",
+      "usage": "arc",
+      "desc": "2/arc force reroll whenever an attack vs your PD hits",
       "max_uses": "2",
-      "used": {}
+      "used": {},
+      "trigger": "hit"
     }
   ],
   "kinPowers": [
     {
       "name": "Resourceful",
       "action": "Passive",
-      "usage": "N/A",
+      "usage": "passive",
       "desc": "You have a bonus feat of the highest tier you qualify for.",
       "max_uses": "",
-      "used": {}
+      "used": {},
+      "trigger": "standard"
     }
   ],
   "classData": {},
   "prefs": {
-    "animations": false,
-    "diceRoller": false
+    "animations": true,
+    "diceRoller": false,
+    "battleHelper": true,
+    "battleHelperOpen": true,
+    "collapsed": {}
   }
 }
