@@ -187,9 +187,21 @@ function populateClassOptions() {
   });
 }
 
-// 13A defenses use the *middle* of three ability mods (the median).
-function middleMod(a, b, c) {
-  return [a, b, c].sort((x, y) => x - y)[1];
+// Which three mods each defense takes the middle of. One table, so the
+// tooltip explaining a defense can't drift from the sum that produced it.
+const DEFENSE_MODS = {
+  ac: ['con_mod', 'dex_mod', 'wis_mod'],
+  pd: ['str_mod', 'con_mod', 'dex_mod'],
+  md: ['int_mod', 'wis_mod', 'cha_mod'],
+};
+
+// 13A defenses use the *middle* of three ability mods (the median). The
+// field it came from rides along, so the tooltip can name the ability
+// rather than just showing a number with no explanation.
+function middleOf(f, defenseKey) {
+  return DEFENSE_MODS[defenseKey]
+    .map(key => ({ key, mod: intOrZero(f[key]) }))
+    .sort((x, y) => x.mod - y.mod)[1];
 }
 
 // Shared shape for PD and MD: class base + middle of three mods + level.
@@ -197,14 +209,13 @@ function middleMod(a, b, c) {
 // armor, a shield and a magic bonus can each be seen and edited.)
 // Returns '' (blank, stays editable) when the class is unknown, or when
 // there's nothing to compute from yet (no level and no relevant mods).
-function defenseCalc(f, defenseKey, modA, modB, modC) {
+function defenseCalc(f, defenseKey) {
   const ci = getClassInfo(f.class);
   if (!ci || !ci.defenses) return '';
   const lvl = intOrNull(f.level);
-  const haveMod = [modA, modB, modC].some(k => intOrNull(f[k]) !== null);
+  const haveMod = DEFENSE_MODS[defenseKey].some(k => intOrNull(f[k]) !== null);
   if (lvl === null && !haveMod) return '';
-  const mid = middleMod(intOrZero(f[modA]), intOrZero(f[modB]), intOrZero(f[modC]));
-  return ci.defenses[defenseKey] + mid + intOrZero(f.level);
+  return ci.defenses[defenseKey] + middleOf(f, defenseKey).mod + intOrZero(f.level);
 }
 
 // ── HEALING POTIONS ─────────────────────────────────────
@@ -333,8 +344,8 @@ function baseAcCalc(f) {
 function acCalc(f) {
   const base = intOrNull(f.base_ac);
   if (base === null) return '';
-  const mid = middleMod(intOrZero(f.con_mod), intOrZero(f.dex_mod), intOrZero(f.wis_mod));
-  return base + intOrZero(f.shield) + intOrZero(f.ac_misc) + mid + intOrZero(f.level);
+  return base + intOrZero(f.shield) + intOrZero(f.ac_misc)
+       + middleOf(f, 'ac').mod + intOrZero(f.level);
 }
 
 // Wearing more armor than the class is trained for costs attack rolls, and
@@ -388,10 +399,23 @@ const ABILITIES = [
   { key: 'cha', label: 'Charisma',     short: 'Cha', mod: 'cha_mod' },
 ];
 const ABILITY_BY_KEY = Object.fromEntries(ABILITIES.map(a => [a.key, a]));
+const ABILITY_BY_MOD = Object.fromEntries(ABILITIES.map(a => [a.mod, a]));
 const ABILITY_MOD_FIELDS = ABILITIES.map(a => a.mod);
 
 function ability(key) { return ABILITY_BY_KEY[key] || ABILITY_BY_KEY.str; }
 function abilityShort(key) { return ability(key).short; }
+// Every tooltip that shows its working is built from these: one term per
+// thing being added, its contribution inside the brackets. "Base (10) +
+// Str (+4)" can't be misread the way "base 10 + Str +4" could, where the
+// sign looks like a fourth thing to add. A modifier keeps its sign; a
+// count — a level, a base — doesn't have one to keep.
+function calcTerm(label, value) { return label + ' (' + value + ')'; }
+
+// Same, addressed by the mod field a defense reads rather than by key.
+function abilityShortByMod(modField) {
+  const a = ABILITY_BY_MOD[modField];
+  return a ? a.short : modField;
+}
 // The mod an attack half is currently using. Unknown key → Strength, which
 // is what an empty dropdown would mean anyway.
 function abilityModValue(f, key) { return intOrZero(f[ability(key).mod]); }
@@ -454,21 +478,77 @@ function attackWorking(f, kind, half) {
   const misc = intOrZero(f[kind + '_' + half + '_misc']);
   const parts = [];
   if (half === 'atk') {
-    parts.push(abilityShort(abKey) + ' ' + signed(mod), 'level ' + lvl);
+    parts.push(calcTerm(abilityShort(abKey), signed(mod)), calcTerm('Level', lvl));
   } else {
     const die = parseWeaponDie(f[kind + '_weapon_die']);
     if (!die) return 'Auto-calculated once you set the weapon damage die';
     const s = modScaling(lvl);
-    parts.push('level ' + lvl + ' × ' + (die.count > 1 ? die.count : '') + 'd' + die.sides);
-    parts.push(abilityShort(abKey) + ' ' + signed(mod) + (s.mult > 1 ? ' × ' + s.mult : ''));
-    if (s.flat) parts.push(String(s.flat));
+    parts.push(calcTerm('Weapon',
+      lvl + ' × ' + (die.count > 1 ? die.count : '') + 'd' + die.sides));
+    parts.push(calcTerm(abilityShort(abKey),
+      signed(mod) + (s.mult > 1 ? ' × ' + s.mult : '')));
+    if (s.flat) parts.push(calcTerm('Epic', signed(s.flat)));
   }
-  if (misc) parts.push('misc ' + signed(misc));
+  if (misc) parts.push(calcTerm('Misc', signed(misc)));
   if (half === 'atk') {
     const armor = armorAtkPenalty(f);
-    if (armor) parts.push('armor ' + signed(armor));
+    if (armor) parts.push(calcTerm('Armor', signed(armor)));
   }
   return parts.join(' + ');
+}
+
+// The sum behind a defense, for its tooltip — the same job the attack
+// tooltips do. Naming which of the three mods came out in the middle is the
+// point of it: that is the part of 13A's defense rule people misremember.
+function defenseWorking(f, key) {
+  const lvl = intOrZero(f.level);
+  if (key === 'initiative') {
+    if (intOrNull(f.dex_mod) === null && intOrNull(f.level) === null) {
+      return 'Auto-calculated once you set your level';
+    }
+    return calcTerm('Dex', signed(intOrZero(f.dex_mod))) + ' + ' + calcTerm('Level', lvl);
+  }
+
+  let base;
+  if (key === 'ac') {
+    base = intOrNull(f.base_ac);
+    if (base === null) return 'Auto-calculated once Base AC is known';
+  } else {
+    const ci = getClassInfo(f.class);
+    if (!ci || !ci.defenses) return 'Auto-calculated once you pick a class';
+    if (intOrNull(f.level) === null
+        && !DEFENSE_MODS[key].some(k => intOrNull(f[k]) !== null)) {
+      return 'Auto-calculated once you set your level';
+    }
+    base = ci.defenses[key];
+  }
+
+  const mid = middleOf(f, key);
+  const short = abilityShortByMod(mid.key);
+  const parts = [
+    calcTerm('Base', base),
+    calcTerm(short, signed(mid.mod)),
+    calcTerm('Level', lvl),
+  ];
+  if (key === 'ac') {
+    const shield = intOrZero(f.shield);
+    const misc = intOrZero(f.ac_misc);
+    if (shield) parts.push(calcTerm('Shield', signed(shield)));
+    if (misc) parts.push(calcTerm('Misc', signed(misc)));
+  }
+  // Why that ability and not one of the other two. On its own line: it is
+  // the one part of the tooltip that isn't a term in the sum, and putting
+  // it in brackets beside a value would read as part of the arithmetic —
+  // the thing this format exists to avoid.
+  return parts.join(' + ') + '\n'
+       + short + ' is the middle of ' + DEFENSE_MODS[key].map(abilityShortByMod).join('/');
+}
+
+function updateDefenseHints() {
+  ['ac', 'pd', 'md', 'initiative'].forEach(key => {
+    const box = document.querySelector(`[data-field="${key}"]`);
+    if (box) box.title = defenseWorking(state.fields, key);
+  });
 }
 
 // Everything about the attack cards that isn't a field value: the tooltips
@@ -610,9 +690,9 @@ const DERIVED_FIELDS = {
   ac: { sources: ['base_ac', 'shield', 'ac_misc', 'level', 'con_mod', 'dex_mod', 'wis_mod'],
         calc: acCalc },
   pd: { sources: ['class', 'level', 'str_mod', 'con_mod', 'dex_mod'],
-        calc: f => defenseCalc(f, 'pd', 'str_mod', 'con_mod', 'dex_mod') },
+        calc: f => defenseCalc(f, 'pd') },
   md: { sources: ['class', 'level', 'int_mod', 'wis_mod', 'cha_mod'],
-        calc: f => defenseCalc(f, 'md', 'int_mod', 'wis_mod', 'cha_mod') },
+        calc: f => defenseCalc(f, 'md') },
   // 13A 2e: attunement limit equals character level.
   max_magic: { sources: ['level'], calc: levelValue },
   // Healing potions, one entry per tier so that overriding the tier you
@@ -649,6 +729,7 @@ function recomputeDerived() {
   updateHpStatus();
   renderPotions();
   updateAttackHints();
+  updateDefenseHints();
   updateArmorUi();
 }
 
