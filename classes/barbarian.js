@@ -137,6 +137,11 @@
   let _skullWatch = null;
   const _reposition = () => positionSkullBonus();
 
+  // Smallest breathing space allowed between the two labels. They are centred
+  // on their brackets and overhang them freely, so with a wide enough font
+  // "+1 to defenses" runs into "+2 to defenses" unless the track makes room.
+  const LABEL_GAP = 10;
+
   function buildSkullBonus() {
     return el('div', { class: 'skull-bonus', id: 'barb-skull-bonus' });
   }
@@ -152,44 +157,98 @@
       el('b', {}, bonus), ' to defenses'));
   }
 
-  function positionSkullBonus() {
-    const host = document.getElementById('barb-skull-bonus');
-    const row = document.getElementById('skulls-row');
-    if (!host || !row) return;
+  // Extra space in front of the middle group, which is what pushes the +2
+  // bracket — and with it the +2 label — clear of the +1 one. It goes on the
+  // `[`, not on the first skull: `.skull-box` transitions `all`, so a margin
+  // set there animates and the re-measure below would read the layout it was
+  // moving away from. Set on elements the sheet owns and rebuilds, so it is
+  // re-applied after every rebuild and dropped again on unmount.
+  function setSkullLeadGap(px) {
+    const open = document.querySelector('#skulls-row .skull-bracket');
+    if (open) open.style.marginLeft = px ? px + 'px' : '';
+  }
+
+  // Draws both brackets at whatever the track currently measures. Returns
+  // false when there is nothing to draw: too few skulls, or a track that has
+  // wrapped onto more than one line, where the brackets would point at the
+  // wrong skulls.
+  function drawSkullBonus(host, row) {
     host.innerHTML = '';
     const skulls = [...row.querySelectorAll('.skull-box')];
-    // Need a first skull and at least one middle one; the final skull is
-    // death, so nothing is drawn under it.
-    if (skulls.length < 3) return;
+    // The final skull is death, so nothing is drawn under it.
+    if (skulls.length < 3) return false;
     const first    = skulls[0];
     const midStart = skulls[1];
     const midEnd   = skulls[skulls.length - 2];
-    // If the row has wrapped onto more than one line the brackets would
-    // point at the wrong skulls — better to show nothing.
-    if (Math.abs(midEnd.offsetTop - first.offsetTop) > 2) return;
+    if (Math.abs(midEnd.offsetTop - first.offsetTop) > 2) return false;
     host.append(
       skullBonusSeg(host, first, first, '+1',
         'With one or more skulls you gain a +1 bonus to all your defenses'),
       skullBonusSeg(host, midStart, midEnd, '+2',
         'With two or more skulls the bonus increases to +2 to all your defenses')
     );
+    return true;
+  }
+
+  // How much the labels overlap, in px, once the required gap is counted.
+  function labelOverlap(host) {
+    const [a, b] = host.querySelectorAll('.skull-bonus-label');
+    if (!a || !b) return 0;
+    return Math.ceil(a.getBoundingClientRect().right + LABEL_GAP
+                     - b.getBoundingClientRect().left);
+  }
+
+  function positionSkullBonus() {
+    const host = document.getElementById('barb-skull-bonus');
+    const row = document.getElementById('skulls-row');
+    if (!host || !row) return;
+    // Measure unspaced first, so a font change in either direction is picked
+    // up — the gap shrinks back as readily as it grows.
+    setSkullLeadGap(0);
+    if (!drawSkullBonus(host, row)) return;
+    // Widening the gap moves the labels apart, but the row is centred and
+    // wraps, so not always by the full amount — hence measure, widen, measure
+    // again. It converges in one or two passes; the cap is a stop, not a plan.
+    let gap = 0;
+    for (let pass = 0; pass < 4; pass++) {
+      const short = labelOverlap(host);
+      if (short <= 0) break;
+      gap += short;
+      setSkullLeadGap(gap);
+      if (!drawSkullBonus(host, row)) {
+        // The wider track wrapped. Cramped labels beat none at all.
+        setSkullLeadGap(0);
+        drawSkullBonus(host, row);
+        break;
+      }
+    }
+  }
+
+  // Re-measure once the fonts a change asked for have actually arrived —
+  // until then the labels are still sized in the fallback face.
+  function repositionWhenFontsReady() {
+    _reposition();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(_reposition);
   }
 
   // Idempotent: onMount runs on every re-render, not just on class change.
   function watchSkulls() {
-    positionSkullBonus();
+    repositionWhenFontsReady();
     if (_skullWatch) return;
     const row = document.getElementById('skulls-row');
     if (!row) return;
-    _skullWatch = new MutationObserver(_reposition);
+    _skullWatch = new MutationObserver(repositionWhenFontsReady);
     _skullWatch.observe(row, { childList: true });
+    // Themes carry their own body font, and a wider one is exactly what makes
+    // the labels collide — so a theme switch has to re-measure too.
+    _skullWatch.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
     window.addEventListener('resize', _reposition);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(_reposition);
   }
 
   function unwatchSkulls() {
     if (_skullWatch) { _skullWatch.disconnect(); _skullWatch = null; }
     window.removeEventListener('resize', _reposition);
+    setSkullLeadGap(0);
   }
 
   // ── Rage panel (inline, right of recoveries + skulls) ────────────────

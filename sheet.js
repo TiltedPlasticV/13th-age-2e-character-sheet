@@ -348,6 +348,32 @@ function acCalc(f) {
        + middleOf(f, 'ac').mod + intOrZero(f.level);
 }
 
+// The class's whole armor table as text, for the dropdown's tooltip: the
+// numbers behind the choice, so picking armor doesn't send anyone to the
+// book. Columns are pipe-separated rather than space-padded — a native
+// tooltip renders in a proportional font, where padding lines nothing up.
+// Rows read live, so a penalty that depends on the character (the ranger's
+// shield) shows what it currently costs.
+const ARMOR_TIP_LEAD =
+  "Your class's armor table sets Base AC from this, and any attack penalty it carries";
+
+function armorTableTooltip(f) {
+  const t = armorTable(f);
+  if (!t) return ARMOR_TIP_LEAD + '.\n' + HINT_NEEDS_CLASS;
+  // The shield rides along at the bottom: it isn't one of the choices in
+  // this dropdown, but it's the rest of the same table.
+  const rows = ARMOR_ROWS.concat(t.shield ? [{ key: 'shield', label: 'Shield' }] : []);
+  const lines = rows.filter(r => t[r.key]).map(r => {
+    const row = t[r.key];
+    // The shield's `ac` is a bonus on top; the armor rows' is the Base AC.
+    const ac = row.ac == null ? '—' : (r.key === 'shield' ? signed(row.ac) : row.ac);
+    const pen = armorValue(row.atk, f);
+    return [r.label, ac, pen ? signed(pen) : '—'].join(' | ');
+  });
+  return ARMOR_TIP_LEAD + '.\n\n'
+       + 'ARMOR TYPE | BASE AC | ATK PENALTY\n' + lines.join('\n');
+}
+
 // Wearing more armor than the class is trained for costs attack rolls, and
 // so does a shield for most classes. Talents undo this often enough — and
 // in ways too varied to encode (the druid's especially) — that one switch
@@ -640,6 +666,8 @@ function populateArmorOptions() {
 // class that can be penalised, and the Shield box hints at what the table
 // says a plain shield is worth.
 function updateArmorUi() {
+  const sel = document.querySelector('select[data-field="armor_type"]');
+  if (sel) sel.title = armorTableTooltip(state.fields);
   const sw = document.getElementById('armor-no-penalty');
   if (sw) {
     const show = armorHasPenalties(state.fields);
