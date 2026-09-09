@@ -917,7 +917,21 @@ function normalizePrefs(s) {
     // needing a "have they seen it yet" flag that old saves wouldn't carry.
     battleHelperOpen: p.battleHelper === true ? p.battleHelperOpen !== false : true,
     collapsed: (p.collapsed && typeof p.collapsed === 'object') ? p.collapsed : {},
+    tray: normalizeTrayGeom(p.tray),
   };
+}
+
+// Tray geometry is four finite numbers or nothing. Anything else — an older
+// save, a hand-edited file — reads as "never moved", which puts the tray back
+// in its corner rather than somewhere unreachable.
+function normalizeTrayGeom(t) {
+  if (!t || typeof t !== 'object') return null;
+  const g = {};
+  for (const k of ['x', 'y', 'w', 'h']) {
+    if (typeof t[k] !== 'number' || !isFinite(t[k])) return null;
+    g[k] = Math.round(t[k]);
+  }
+  return g;
 }
 
 function applyPrefs() {
@@ -930,6 +944,7 @@ function applyPrefs() {
     sw.classList.toggle('on', on);
     sw.setAttribute('aria-checked', on ? 'true' : 'false');
   });
+  applyTrayGeometry();
   renderBattleHelper();
 }
 
@@ -2985,11 +3000,185 @@ function openDiceTray() {
   document.getElementById('dice-tray').classList.remove('collapsed');
   document.getElementById('dice-tray-head').setAttribute('aria-expanded', 'true');
   document.getElementById('dice-tray-caret').textContent = '▾';
+  applyTrayGeometry();
 }
 function toggleDiceTray() {
   const collapsed = document.getElementById('dice-tray').classList.toggle('collapsed');
   document.getElementById('dice-tray-head').setAttribute('aria-expanded', collapsed ? 'false' : 'true');
   document.getElementById('dice-tray-caret').textContent = collapsed ? '▸' : '▾';
+  applyTrayGeometry();
+}
+
+// ── DICE TRAY AS A WINDOW ───────────────────────────────────────
+// Drag the header to move it, drag the corner grip to resize it. The four
+// numbers live in `state.prefs.tray` beside the display switches, so a layout
+// survives a reload and rides along in a saved file — clamped back into view
+// on arrival, since a sheet can be opened on a smaller screen than it was
+// saved on. No stored geometry means the corner the stylesheet gives it.
+const TRAY_MIN_W = 240;   // narrower and the quick-roll buttons wrap
+const TRAY_MIN_H = 170;   // header, escalation row, buttons, one log entry
+const TRAY_EDGE  = 8;     // never let the whole of an edge leave the viewport
+// The open height a tray takes the first time it is moved while collapsed:
+// it has no open height to measure yet, and this is the CSS one.
+const TRAY_OPEN_H = 340;
+
+function trayEl() { return document.getElementById('dice-tray'); }
+function trayGeom() { return (state.prefs && state.prefs.tray) || null; }
+
+// Size is clamped to the viewport; position is clamped by what is actually on
+// screen, so a collapsed tray — a header and nothing else — can sit lower
+// than an open one could. Opening it clamps again at its full height.
+function clampTray(g) {
+  const tray = trayEl();
+  const vw = window.innerWidth, vh = window.innerHeight;
+  g.w = Math.max(TRAY_MIN_W, Math.min(g.w, vw - TRAY_EDGE * 2));
+  g.h = Math.max(TRAY_MIN_H, Math.min(g.h, vh - TRAY_EDGE * 2));
+  let w = g.w, h = g.h;
+  if (tray && tray.classList.contains('collapsed')) {
+    const r = tray.getBoundingClientRect();
+    w = r.width; h = r.height;
+  }
+  g.x = Math.round(Math.max(TRAY_EDGE, Math.min(g.x, vw - w - TRAY_EDGE)));
+  g.y = Math.round(Math.max(TRAY_EDGE, Math.min(g.y, vh - h - TRAY_EDGE)));
+}
+
+const TRAY_GEOM_PROPS = ['left', 'top', 'right', 'bottom', 'width', 'height'];
+
+function applyTrayGeometry() {
+  const tray = trayEl();
+  if (!tray) return;
+  const g = trayGeom();
+  if (!g) {
+    TRAY_GEOM_PROPS.forEach(prop => tray.style.removeProperty(prop));
+    tray.classList.remove('sized');
+    return;
+  }
+  clampTray(g);
+  // Anchored top-left once moved: the stylesheet's bottom-left corner can't
+  // express a dragged position, and mixing the two makes a resize grow in
+  // the wrong direction.
+  tray.style.left = g.x + 'px';
+  tray.style.top = g.y + 'px';
+  tray.style.right = 'auto';
+  tray.style.bottom = 'auto';
+  // A collapsed tray is exactly its header; the stored size waits for it to
+  // be opened again.
+  const open = !tray.classList.contains('collapsed');
+  if (open) { tray.style.width = g.w + 'px'; tray.style.height = g.h + 'px'; }
+  else { tray.style.removeProperty('width'); tray.style.removeProperty('height'); }
+  tray.classList.toggle('sized', open);
+}
+
+// The first drag or resize turns the corner-anchored tray into a positioned
+// one. Measuring it first is what makes that conversion move nothing.
+function trayGeomForEdit() {
+  if (!state.prefs) normalizePrefs(state);
+  if (state.prefs.tray) return state.prefs.tray;
+  const tray = trayEl();
+  const r = tray.getBoundingClientRect();
+  const open = !tray.classList.contains('collapsed');
+  state.prefs.tray = {
+    x: Math.round(r.left), y: Math.round(r.top),
+    w: Math.round(r.width), h: open ? Math.round(r.height) : TRAY_OPEN_H,
+  };
+  return state.prefs.tray;
+}
+
+function resetTrayGeometry() {
+  if (!state.prefs) normalizePrefs(state);
+  if (!state.prefs.tray) return;
+  state.prefs.tray = null;
+  applyTrayGeometry();
+  showToast('Dice tray back in its corner');
+  saveNow();
+}
+
+// One drag state for both gestures: they differ only in what the pointer's
+// travel is added to. `moved` is what keeps a click on the header the toggle
+// it already was — until the pointer has actually gone somewhere.
+let _trayDrag = null;
+const TRAY_DRAG_SLOP = 4;
+
+function trayPointerDown(mode, e) {
+  if (e.button) return;
+  if (!trayEl()) return;
+  _trayDrag = { mode, id: e.pointerId, sx: e.clientX, sy: e.clientY, moved: false,
+                g: null, ox: 0, oy: 0 };
+  e.currentTarget.setPointerCapture(e.pointerId);
+  // A resize means nothing else, so it doesn't wait for the slop.
+  if (mode === 'size') trayDragBegin();
+}
+
+function trayDragBegin() {
+  const d = _trayDrag;
+  d.moved = true;
+  d.g = trayGeomForEdit();
+  d.ox = d.mode === 'move' ? d.g.x : d.g.w;
+  d.oy = d.mode === 'move' ? d.g.y : d.g.h;
+  trayEl().classList.add(d.mode === 'move' ? 'dragging' : 'resizing');
+  applyTrayGeometry();
+}
+
+function trayPointerMove(e) {
+  const d = _trayDrag;
+  if (!d || e.pointerId !== d.id) return;
+  const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+  if (!d.moved) {
+    if (Math.abs(dx) < TRAY_DRAG_SLOP && Math.abs(dy) < TRAY_DRAG_SLOP) return;
+    trayDragBegin();
+  }
+  if (d.mode === 'move') { d.g.x = d.ox + dx; d.g.y = d.oy + dy; }
+  else { d.g.w = d.ox + dx; d.g.h = d.oy + dy; }
+  applyTrayGeometry();
+}
+
+// Set while a drag ends, so the click the browser sends afterwards doesn't
+// also collapse the tray. Cleared by that click, and by the next press.
+let _traySuppressClick = false;
+
+function trayPointerUp(e) {
+  const d = _trayDrag;
+  if (!d || e.pointerId !== d.id) return;
+  _trayDrag = null;
+  trayEl().classList.remove('dragging', 'resizing');
+  if (!d.moved) return;
+  _traySuppressClick = d.mode === 'move';
+  applyTrayGeometry();
+  saveNow();
+}
+
+function trayHeadClick() {
+  if (_traySuppressClick) { _traySuppressClick = false; return; }
+  toggleDiceTray();
+}
+
+function wireDiceTrayWindow() {
+  const head = document.getElementById('dice-tray-head');
+  const grip = document.getElementById('dice-tray-grip');
+  if (!head) return;
+  head.addEventListener('click', trayHeadClick);
+  // Both clicks of a double-click still reach the toggle, which lands back
+  // where it started: the reset is about where the tray is, not whether it
+  // is open.
+  head.addEventListener('dblclick', resetTrayGeometry);
+  head.addEventListener('pointerdown', e => { _traySuppressClick = false; trayPointerDown('move', e); });
+  head.addEventListener('pointermove', trayPointerMove);
+  head.addEventListener('pointerup', trayPointerUp);
+  head.addEventListener('pointercancel', trayPointerUp);
+  if (grip) {
+    grip.addEventListener('pointerdown', e => trayPointerDown('size', e));
+    grip.addEventListener('pointermove', trayPointerMove);
+    grip.addEventListener('pointerup', trayPointerUp);
+    grip.addEventListener('pointercancel', trayPointerUp);
+  }
+  // A viewport that shrinks under a tray parked at its edge would put it out
+  // of reach; the clamp inside applyTrayGeometry walks it back.
+  window.addEventListener('resize', () => { if (trayGeom()) applyTrayGeometry(); });
+  // The header is set in a webfont, so its collapsed width — what a parked
+  // tray is clamped against — is not final until that font arrives.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { if (trayGeom()) applyTrayGeometry(); });
+  }
 }
 
 // Prepend an entry to the dice & action log (newest on top, capped at 30)
@@ -3321,7 +3510,7 @@ function wireStaticHandlers() {
     const fn = ROLL_HANDLERS[btn.dataset.roll];
     if (fn) btn.addEventListener('click', fn);
   });
-  document.getElementById('dice-tray-head').addEventListener('click', toggleDiceTray);
+  wireDiceTrayWindow();
   document.getElementById('bh-rail').addEventListener('click', toggleBattleHelper);
   document.getElementById('esc-plus').addEventListener('click', () => bumpEscalation(1));
   document.getElementById('esc-minus').addEventListener('click', () => bumpEscalation(-1));
