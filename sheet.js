@@ -411,6 +411,11 @@ function abilityShort(key) { return ability(key).short; }
 // count — a level, a base — doesn't have one to keep.
 function calcTerm(label, value) { return label + ' (' + value + ')'; }
 
+// What a working-tooltip says while its field is still blank. A blank
+// derived field is waiting on something; these name what.
+const HINT_NEEDS_CLASS = 'Auto-calculated once you pick a class';
+const HINT_NEEDS_LEVEL = 'Auto-calculated once you set your level';
+
 // Same, addressed by the mod field a defense reads rather than by key.
 function abilityShortByMod(modField) {
   const a = ABILITY_BY_MOD[modField];
@@ -503,9 +508,7 @@ function attackWorking(f, kind, half) {
 function defenseWorking(f, key) {
   const lvl = intOrZero(f.level);
   if (key === 'initiative') {
-    if (intOrNull(f.dex_mod) === null && intOrNull(f.level) === null) {
-      return 'Auto-calculated once you set your level';
-    }
+    if (intOrNull(f.dex_mod) === null && intOrNull(f.level) === null) return HINT_NEEDS_LEVEL;
     return calcTerm('Dex', signed(intOrZero(f.dex_mod))) + ' + ' + calcTerm('Level', lvl);
   }
 
@@ -515,11 +518,9 @@ function defenseWorking(f, key) {
     if (base === null) return 'Auto-calculated once Base AC is known';
   } else {
     const ci = getClassInfo(f.class);
-    if (!ci || !ci.defenses) return 'Auto-calculated once you pick a class';
+    if (!ci || !ci.defenses) return HINT_NEEDS_CLASS;
     if (intOrNull(f.level) === null
-        && !DEFENSE_MODS[key].some(k => intOrNull(f[k]) !== null)) {
-      return 'Auto-calculated once you set your level';
-    }
+        && !DEFENSE_MODS[key].some(k => intOrNull(f[k]) !== null)) return HINT_NEEDS_LEVEL;
     base = ci.defenses[key];
   }
 
@@ -542,6 +543,55 @@ function defenseWorking(f, key) {
   // the thing this format exists to avoid.
   return parts.join(' + ') + '\n'
        + short + ' is the middle of ' + DEFENSE_MODS[key].map(abilityShortByMod).join('/');
+}
+
+// The sums behind the Hit Points block. Max HP is the one number on the
+// sheet where the order of operations is easy to get wrong — the Con mod
+// joins the class base *before* the level multiplier, not after — so the
+// brackets there are doing real work rather than just holding a value.
+function hpWorking(f, key) {
+  if (key === 'max_hp') {
+    const ci = getClassInfo(f.class);
+    if (!ci || ci.baseHp == null) return HINT_NEEDS_CLASS;
+    const lvl = intOrNull(f.level);
+    const mult = HP_LEVEL_MULT[lvl];
+    if (mult === undefined) return HINT_NEEDS_LEVEL;
+    return '(' + calcTerm('Base', ci.baseHp)
+         + ' + ' + calcTerm('Con', signed(intOrZero(f.con_mod)))
+         + ') × ' + calcTerm('Level ' + lvl + ' multiplier', mult);
+  }
+
+  if (key === 'staggered' || key === 'dead') {
+    const hp = intOrNull(f.max_hp);
+    if (hp === null) return 'Auto-calculated once Max HP is known';
+    return calcTerm('Max HP', hp) + ' ÷ 2, rounded down'
+         + (key === 'dead' ? ', below zero' : '');
+  }
+
+  // recovery_dice. The die is read back out of the expression rather than
+  // from the class, because two classes choose theirs (see the bard's
+  // dropdown and the cleric's) and the tooltip has to describe whichever
+  // one actually produced the value.
+  const lvl = intOrNull(f.level);
+  if (lvl === null || lvl < 1 || lvl > 10) return HINT_NEEDS_LEVEL;
+  const ci = getClassInfo(f.class);
+  const parsed = parseRecoveryDice(f.recovery_dice);
+  const sides = parsed ? parsed.sides : (ci ? ci.recoveryDie : null);
+  if (sides == null) return HINT_NEEDS_CLASS;
+  const sc = modScaling(lvl);
+  const parts = [
+    calcTerm('Dice', lvl + ' × d' + sides),
+    calcTerm('Con', signed(intOrZero(f.con_mod)) + (sc.mult > 1 ? ' × ' + sc.mult : '')),
+  ];
+  if (sc.flat) parts.push(calcTerm('Epic', signed(sc.flat)));
+  return parts.join(' + ');
+}
+
+function updateHpHints() {
+  ['max_hp', 'staggered', 'dead', 'recovery_dice'].forEach(key => {
+    const box = document.querySelector(`[data-field="${key}"]`);
+    if (box) box.title = hpWorking(state.fields, key);
+  });
 }
 
 function updateDefenseHints() {
@@ -730,6 +780,7 @@ function recomputeDerived() {
   renderPotions();
   updateAttackHints();
   updateDefenseHints();
+  updateHpHints();
   updateArmorUi();
 }
 
