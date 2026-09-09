@@ -2120,7 +2120,10 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
   text-transform: uppercase; color: var(--ink-dim);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.roll-entry-detail { font-size: 12px; color: var(--ink-faint); }
+/* `pre-line` so an action that did several things can list them one per
+   line inside its single entry (see logRest); every other detail is one
+   line and reads the same either way. */
+.roll-entry-detail { font-size: 12px; color: var(--ink-faint); white-space: pre-line; }
 .roll-entry-total {
   font-family: var(--heading-font); font-size: 22px; font-weight: 700;
   color: var(--bone); flex-shrink: 0;

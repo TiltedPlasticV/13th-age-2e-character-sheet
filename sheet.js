@@ -918,6 +918,9 @@ function normalizePrefs(s) {
     battleHelperOpen: p.battleHelper === true ? p.battleHelperOpen !== false : true,
     collapsed: (p.collapsed && typeof p.collapsed === 'object') ? p.collapsed : {},
     tray: normalizeTrayGeom(p.tray),
+    // Closed unless it has been opened, which is how the markup ships — an
+    // older save has no say in it either way.
+    trayOpen: p.trayOpen === true,
   };
 }
 
@@ -944,7 +947,7 @@ function applyPrefs() {
     sw.classList.toggle('on', on);
     sw.setAttribute('aria-checked', on ? 'true' : 'false');
   });
-  applyTrayGeometry();
+  applyTrayOpen();
   renderBattleHelper();
 }
 
@@ -2831,47 +2834,129 @@ function clearIconTracks() {
 
 function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 
-function quickRest() {
-  // skull_0 survives — a lasting wound that carries across rests.
+// ── RESTS ──────────────────────────────────────────────────────
+// A rest touches more of the sheet than any other button, and none of it is
+// undoable, so each one says what it will do in three places that must agree:
+// the button's tooltip, the confirm before it runs, and the log entry after.
+// One list, read three ways — the log swaps in what actually changed.
+const REST_PLANS = {
+  quick: {
+    label: 'Quick Rest',
+    lead: 'Between battles:',
+    ask: 'Take a quick rest?',
+    effects: [
+      'Clears every death-save skull except the first',
+      'Refreshes every per-battle ability',
+      'Clears all conditions',
+      'Resets the escalation die',
+      'Ends any class effect that stops with the battle (rage, bravado…)',
+    ],
+  },
+  full: {
+    label: 'Full Heal-Up',
+    lead: 'Ends the arc:',
+    ask: 'Take a full heal-up?',
+    effects: [
+      'Sets current HP to max and clears temp HP',
+      'Restores every recovery',
+      'Clears every death-save skull',
+      'Refreshes every per-battle and per-arc ability',
+      'Resets every icon relationship',
+      'Restocks potions at your current level',
+    ],
+  },
+};
+
+function restBullets(plan) { return plan.effects.map(e => '• ' + e).join('\n'); }
+function restTooltip(plan) { return plan.lead + '\n' + restBullets(plan); }
+// Native, like the one on New Sheet: the sheet has no dialog of its own, and
+// a rest is rare enough that a plain browser prompt is the honest cost.
+function confirmRest(plan) {
+  return confirm(plan.ask + '\n\n' + restBullets(plan) + '\n\nThis cannot be undone.');
+}
+// One entry, one line per thing that actually changed — a rest that found
+// nothing to do says so rather than logging a list of zeroes.
+function logRest(plan, done) {
+  logAction(plan.label, done.length
+    ? done.map(d => '• ' + d).join('\n')
+    : 'Nothing needed refreshing');
+}
+
+// A checkbox key is only "set" when its value is truthy: unticking writes
+// `false` rather than removing the key, so counting keys would over-report.
+function clearCheckboxes(re) {
+  let n = 0;
   Object.keys(state.checkboxes).forEach(key => {
-    const m = key.match(/^skull_(\d+)$/);
-    if (m && parseInt(m[1], 10) > 0) delete state.checkboxes[key];
+    if (!re.test(key)) return;
+    if (state.checkboxes[key]) n++;
+    delete state.checkboxes[key];
   });
+  return n;
+}
+
+function quickRest() {
+  if (!confirmRest(REST_PLANS.quick)) return;
+  const done = [];
+  // skull_0 survives — a lasting wound that carries across rests.
+  const skulls = clearCheckboxes(/^skull_(?!0$)\d+$/);
+  if (skulls) done.push(plural(skulls, 'death-save skull', 'death-save skulls') + ' cleared (the first is kept)');
   const refreshed = clearUses(['battle']);
+  if (refreshed) done.push(plural(refreshed, 'per-battle ability', 'per-battle abilities') + ' refreshed');
+  // Conditions run out at the end of a battle, which is what a quick rest
+  // marks — not at the end of an arc.
+  const conds = Object.keys(state.activeConditions || {}).length;
+  if (conds) done.push(plural(conds, 'condition', 'conditions') + ' cleared');
+  state.activeConditions = {};
+  // The die climbs within a battle and starts the next one at zero, so it
+  // turns over with the battle rather than with the arc.
+  const escalation = state.escalation || 0;
+  state.escalation = 0;
+  if (escalation) done.push('Escalation die → 0 (was ' + escalation + ')');
   renderSkulls();
   renderAbilityLists();
+  renderConditions();
+  renderEscalation();
   classHook('onQuickRest');
-  logAction('Quick Rest', 'Death-save skulls cleared (first preserved)'
-    + (refreshed ? ` · ${plural(refreshed, 'per-battle ability', 'per-battle abilities')} refreshed` : ''));
+  logRest(REST_PLANS.quick, done);
   saveNow();
   showToast('Quick rest');
 }
 
 function fullHealUp() {
-  // Clear every skull, recovery and potion checkbox, and refill current HP.
+  if (!confirmRest(REST_PLANS.full)) return;
+  const done = [];
   // Potions are restocked rather than refreshed — the allocation comes off
   // the level-derived stock fields, so clearing the ticks *is* the restock,
   // and a level gained between arcs restocks at the new level.
-  Object.keys(state.checkboxes).forEach(key => {
-    if (/^(skull|rec|potion_[a-z]+)_\d+$/.test(key)) delete state.checkboxes[key];
-  });
-  // Set current HP from max HP. If max is blank, leave current blank
-  // rather than writing "undefined" or stale data into the field.
+  const skulls = clearCheckboxes(/^skull_\d+$/);
+  const recs = clearCheckboxes(/^rec_\d+$/);
+  const potionTicks = clearCheckboxes(/^potion_[a-z]+_\d+$/);
+  // Set current HP from max HP. If max is blank, leave current blank rather
+  // than writing "undefined" or stale data into the field.
   const max = state.fields.max_hp || '';
+  const hadTemp = intOrZero(state.fields.temp_hp);
+  const prevHp = state.fields.current_hp || '';
   state.fields.current_hp = max;
   setFieldDom('current_hp');
-  // A full heal-up ends the battle/arc: temp HP, conditions and the
-  // escalation die don't carry over.
   state.fields.temp_hp = '';
   setFieldDom('temp_hp');
-  state.activeConditions = {};
-  state.escalation = 0;
+  // A character already at full HP was not healed, and saying so buries the
+  // lines that did happen. Same for every other line here: the log reports
+  // changes, not intentions.
+  if (max !== prevHp) {
+    done.push(max
+      ? 'Current HP → ' + max + (prevHp ? ' (was ' + prevHp + ')' : '')
+      : 'Current HP cleared (no Max HP set)');
+  }
+  if (hadTemp) done.push(hadTemp + ' temp HP cleared');
+  if (recs) done.push(plural(recs, 'recovery', 'recoveries') + ' restored');
+  if (skulls) done.push(plural(skulls, 'death-save skull', 'death-save skulls') + ' cleared');
   // A full heal-up ends the arc, so per-battle *and* per-arc trackers go
   // with it, icon relationships included.
   const refreshed = clearUses(['battle', 'arc']);
+  if (refreshed) done.push(plural(refreshed, 'ability', 'abilities') + ' refreshed');
   const iconsReset = clearIconTracks();
-  renderConditions();
-  renderEscalation();
+  if (iconsReset) done.push(plural(iconsReset, 'icon relationship', 'icon relationships') + ' reset');
   renderSkulls();
   renderRecoveries();
   renderPotions();
@@ -2879,16 +2964,15 @@ function fullHealUp() {
   renderIcons();
   classHook('onFullHeal');
   updateHpStatus();
-  const bits = [
-    `HP → ${max || '—'}`,
-    'recoveries & skulls reset',
-    'conditions, temp HP & escalation cleared',
-  ];
-  if (refreshed) bits.push(`${plural(refreshed, 'ability', 'abilities')} refreshed`);
-  if (iconsReset) bits.push(`${plural(iconsReset, 'icon relationship', 'icon relationships')} reset`);
-  const potions = potionSummary();
-  if (potions) bits.push(`potions restocked (${potions})`);
-  logAction('Full Heal-Up', bits.join(' · '));
+  // Only when something was actually drunk. The summary is read after the
+  // ticks are gone, so it is the stock the player now has rather than the
+  // one they had left.
+  if (potionTicks) {
+    const potions = potionSummary();
+    done.push(potions ? 'Potions restocked (' + potions + ')'
+                      : plural(potionTicks, 'potion tick', 'potion ticks') + ' cleared');
+  }
+  logRest(REST_PLANS.full, done);
   saveNow();
   showToast('Fully healed');
 }
@@ -2996,18 +3080,31 @@ function exprDetail(expr, r) {
   return `${expr}: [${r.rolls.join(', ')}]` + (r.bonus ? ' ' + signed(r.bonus) : '');
 }
 
-function openDiceTray() {
-  document.getElementById('dice-tray').classList.remove('collapsed');
-  document.getElementById('dice-tray-head').setAttribute('aria-expanded', 'true');
-  document.getElementById('dice-tray-caret').textContent = '▾';
+// Open or closed is a preference like the tray's position, not a fact about
+// the DOM: a roll that pops it open is the player opening it, and it should
+// still be open after a reload.
+function applyTrayOpen() {
+  const tray = trayEl();
+  if (!tray) return;
+  const open = !!(state.prefs && state.prefs.trayOpen);
+  tray.classList.toggle('collapsed', !open);
+  document.getElementById('dice-tray-head').setAttribute('aria-expanded', open ? 'true' : 'false');
+  document.getElementById('dice-tray-caret').textContent = open ? '▾' : '▸';
   applyTrayGeometry();
 }
-function toggleDiceTray() {
-  const collapsed = document.getElementById('dice-tray').classList.toggle('collapsed');
-  document.getElementById('dice-tray-head').setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-  document.getElementById('dice-tray-caret').textContent = collapsed ? '▸' : '▾';
-  applyTrayGeometry();
+
+function setTrayOpen(open) {
+  if (!state.prefs) normalizePrefs(state);
+  const changed = state.prefs.trayOpen !== !!open;
+  state.prefs.trayOpen = !!open;
+  applyTrayOpen();
+  // Every roll opens the tray; only the one that actually changes the
+  // setting is worth a save.
+  if (changed) saveNow();
 }
+
+function openDiceTray() { setTrayOpen(true); }
+function toggleDiceTray() { setTrayOpen(!(state.prefs && state.prefs.trayOpen)); }
 
 // ── DICE TRAY AS A WINDOW ───────────────────────────────────────
 // Drag the header to move it, drag the corner grip to resize it. The four
@@ -3511,6 +3608,8 @@ function wireStaticHandlers() {
     if (fn) btn.addEventListener('click', fn);
   });
   wireDiceTrayWindow();
+  document.querySelectorAll('[data-action="quick-rest"]').forEach(b => { b.title = restTooltip(REST_PLANS.quick); });
+  document.querySelectorAll('[data-action="full-heal"]').forEach(b => { b.title = restTooltip(REST_PLANS.full); });
   document.getElementById('bh-rail').addEventListener('click', toggleBattleHelper);
   document.getElementById('esc-plus').addEventListener('click', () => bumpEscalation(1));
   document.getElementById('esc-minus').addEventListener('click', () => bumpEscalation(-1));
