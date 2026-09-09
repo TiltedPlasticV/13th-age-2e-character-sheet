@@ -11,7 +11,7 @@ registerClass('sorcerer', {
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 6,
 
-  // Recovery dice = one per level, + Con mod (×2 from 5th, ×4 from 8th).
+  // Recovery dice = one per level, + Con mod, scaled by tier.
   recoveryDie: 6,
 
 });

@@ -47,13 +47,13 @@
     // max HP = (baseHp + Con mod) × level multiplier. Almost always 6 or 7.
     // Use null if you're unsure — max HP then stays blank and manual.
     baseHp: 7,
-    // Recovery dice = one die per level, + Con mod (×2 from 5th level, ×4
-    // from 8th). Omit if you're unsure and the Recovery Dice field stays
-    // blank and hand-typed.
+    // Recovery dice = one die per level, + the Con mod scaled by tier (×2
+    // from 5th, ×4 +5/+10/+15 over the epic levels) — the same scaling for
+    // every class, and the same table basic attack damage uses. Omit if you're unsure
+    // and the Recovery Dice field stays blank and hand-typed. A class whose
+    // die isn't a constant leaves this out and derives `recovery_dice`
+    // itself with recoveryDiceFor() — see classes/bard.js.
     recoveryDie: 8,
-    // Set false only for a class whose Con mod stays flat at every level
-    // (the necromancer). Omit it and the ×2 / ×4 above apply.
-    // recoveryConScales: false,
 
     // ── Basic attacks ──
     // Only what this class does *differently*. Every basic attack in 13A 2e
@@ -63,6 +63,10 @@
     // ability, and the defaults (Strength in melee, Dexterity at range) are
     // right for most of the roster. Omit this key entirely unless:
     //   ability: 'dex'          — this class uses another ability (rogue)
+    //   dmgAbility: 'str'       — damage uses a *different* one from the
+    //                             attack (the monk punches with Dex, hurts
+    //                             with Str). Omit and damage follows the
+    //                             attack dropdown.
     //   choice:  ['str','dex']  — the player picks; shown beside the
     //                             dropdown, which starts on the first
     //   note:    'Thrown …'     — a line under the card. For a rule the
@@ -81,6 +85,7 @@
     // ── UI injected into the sheet ──
     // Each slot maps to a `[data-class-slot]` host in the HTML:
     //   'attacks'      — extra attack cards in the Basic Attacks section
+    //   'recovery'     — beside the Recovery Dice field
     //   'hp-side'      — inline panel right of recoveries + skulls
     //   'skulls-under' — strip directly beneath the skull track
     //   'sections'     — whole extra sections, after Basic Attacks

@@ -1,5 +1,5 @@
 // ── PALADIN — 13th Age 2e ──
-// Base numbers only. Anything else about the class — extra attacks, an
+// Base numbers and basic attacks. Anything else about the class — an
 // inline panel, whole new sections, auto-calculated fields, rest hooks —
 // can be added right here. See _template.js for the full module API.
 registerClass('paladin', {
@@ -15,7 +15,7 @@ registerClass('paladin', {
   // so the note points at the Dmg dropdown rather than doing anything.
   attacks: { ranged: { note: 'Thrown weapons add Strength damage instead of Dexterity.' } },
 
-  // Recovery dice = one per level, + Con mod (×2 from 5th, ×4 from 8th).
+  // Recovery dice = one per level, + Con mod, scaled by tier.
   recoveryDie: 10,
 
 });

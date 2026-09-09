@@ -1,5 +1,5 @@
 // ── FIGHTER — 13th Age 2e ──
-// Base numbers only. Anything else about the class — extra attacks, an
+// Base numbers and basic attacks. Anything else about the class — an
 // inline panel, whole new sections, auto-calculated fields, rest hooks —
 // can be added right here. See _template.js for the full module API.
 registerClass('fighter', {
@@ -10,6 +10,9 @@ registerClass('fighter', {
 
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 7,
+
+  // Recovery dice = one per level, + Con mod, scaled by tier.
+  recoveryDie: 10,
 
   // A thrown weapon is still a Dexterity attack — only the damage changes,
   // so the note points at the Dmg dropdown rather than doing anything.

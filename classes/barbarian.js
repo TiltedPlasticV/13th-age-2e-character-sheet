@@ -298,7 +298,7 @@
   registerClass('barbarian', {
     defenses: { ac: 12, pd: 11, md: 10 },
     baseHp: 7,
-    // Recovery dice = one per level, + Con mod (×2 from 5th, ×4 from 8th).
+    // Recovery dice = one per level, + Con mod, scaled by tier.
     recoveryDie: 12,
 
     // A thrown weapon is still a Dexterity attack — only the damage

@@ -114,6 +114,7 @@
           <div class="hp-mid-row">
             <div class="hp-item"><span class="hp-label">Recovery Dice</span><input class="field-inline field-wide" data-field="recovery_dice" aria-label="Recovery dice"></div>
             <div class="hp-item"><span class="hp-label">Avg</span><input class="field-inline field-md" data-field="recovery_avg" aria-label="Average recovery"></div>
+            <div class="class-slot" data-class-slot="recovery"></div>
             <div class="hp-item"><span class="hp-label">Max Recoveries</span><input class="field-inline field-md" data-field="max_recoveries" aria-label="Maximum recoveries"></div>
             <div class="check-row" id="recoveries-row"><span class="hp-label">Recoveries</span></div>
           </div>
@@ -131,8 +132,8 @@
         </div>
         <span class="action-sep" aria-hidden="true"></span>
         <button class="action-btn" data-action="roll-recovery" title="Spend the next recovery: rolls your recovery dice and adds the result to current HP">🎲 Recovery</button>
-        <button class="action-btn" data-action="quick-rest" title="Between battles: refresh every per-battle ability and clear all death-save skulls except the 1st">⛺ Quick Rest</button>
-        <button class="action-btn" data-action="full-heal" title="Ends the arc: refresh every per-battle and per-arc ability and all icon relationships, clear all skulls, conditions and temp HP, restore all recoveries, set current HP to max">☀ Full Heal-Up</button>
+        <button class="action-btn" data-action="quick-rest" title="Between battles: refresh every per-battle ability and clear all death-save skulls except the 1st">⚔ Quick Rest</button>
+        <button class="action-btn" data-action="full-heal" title="Ends the arc: refresh every per-battle and per-arc ability and all icon relationships, clear all skulls, conditions and temp HP, restore all recoveries, set current HP to max">↺ Full Heal-Up</button>
       </div>
     </div>
   </div>
@@ -430,7 +431,7 @@
       </select>
       <button class="primary" id="btn-save">⤓ Save to File</button>
       <button id="btn-load">⤒ Load from File</button>
-      <button id="btn-reset">↺ New Sheet</button>
+      <button id="btn-reset">▢ New Sheet</button>
       <input type="file" id="load-input" accept=".json" style="display:none;">
     </div>
     <div class="toolbar prefs-row">
@@ -470,7 +471,7 @@
         <button class="esc-btn" id="esc-minus" title="Decrease escalation die" aria-label="Decrease escalation die">−</button>
         <div class="esc-die" id="esc-value" title="Added automatically to attack rolls">0</div>
         <button class="esc-btn" id="esc-plus" title="Increase escalation die (new round)" aria-label="Increase escalation die">+</button>
-        <button class="esc-btn" id="esc-reset" title="Reset to 0 (new battle)" aria-label="Reset escalation die">↺</button>
+        <button class="esc-btn esc-reset" id="esc-reset" title="Reset to 0 (new battle)" aria-label="Reset escalation die">⚔ Reset</button>
       </div>
     </div>
     <div class="dice-quick">

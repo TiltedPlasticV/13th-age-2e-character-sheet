@@ -58,6 +58,21 @@ function abilityMod(score) {
   return signed(Math.floor((s - 10) / 2));
 }
 
+// ── ABILITY MODIFIER SCALING ──
+// One table, two users. Wherever 13A 2e adds an ability modifier to
+// something that already grows with level, it scales the same way: ×1
+// through 4th, ×2 at champion, ×4 at epic, plus a flat amount over the last
+// three levels. Basic attack damage reads it, and so does a recovery roll.
+// Ordered high → low so the first matching `min` wins, as TIERS does.
+const MOD_SCALING = [
+  { min: 10, mult: 4, flat: 15 },
+  { min: 9,  mult: 4, flat: 10 },
+  { min: 8,  mult: 4, flat: 5 },
+  { min: 5,  mult: 2, flat: 0 },
+  { min: 1,  mult: 1, flat: 0 },
+];
+function modScaling(lvl) { return MOD_SCALING.find(s => lvl >= s.min); }
+
 // Several 13A values are simply your level — miss damage, the attunement
 // limit. Blank until there is one, which leaves the field hand-typed.
 function levelValue(f) {
@@ -108,8 +123,13 @@ const CLASS_ABILITY_SECTION = {
   necromancer: { list: 'spells', label: 'Spells',         noun: 'Spell' },
   sorcerer:    { list: 'spells', label: 'Spells',         noun: 'Spell' },
   wizard:      { list: 'spells', label: 'Spells',         noun: 'Spell' },
+  druid:       { list: 'spells', label: 'Spells',         noun: 'Spell' },
+  occultist:   { list: 'spells', label: 'Spells',         noun: 'Spell' },
   fighter:     { list: 'powers', label: 'Maneuvers',      noun: 'Maneuver' },
   rogue:       { list: 'powers', label: 'Powers',         noun: 'Power' },
+  // Commands and tactics are two kinds of thing but one list to read from
+  // in play, so they share a section.
+  commander:   { list: 'powers', label: 'Commands & Tactics', noun: 'Command' },
 };
 
 // Level → HP multiplier (13th Age 2e). Levels outside 1–10 have no entry,
@@ -126,26 +146,28 @@ function maxHpCalc(f) {
   return (ci.baseHp + intOrZero(f.con_mod)) * mult;
 }
 
-// Recovery dice: one die per level, plus Con mod — doubled from 5th level
-// and quadrupled from 8th. Both class-varying parts ride in the class
-// module: `recoveryDie`, and `recoveryConScales: false` for a class whose
-// Con mod stays flat (the necromancer).
+// Recovery dice: one die per level, plus the tier-scaled Con mod — the same
+// scaling for every class without exception. Only the die varies, and it
+// rides in the class module as `recoveryDie`.
 //
 // Produces an expression ("5d8+6"), not a number — that's what the Roll
 // Recovery button and the Avg field parse. With no `recoveryDie` the field
 // stays blank and hand-typed.
-function recoveryConMult(lvl, ci) {
-  if (ci && ci.recoveryConScales === false) return 1;
-  return lvl >= 8 ? 4 : lvl >= 5 ? 2 : 1;
+//
+// Split from the calc below so a class whose die isn't a constant can reuse
+// the formula — the bard's is d8 or d6 depending on a choice they make.
+function recoveryDiceFor(f, die) {
+  if (die == null) return '';
+  const lvl = intOrNull(f.level);
+  if (lvl === null || lvl < 1 || lvl > 10) return '';
+  const s = modScaling(lvl);
+  const bonus = intOrZero(f.con_mod) * s.mult + s.flat;
+  return lvl + 'd' + die + (bonus === 0 ? '' : signed(bonus));
 }
 
 function recoveryDiceCalc(f) {
   const ci = getClassInfo(f.class);
-  if (!ci || ci.recoveryDie == null) return '';
-  const lvl = intOrNull(f.level);
-  if (lvl === null || lvl < 1 || lvl > 10) return '';
-  const bonus = intOrZero(f.con_mod) * recoveryConMult(lvl, ci);
-  return lvl + 'd' + ci.recoveryDie + (bonus === 0 ? '' : signed(bonus));
+  return ci ? recoveryDiceFor(f, ci.recoveryDie) : '';
 }
 
 // A class's base numbers arrive with its file, so this is null until that
@@ -283,18 +305,6 @@ function abilityShort(key) { return ability(key).short; }
 // is what an empty dropdown would mean anyway.
 function abilityModValue(f, key) { return intOrZero(f[ability(key).mod]); }
 
-// Damage bonus by level: the ability mod ×1, ×2 from 5th, ×4 from 8th, plus
-// a flat amount in the epic tier. Ordered high → low so the first matching
-// `min` wins, as TIERS does.
-const ATTACK_SCALING = [
-  { min: 10, mult: 4, flat: 15 },
-  { min: 9,  mult: 4, flat: 10 },
-  { min: 8,  mult: 4, flat: 5 },
-  { min: 5,  mult: 2, flat: 0 },
-  { min: 1,  mult: 1, flat: 0 },
-];
-function attackScaling(lvl) { return ATTACK_SCALING.find(s => lvl >= s.min); }
-
 // The weapon's damage die, rolled once per level: "d8", "1d8" and "8" all
 // mean one d8. A count is only honoured when spelled with a `d` ("2d6"),
 // so "10" reads as a d10 rather than ten of something.
@@ -337,7 +347,7 @@ function attackDamageCalc(f, kind) {
   const lvl = intOrNull(f.level);
   const die = parseWeaponDie(f[kind + '_weapon_die']);
   if (lvl === null || lvl < 1 || die === null) return '';
-  const s = attackScaling(lvl);
+  const s = modScaling(lvl);
   const bonus = abilityModValue(f, f[kind + '_dmg_ability']) * s.mult
               + s.flat + intOrZero(f[kind + '_dmg_misc']);
   return (die.count * lvl) + 'd' + die.sides + (bonus === 0 ? '' : signed(bonus));
@@ -357,7 +367,7 @@ function attackWorking(f, kind, half) {
   } else {
     const die = parseWeaponDie(f[kind + '_weapon_die']);
     if (!die) return 'Auto-calculated once you set the weapon damage die';
-    const s = attackScaling(lvl);
+    const s = modScaling(lvl);
     parts.push('level ' + lvl + ' × ' + (die.count > 1 ? die.count : '') + 'd' + die.sides);
     parts.push(abilityShort(abKey) + ' ' + signed(mod) + (s.mult > 1 ? ' × ' + s.mult : ''));
     if (s.flat) parts.push(String(s.flat));
@@ -431,9 +441,11 @@ const DERIVED_FIELDS = {
   // damage half mirrors the attack half until the player says otherwise —
   // which is the thrown weapon that hits with Dex and hurts with Str.
   melee_atk_ability:  { sources: ['class'], calc: f => attackInfo(f, 'melee').ability },
-  melee_dmg_ability:  { sources: ['melee_atk_ability'], calc: f => f.melee_atk_ability || '' },
+  melee_dmg_ability:  { sources: ['class', 'melee_atk_ability'],
+                        calc: f => attackInfo(f, 'melee').dmgAbility || f.melee_atk_ability || '' },
   ranged_atk_ability: { sources: ['class'], calc: f => attackInfo(f, 'ranged').ability },
-  ranged_dmg_ability: { sources: ['ranged_atk_ability'], calc: f => f.ranged_atk_ability || '' },
+  ranged_dmg_ability: { sources: ['class', 'ranged_atk_ability'],
+                        calc: f => attackInfo(f, 'ranged').dmgAbility || f.ranged_atk_ability || '' },
   // Attack bonuses. Near and far are the same sum — the rules add no
   // distance penalty — but stay separate fields, so a weapon that can't
   // reach far away is locked to a "—" without touching the other.
@@ -2089,6 +2101,7 @@ function renderAdvances() {
 //   slots:      { <slot name>: () => Node } — content injected into the
 //               matching `[data-class-slot]` host. Slots today:
 //                 'attacks'      — extra cards in the Basic Attacks section
+//                 'recovery'     — beside the Recovery Dice field
 //                 'hp-side'      — inline panel right of recoveries + skulls
 //                 'skulls-under' — strip directly beneath the skull track
 //                 'sections'     — whole extra sections after Basic Attacks
@@ -2112,7 +2125,7 @@ function renderAdvances() {
 // reads inputs currently on screen — so an unmounted one can't be blanked.
 // Everything else goes in state.classData[<class>] via classData(). Both
 // save with `state`; only a deliberate "New Sheet" clears them.
-const CLASS_SLOTS = ['attacks', 'hp-side', 'skulls-under', 'sections'];
+const CLASS_SLOTS = ['attacks', 'recovery', 'hp-side', 'skulls-under', 'sections'];
 const CLASS_DIR = 'classes/';
 
 // Populated by registerClass() as class files load; empty at startup.

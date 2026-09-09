@@ -1,5 +1,5 @@
 // ── NECROMANCER — 13th Age 2e ──
-// Base numbers only. Anything else about the class — extra attacks, an
+// Base numbers and basic attacks. Anything else about the class — an
 // inline panel, whole new sections, auto-calculated fields, rest hooks —
 // can be added right here. See _template.js for the full module API.
 registerClass('necromancer', {
@@ -11,9 +11,7 @@ registerClass('necromancer', {
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 6,
 
-  // Recovery dice = one per level, + Con mod. Deliberately frail: unlike
-  // every other class the Con mod stays flat, with no ×2 at 5th or ×4 at 8th.
+  // Recovery dice = one per level, + Con mod, scaled by tier.
   recoveryDie: 6,
-  recoveryConScales: false,
 
 });

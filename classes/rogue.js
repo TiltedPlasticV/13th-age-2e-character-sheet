@@ -45,9 +45,10 @@
       ),
       el('div', { class: 'bravado-reset-row' },
         el('button', {
-          class: 'action-btn', title: 'Set bravado points back to 0',
+          class: 'action-btn',
+          title: 'Set bravado points back to 0. A quick rest does this too.',
           onclick: () => setBravado(0, 'reset')
-        }, '↺ Reset')
+        }, '⚔ Reset')
       )
     );
   }
@@ -63,7 +64,7 @@
     // max HP = (baseHp + Con mod) × level multiplier.
     baseHp: 6,
 
-    // Recovery dice = one per level, + Con mod (×2 from 5th, ×4 from 8th).
+    // Recovery dice = one per level, + Con mod, scaled by tier.
     recoveryDie: 8,
 
     // A rogue hits with Dexterity in melee, not Strength — and unlike most
@@ -75,6 +76,13 @@
 
     slots: {
       'hp-side': buildBravadoPanel,
+    },
+
+    // Bravado is spent within a battle and doesn't carry out of it, so the
+    // quick rest clears it — the ⚔ on the panel's own button is the same
+    // action, for when the battle ends without one.
+    onQuickRest() {
+      if (bravado()) setBravado(0, 'cleared');
     },
 
     // The counter needs no more room than its buttons — let the recoveries
