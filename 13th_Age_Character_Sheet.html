@@ -145,7 +145,21 @@
         <div class="attack-card">
           <div class="attack-card-body">
             <div class="attack-title">Melee</div>
-            <div class="attack-weapon"><input class="field-inline" data-field="melee_weapon" placeholder="Weapon" aria-label="Melee weapon"></div>
+            <div class="attack-weapon">
+              <input class="field-inline" data-field="melee_weapon" placeholder="Weapon" aria-label="Melee weapon">
+              <input class="field-inline field-die" data-field="melee_weapon_die" placeholder="d8" aria-label="Melee weapon damage die" title="The weapon's damage die. You roll it once per level.">
+              <span class="attack-label">per level</span>
+            </div>
+            <div class="attack-formula">
+              <span class="attack-label">Atk</span>
+              <select class="field-inline field-ability" data-field="melee_atk_ability" aria-label="Melee attack ability"></select>
+              <input class="field-inline field-xs" data-field="melee_atk_misc" placeholder="±" aria-label="Melee attack misc bonus" title="Anything else on the attack roll — a magic weapon, a talent">
+              <span class="attack-sep">·</span>
+              <span class="attack-label">Dmg</span>
+              <select class="field-inline field-ability" data-field="melee_dmg_ability" aria-label="Melee damage ability"></select>
+              <input class="field-inline field-xs" data-field="melee_dmg_misc" placeholder="±" aria-label="Melee damage misc bonus" title="Anything else on damage — a magic weapon, a talent">
+              <span class="note attack-choice" data-attack-choice="melee"></span>
+            </div>
             <div class="attack-stats">
               <span class="attack-label">Hit Dmg</span>
               <input class="field-inline field-grow" data-field="melee_damage" placeholder="1d8+4" aria-label="Melee hit damage">
@@ -157,11 +171,12 @@
               <span class="attack-label">Miss</span>
               <input class="field-inline field-sm" data-field="melee_miss" placeholder="—" aria-label="Melee miss damage">
             </div>
+            <div class="note attack-note" data-attack-note="melee"></div>
           </div>
           <div class="attack-ac-group">
             <div class="attack-ac-badge">
               <span class="attack-ac-label">vs AC</span>
-              <input class="field-inline" data-field="melee_vs_ac" placeholder="±" aria-label="Melee attack bonus vs AC">
+              <input class="field-inline" data-field="melee_vs_ac" data-attack-bonus="melee" placeholder="±" aria-label="Melee attack bonus vs AC">
               <button class="roll-btn" data-roll="melee_atk" title="Roll melee attack: d20 + bonus + escalation die" aria-label="Roll melee attack">🎲</button>
             </div>
           </div>
@@ -169,7 +184,21 @@
         <div class="attack-card">
           <div class="attack-card-body">
             <div class="attack-title">Ranged</div>
-            <div class="attack-weapon"><input class="field-inline" data-field="ranged_weapon" placeholder="Weapon" aria-label="Ranged weapon"></div>
+            <div class="attack-weapon">
+              <input class="field-inline" data-field="ranged_weapon" placeholder="Weapon" aria-label="Ranged weapon">
+              <input class="field-inline field-die" data-field="ranged_weapon_die" placeholder="d6" aria-label="Ranged weapon damage die" title="The weapon's damage die. You roll it once per level.">
+              <span class="attack-label">per level</span>
+            </div>
+            <div class="attack-formula">
+              <span class="attack-label">Atk</span>
+              <select class="field-inline field-ability" data-field="ranged_atk_ability" aria-label="Ranged attack ability"></select>
+              <input class="field-inline field-xs" data-field="ranged_atk_misc" placeholder="±" aria-label="Ranged attack misc bonus" title="Anything else on the attack roll — a magic weapon, a talent">
+              <span class="attack-sep">·</span>
+              <span class="attack-label">Dmg</span>
+              <select class="field-inline field-ability" data-field="ranged_dmg_ability" aria-label="Ranged damage ability"></select>
+              <input class="field-inline field-xs" data-field="ranged_dmg_misc" placeholder="±" aria-label="Ranged damage misc bonus" title="Anything else on damage — a magic weapon, a talent">
+              <span class="note attack-choice" data-attack-choice="ranged"></span>
+            </div>
             <div class="attack-stats">
               <span class="attack-label">Hit Dmg</span>
               <input class="field-inline field-grow" data-field="ranged_damage" placeholder="1d6+2" aria-label="Ranged hit damage">
@@ -181,16 +210,17 @@
               <span class="attack-label">Miss</span>
               <input class="field-inline field-sm" data-field="ranged_miss" placeholder="—" aria-label="Ranged miss damage">
             </div>
+            <div class="note attack-note" data-attack-note="ranged"></div>
           </div>
           <div class="attack-ac-group">
             <div class="attack-ac-badge">
               <span class="attack-ac-label">Near</span>
-              <input class="field-inline" data-field="ranged_vs_ac_near" placeholder="±" aria-label="Ranged attack bonus vs AC (nearby)">
+              <input class="field-inline" data-field="ranged_vs_ac_near" data-attack-bonus="ranged" placeholder="±" aria-label="Ranged attack bonus vs AC (nearby)">
               <button class="roll-btn" data-roll="ranged_atk_near" title="Roll ranged attack (nearby): d20 + bonus + escalation die" aria-label="Roll ranged attack against a nearby target">🎲</button>
             </div>
             <div class="attack-ac-badge">
               <span class="attack-ac-label">Far</span>
-              <input class="field-inline" data-field="ranged_vs_ac_far" placeholder="±" aria-label="Ranged attack bonus vs AC (far away)">
+              <input class="field-inline" data-field="ranged_vs_ac_far" data-attack-bonus="ranged" placeholder="±" aria-label="Ranged attack bonus vs AC (far away)">
               <button class="roll-btn" data-roll="ranged_atk_far" title="Roll ranged attack (far away): d20 + bonus + escalation die" aria-label="Roll ranged attack against a far away target">🎲</button>
             </div>
           </div>

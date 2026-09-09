@@ -901,7 +901,7 @@ textarea.field-block {
   font-size: 10px;
   line-height: 1;
   cursor: pointer;
-  opacity: 0.4;
+  opacity: 0.2;
   user-select: none;
   transition: opacity 0.15s, color 0.15s;
   z-index: 3;
@@ -1024,12 +1024,42 @@ textarea.field-block {
   margin-bottom: 4px; font-weight: 700;
 }
 
-.attack-weapon { margin-bottom: 4px; }
+/* Weapon name and its damage die on one line — the name takes whatever
+   the die leaves. */
+.attack-weapon {
+  margin-bottom: 4px;
+  display: flex; align-items: center; gap: 6px;
+}
 .attack-weapon .field-inline { width: 100%; font-size: var(--fs-lg); }
 /* A derived weapon name is wrapped in `.has-lock` for its padlock. That
    wrapper is inline-block, so the `100%` above would resolve against a
    shrink-wrapped box instead of the card. Block makes it span the card. */
 .attack-weapon .has-lock { display: block; }
+/* Whichever of the two the name turns out to be, it is the part that grows —
+   and the only part that shrinks, so a narrow card squeezes the name rather
+   than the die box or the two words explaining it. */
+.attack-weapon > .field-inline:first-child,
+.attack-weapon > .has-lock { flex: 1; min-width: 0; }
+.attack-weapon > .field-die { flex: none; }
+.attack-weapon > .attack-label { white-space: nowrap; }
+
+/* The working behind the two derived numbers: which ability feeds each
+   half of the attack, and anything else the player adds to it. Reads as
+   small print, so it borrows `.note`'s scale rather than setting its own. */
+.attack-formula {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 3px 5px; margin-bottom: 4px;
+}
+/* As the power-header selects: room for the native arrow, sized to the
+   widest ability name instead of stretching. */
+.attack-formula select.field-inline.field-ability {
+  width: auto; padding-right: 16px; cursor: pointer;
+  font-size: var(--fs-sm);
+}
+.attack-formula .field-inline.field-xs { font-size: var(--fs-sm); }
+/* Neither line exists for most classes — an empty one would still collect
+   the card's spacing. */
+.attack-choice:empty, .attack-note:empty { display: none; }
 
 .attack-stats {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
@@ -1543,6 +1573,7 @@ body[data-theme="paladin"] {
   gap: 4px; margin-top: 3px;
 }
 
+.field-inline.field-die  { width: 46px; text-align: center; }
 .field-inline.field-xs   { width: 30px; text-align: center; }
 .field-inline.field-sm   { width: 40px; text-align: center; }
 .field-inline.field-md   { width: 50px; text-align: center; }

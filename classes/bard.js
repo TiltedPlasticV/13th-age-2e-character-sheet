@@ -11,4 +11,8 @@ registerClass('bard', {
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 7,
 
+  // A bard picks Strength or Dexterity for melee attacks. The dropdown on
+  // the sheet starts on the first and remembers whichever you choose.
+  attacks: { melee: { choice: ['str', 'dex'] } },
+
 });

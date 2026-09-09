@@ -301,6 +301,11 @@
     // Recovery dice = one per level, + Con mod (×2 from 5th, ×4 from 8th).
     recoveryDie: 12,
 
+    // A thrown weapon is still a Dexterity attack — only the damage
+    // changes, so the note points at the Dmg dropdown rather than doing
+    // anything itself.
+    attacks: { ranged: { note: 'Thrown weapons add Strength damage instead of Dexterity.' } },
+
     slots: {
       attacks:        buildAttacks,
       'hp-side':      buildRagePanel,

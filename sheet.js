@@ -58,6 +58,13 @@ function abilityMod(score) {
   return signed(Math.floor((s - 10) / 2));
 }
 
+// Several 13A values are simply your level — miss damage, the attunement
+// limit. Blank until there is one, which leaves the field hand-typed.
+function levelValue(f) {
+  const lvl = intOrNull(f.level);
+  return lvl === null ? '' : lvl;
+}
+
 // Parses "2d10 + 4", "2d10+4", "5d8 - 1", "3d6". Returns null if unparseable.
 function parseRecoveryDice(str) {
   if (!str) return null;
@@ -243,6 +250,151 @@ function potionSummary() {
     .filter(Boolean).join(', ');
 }
 
+// ── BASIC ATTACKS ─────────────────────────────────────────────────────
+// Every class's basic attack is the same shape in 13A 2e — an ability mod
+// + level to hit, and level × the weapon's die + a scaling ability bonus
+// on a hit. Only *which* ability differs, so the whole progression lives
+// here and a class module carries nothing but its deviations.
+//
+// The player supplies the weapon: its name, and its damage die. No weapon
+// table — a die is one keystroke and covers every weapon in the game,
+// magical ones included. The `_misc` fields are the ± a magic weapon or a
+// talent adds; they're the one part of the sum the sheet can't know.
+//
+// Which ability each half uses is a dropdown, and the dropdown is itself a
+// derived field: the class fills it in, and choosing locks it exactly like
+// typing over a number. That is what makes the bard's and ranger's
+// Str-or-Dex choice, and thrown weapons adding Strength damage, need no
+// special case anywhere — the player just picks.
+const ABILITIES = [
+  { key: 'str', label: 'Strength',     short: 'Str', mod: 'str_mod' },
+  { key: 'dex', label: 'Dexterity',    short: 'Dex', mod: 'dex_mod' },
+  { key: 'con', label: 'Constitution', short: 'Con', mod: 'con_mod' },
+  { key: 'wis', label: 'Wisdom',       short: 'Wis', mod: 'wis_mod' },
+  { key: 'int', label: 'Intelligence', short: 'Int', mod: 'int_mod' },
+  { key: 'cha', label: 'Charisma',     short: 'Cha', mod: 'cha_mod' },
+];
+const ABILITY_BY_KEY = Object.fromEntries(ABILITIES.map(a => [a.key, a]));
+const ABILITY_MOD_FIELDS = ABILITIES.map(a => a.mod);
+
+function ability(key) { return ABILITY_BY_KEY[key] || ABILITY_BY_KEY.str; }
+function abilityShort(key) { return ability(key).short; }
+// The mod an attack half is currently using. Unknown key → Strength, which
+// is what an empty dropdown would mean anyway.
+function abilityModValue(f, key) { return intOrZero(f[ability(key).mod]); }
+
+// Damage bonus by level: the ability mod ×1, ×2 from 5th, ×4 from 8th, plus
+// a flat amount in the epic tier. Ordered high → low so the first matching
+// `min` wins, as TIERS does.
+const ATTACK_SCALING = [
+  { min: 10, mult: 4, flat: 15 },
+  { min: 9,  mult: 4, flat: 10 },
+  { min: 8,  mult: 4, flat: 5 },
+  { min: 5,  mult: 2, flat: 0 },
+  { min: 1,  mult: 1, flat: 0 },
+];
+function attackScaling(lvl) { return ATTACK_SCALING.find(s => lvl >= s.min); }
+
+// The weapon's damage die, rolled once per level: "d8", "1d8" and "8" all
+// mean one d8. A count is only honoured when spelled with a `d` ("2d6"),
+// so "10" reads as a d10 rather than ten of something.
+function parseWeaponDie(str) {
+  if (!str) return null;
+  const m = String(str).replace(/\s+/g, '').match(/^(?:(\d+)d|d?)(\d+)$/i);
+  if (!m) return null;
+  const count = m[1] ? +m[1] : 1;
+  const sides = +m[2];
+  return (count > 0 && sides > 0) ? { count, sides } : null;
+}
+
+// What a class does differently. Everything unstated falls back to these —
+// right for most of the roster, and still right when the class file is
+// missing, so basic attacks auto-calculate on a sheet that has no module
+// at all. See `attacks` in classes/_template.js.
+const ATTACK_DEFAULTS = {
+  melee:  { ability: 'str' },
+  ranged: { ability: 'dex' },
+};
+function attackInfo(f, kind) {
+  const ci = getClassInfo(f.class);
+  const spec = ci && ci.attacks && ci.attacks[kind];
+  return Object.assign({}, ATTACK_DEFAULTS[kind], spec || {});
+}
+
+// Attack bonus: ability mod + level + whatever the player added. Blank
+// until there's a level, which leaves the field hand-typed as before.
+function attackBonusCalc(f, kind) {
+  const lvl = intOrNull(f.level);
+  if (lvl === null) return '';
+  return signed(abilityModValue(f, f[kind + '_atk_ability'])
+              + lvl + intOrZero(f[kind + '_atk_misc']));
+}
+
+// Hit damage: level × the weapon die, + the scaled ability mod. Blank
+// until both a level and a die are known — the sheet has nothing to say
+// about damage before then, so the field stays blank and editable.
+function attackDamageCalc(f, kind) {
+  const lvl = intOrNull(f.level);
+  const die = parseWeaponDie(f[kind + '_weapon_die']);
+  if (lvl === null || lvl < 1 || die === null) return '';
+  const s = attackScaling(lvl);
+  const bonus = abilityModValue(f, f[kind + '_dmg_ability']) * s.mult
+              + s.flat + intOrZero(f[kind + '_dmg_misc']);
+  return (die.count * lvl) + 'd' + die.sides + (bonus === 0 ? '' : signed(bonus));
+}
+
+// The sum in words, for the field's tooltip. A number like "5d8+21" should
+// never be a mystery — least of all the flat +5 that appears at 8th level.
+function attackWorking(f, kind, half) {
+  const lvl = intOrNull(f.level);
+  if (lvl === null) return 'Auto-calculated once you set your level';
+  const abKey = f[kind + '_' + half + '_ability'];
+  const mod = abilityModValue(f, abKey);
+  const misc = intOrZero(f[kind + '_' + half + '_misc']);
+  const parts = [];
+  if (half === 'atk') {
+    parts.push(abilityShort(abKey) + ' ' + signed(mod), 'level ' + lvl);
+  } else {
+    const die = parseWeaponDie(f[kind + '_weapon_die']);
+    if (!die) return 'Auto-calculated once you set the weapon damage die';
+    const s = attackScaling(lvl);
+    parts.push('level ' + lvl + ' × ' + (die.count > 1 ? die.count : '') + 'd' + die.sides);
+    parts.push(abilityShort(abKey) + ' ' + signed(mod) + (s.mult > 1 ? ' × ' + s.mult : ''));
+    if (s.flat) parts.push(String(s.flat));
+  }
+  if (misc) parts.push('misc ' + signed(misc));
+  return parts.join(' + ');
+}
+
+// Everything about the attack cards that isn't a field value: the tooltips
+// showing the working, the Str-or-Dex hint, and the thrown-weapon note.
+// All three follow the same numbers, so they refresh from one place.
+function updateAttackHints() {
+  ['melee', 'ranged'].forEach(kind => {
+    const info = attackInfo(state.fields, kind);
+    const hint = document.querySelector(`[data-attack-choice="${kind}"]`);
+    if (hint) {
+      hint.textContent = info.choice
+        ? '(' + info.choice.map(abilityShort).join(' or ') + ')' : '';
+    }
+    const note = document.querySelector(`[data-attack-note="${kind}"]`);
+    if (note) note.textContent = info.note || '';
+    const dmg = document.querySelector(`[data-field="${kind}_damage"]`);
+    if (dmg) dmg.title = attackWorking(state.fields, kind, 'dmg');
+    document.querySelectorAll(`[data-attack-bonus="${kind}"]`).forEach(box => {
+      box.title = attackWorking(state.fields, kind, 'atk');
+    });
+  });
+}
+
+// Fill every ability dropdown. Like the class list, this runs before any
+// state is applied, so the option a saved sheet names already exists.
+function populateAbilityOptions() {
+  document.querySelectorAll('select[data-field$="_ability"]').forEach(sel => {
+    ABILITIES.forEach(a => sel.appendChild(el('option', { value: a.key }, a.label)));
+  });
+}
+
 // Order matters: dependents come after their sources so one pass resolves
 // chains like dex_score → dex_mod → initiative. `sources` lists the fields
 // each calc reads and gates recomputation (typing in `notes` shouldn't walk
@@ -274,16 +426,37 @@ const DERIVED_FIELDS = {
   // Before recovery_avg, so the average sees the fresh expression.
   recovery_dice: { sources: ['class', 'level', 'con_mod'], calc: f => recoveryDiceCalc(f) },
   recovery_avg: { sources: ['recovery_dice'], calc: f => recoveryAvg(f.recovery_dice) },
+  // ── Basic attacks ──
+  // The ability dropdowns come first: everything below reads them, and the
+  // damage half mirrors the attack half until the player says otherwise —
+  // which is the thrown weapon that hits with Dex and hurts with Str.
+  melee_atk_ability:  { sources: ['class'], calc: f => attackInfo(f, 'melee').ability },
+  melee_dmg_ability:  { sources: ['melee_atk_ability'], calc: f => f.melee_atk_ability || '' },
+  ranged_atk_ability: { sources: ['class'], calc: f => attackInfo(f, 'ranged').ability },
+  ranged_dmg_ability: { sources: ['ranged_atk_ability'], calc: f => f.ranged_atk_ability || '' },
+  // Attack bonuses. Near and far are the same sum — the rules add no
+  // distance penalty — but stay separate fields, so a weapon that can't
+  // reach far away is locked to a "—" without touching the other.
+  melee_vs_ac: { sources: ['level', 'melee_atk_ability', 'melee_atk_misc', ...ABILITY_MOD_FIELDS],
+                 calc: f => attackBonusCalc(f, 'melee') },
+  ranged_vs_ac_near: { sources: ['level', 'ranged_atk_ability', 'ranged_atk_misc', ...ABILITY_MOD_FIELDS],
+                       calc: f => attackBonusCalc(f, 'ranged') },
+  ranged_vs_ac_far:  { sources: ['level', 'ranged_atk_ability', 'ranged_atk_misc', ...ABILITY_MOD_FIELDS],
+                       calc: f => attackBonusCalc(f, 'ranged') },
+  // Hit damage, before the averages below so they see the fresh expression.
+  melee_damage:  { sources: ['level', 'melee_weapon_die', 'melee_dmg_ability', 'melee_dmg_misc', ...ABILITY_MOD_FIELDS],
+                   calc: f => attackDamageCalc(f, 'melee') },
+  ranged_damage: { sources: ['level', 'ranged_weapon_die', 'ranged_dmg_ability', 'ranged_dmg_misc', ...ABILITY_MOD_FIELDS],
+                   calc: f => attackDamageCalc(f, 'ranged') },
   // Average weapon damage from the hit-damage formula (e.g. "1d8+4" → 8).
   melee_avg:    { sources: ['melee_damage'],  calc: f => diceAvg(f.melee_damage) },
   ranged_avg:   { sources: ['ranged_damage'], calc: f => diceAvg(f.ranged_damage) },
   // 13A 2e: a basic *melee* attack misses for damage equal to your level.
-  // Ranged miss damage stays manual — it's usually none, and the classes
-  // that do get it (or a different melee value) override via their module.
-  melee_miss:   { sources: ['level'], calc: f => {
-    const lvl = intOrNull(f.level);
-    return lvl === null ? '' : lvl;
-  }},
+  // A missed *ranged* attack usually does nothing at all — the classes
+  // where it does say so with `attacks.ranged.missDamage`.
+  melee_miss:   { sources: ['level'], calc: levelValue },
+  ranged_miss:  { sources: ['class', 'level'],
+                  calc: f => attackInfo(f, 'ranged').missDamage ? levelValue(f) : '' },
   // Defenses take their base from the class module. The *_mod sources are
   // themselves derived, but are defined above and so already fresh here.
   ac: { sources: ['class', 'level', 'con_mod', 'dex_mod', 'wis_mod'],
@@ -293,10 +466,7 @@ const DERIVED_FIELDS = {
   md: { sources: ['class', 'level', 'int_mod', 'wis_mod', 'cha_mod'],
         calc: f => defenseCalc(f, 'md', 'int_mod', 'wis_mod', 'cha_mod') },
   // 13A 2e: attunement limit equals character level.
-  max_magic: { sources: ['level'], calc: f => {
-    const lvl = intOrNull(f.level);
-    return lvl === null ? '' : lvl;
-  }},
+  max_magic: { sources: ['level'], calc: levelValue },
   // Healing potions, one entry per tier so that overriding the tier you
   // bought a potion of leaves the other two tracking your level.
   potions_adventurer: { sources: ['level'], calc: f => potionsAtLevel(f, 'adventurer') },
@@ -330,6 +500,7 @@ function recomputeDerived() {
   updateTierBadge();
   updateHpStatus();
   renderPotions();
+  updateAttackHints();
 }
 
 // Display-only tier label next to the character name.
@@ -2175,6 +2346,27 @@ function migrateTrigger(s) {
   });
 }
 
+// Attack bonus and hit damage were hand-typed before they were derived, so
+// a sheet saved back then would have its numbers recomputed out from under
+// it on the next load. The weapon die is the tell: a card that has a value
+// but no die predates the automation, so its fields are locked and the
+// sheet opens exactly as it was left. Typing the die and clicking the
+// padlock is how you opt in.
+const LEGACY_ATTACK_FIELDS = {
+  melee:  ['melee_damage', 'melee_vs_ac', 'melee_miss'],
+  ranged: ['ranged_damage', 'ranged_vs_ac_near', 'ranged_vs_ac_far', 'ranged_miss'],
+};
+function migrateAttackAutoCalc(s) {
+  if (!s || !s.fields) return;
+  if (!s.locks) s.locks = {};
+  Object.entries(LEGACY_ATTACK_FIELDS).forEach(([kind, keys]) => {
+    if (String(s.fields[kind + '_weapon_die'] || '').trim()) return;
+    keys.forEach(key => {
+      if (String(s.fields[key] || '').trim()) s.locks[key] = true;
+    });
+  });
+}
+
 function loadFromFile(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -2205,6 +2397,7 @@ function loadFromFile(event) {
       if (!state.theme) state.theme = 'necromancer';
       migrateUsage(state);
       migrateTrigger(state);
+      migrateAttackAutoCalc(state);
       normalizePrefs(state);
       applyState();
       autoSave();
@@ -2748,6 +2941,7 @@ try {
     if (!state.theme) state.theme = 'necromancer';
     migrateUsage(state);
     migrateTrigger(state);
+    migrateAttackAutoCalc(state);
     normalizePrefs(state);
   }
 } catch(e) {}
@@ -2828,6 +3022,7 @@ function applyInputModes() {
 // Init
 wireStaticHandlers();
 populateClassOptions();
+populateAbilityOptions();
 applyInputModes();
 initLocks();
 applyState();

@@ -55,6 +55,29 @@
     // (the necromancer). Omit it and the ×2 / ×4 above apply.
     // recoveryConScales: false,
 
+    // ── Basic attacks ──
+    // Only what this class does *differently*. Every basic attack in 13A 2e
+    // is the same sum — ability mod + level to hit, level × the weapon die
+    // + a scaling ability mod on a hit — and the sheet computes it for any
+    // class, including one whose file is missing. All that varies is which
+    // ability, and the defaults (Strength in melee, Dexterity at range) are
+    // right for most of the roster. Omit this key entirely unless:
+    //   ability: 'dex'          — this class uses another ability (rogue)
+    //   choice:  ['str','dex']  — the player picks; shown beside the
+    //                             dropdown, which starts on the first
+    //   note:    'Thrown …'     — a line under the card. For a rule the
+    //                             player applies by changing the dropdown,
+    //                             not something the sheet should do for them
+    //   missDamage: true         — a missed *ranged* attack still deals
+    //                             damage equal to your level (ranger, rogue)
+    // The dropdown is a derived field like any other, so whatever you set
+    // here is a starting point the player can override and the padlock
+    // gives back.
+    // attacks: {
+    //   melee:  { ability: 'dex' },
+    //   ranged: { note: 'Thrown weapons add Strength damage instead of Dexterity.' },
+    // },
+
     // ── UI injected into the sheet ──
     // Each slot maps to a `[data-class-slot]` host in the HTML:
     //   'attacks'      — extra attack cards in the Basic Attacks section

@@ -66,6 +66,13 @@
     // Recovery dice = one per level, + Con mod (×2 from 5th, ×4 from 8th).
     recoveryDie: 8,
 
+    // A rogue hits with Dexterity in melee, not Strength — and unlike most
+    // classes, a missed *ranged* attack still deals damage equal to level.
+    attacks: {
+      melee:  { ability: 'dex' },
+      ranged: { missDamage: true },
+    },
+
     slots: {
       'hp-side': buildBravadoPanel,
     },

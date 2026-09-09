@@ -11,6 +11,10 @@ registerClass('paladin', {
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 7,
 
+  // A thrown weapon is still a Dexterity attack — only the damage changes,
+  // so the note points at the Dmg dropdown rather than doing anything.
+  attacks: { ranged: { note: 'Thrown weapons add Strength damage instead of Dexterity.' } },
+
   // Recovery dice = one per level, + Con mod (×2 from 5th, ×4 from 8th).
   recoveryDie: 10,
 

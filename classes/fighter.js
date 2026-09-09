@@ -11,4 +11,8 @@ registerClass('fighter', {
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 7,
 
+  // A thrown weapon is still a Dexterity attack — only the damage changes,
+  // so the note points at the Dmg dropdown rather than doing anything.
+  attacks: { ranged: { note: 'Thrown weapons add Strength damage instead of Dexterity.' } },
+
 });

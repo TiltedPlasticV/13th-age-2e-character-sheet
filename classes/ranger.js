@@ -11,4 +11,13 @@ registerClass('ranger', {
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 7,
 
+  // A ranger picks Strength or Dexterity for melee attacks — the dropdown
+  // on the sheet starts on the first and remembers whichever you choose —
+  // and a missed ranged attack still deals damage equal to your level,
+  // which most classes don't get.
+  attacks: {
+    melee:  { choice: ['str', 'dex'] },
+    ranged: { missDamage: true },
+  },
+
 });
