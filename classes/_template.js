@@ -41,9 +41,36 @@
   registerClass('template', {
 
     // ── Base numbers (13th Age 2e) ──
-    // Base AC assumes the class's standard armor; a player in different
-    // armor just locks the AC field and types their own.
-    defenses: { ac: 10, pd: 10, md: 10 },
+    // PD and MD are flat class numbers. AC isn't: it is built from the gear
+    // row, off the armor table below.
+    defenses: { pd: 10, md: 10 },
+
+    // ── Armor table ──
+    // One entry per row of the class's printed armor table. The dropdown in
+    // Gear picks the row, Base AC follows it, and any `atk` is subtracted
+    // from every attack bonus on the sheet.
+    //   ac       BASE AC for that row. On `shield` it is only the
+    //            placeholder for the hand-typed Shield box — a magic shield
+    //            is worth more than the table's +1, so the sheet never
+    //            fills that number in for the player.
+    //   atk      the attack penalty. Omit it for a row that has none; a
+    //            class with no penalties anywhere (fighter, paladin) also
+    //            loses the No Armor Penalty switch, which would do nothing.
+    //            May be a function of the fields for a rule that depends on
+    //            the character — see the ranger's shield and the cleric's
+    //            heavy armor.
+    //   default  the row the dropdown starts on: the heaviest with no
+    //            penalty. May also be a function (the cleric's follows
+    //            their Armor-or-Vestments choice).
+    // Omit the whole key and Base AC stays blank and hand-typed, the way
+    // max HP does without a class.
+    armor: {
+      none:   { ac: 10 },
+      light:  { ac: 12 },
+      heavy:  { ac: 14, atk: -2 },
+      shield: { ac: 1, atk: -2 },
+      default: 'light',
+    },
     // max HP = (baseHp + Con mod) × level multiplier. Almost always 6 or 7.
     // Use null if you're unsure — max HP then stays blank and manual.
     baseHp: 7,
@@ -86,6 +113,7 @@
     // Each slot maps to a `[data-class-slot]` host in the HTML:
     //   'attacks'      — extra attack cards in the Basic Attacks section
     //   'recovery'     — beside the Recovery Dice field
+    //   'armor'        — beside the armor fields in Gear
     //   'hp-side'      — inline panel right of recoveries + skulls
     //   'skulls-under' — strip directly beneath the skull track
     //   'sections'     — whole extra sections, after Basic Attacks

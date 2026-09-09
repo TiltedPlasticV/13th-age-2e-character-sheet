@@ -845,6 +845,21 @@ textarea.field-block {
   gap: 6px 18px;
 }
 .gear-row .hp-item { min-width: 0; max-width: 100%; }
+/* Armor is a name plus a category, the same pairing as a weapon and its
+   damage die. Sized like the sheet's other dropdowns: room for the native
+   arrow, and wide enough for its longest label. */
+.gear-row select.field-inline.field-armor {
+  width: auto; padding-right: 16px; cursor: pointer;
+  font-size: var(--fs-sm);
+}
+.gear-row .class-switch { align-self: center; }
+/* Everything about armor stays on one line of its own: a zero-height item
+   spanning the row forces the wrap after it, whether or not the switch
+   before it is showing. The two row-gaps either side of it also set the
+   armor group a little apart from the weapons below — which is the point. */
+.row-break { flex-basis: 100%; height: 0; }
+/* Written `:not(:empty)` for the empty-slot invariant — see CLASS MODULES. */
+.gear-row > .class-slot:not(:empty) { display: flex; align-items: center; gap: 6px 18px; flex-wrap: wrap; }
 /* Every gear field except the two numeric boxes, which read better fixed,
    carries `.field-grow` — see the field-width utilities. */
 
@@ -1699,6 +1714,10 @@ body[data-theme="paladin"] {
 }
 .class-switch.on .class-switch-label { color: var(--highlight); }
 .class-switch:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+/* An author `display` beats the UA's `[hidden]` rule whatever the
+   specificity, so a switch that hides itself needs saying explicitly — the
+   armor penalty switch does, for classes that have no penalties. */
+.class-switch[hidden] { display: none; }
 
 /* Compact one-box use trackers inside a class panel */
 .class-track-row { display: flex; flex-wrap: wrap; gap: 5px 12px; align-items: center; }

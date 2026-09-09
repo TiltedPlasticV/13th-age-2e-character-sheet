@@ -192,7 +192,9 @@ function middleMod(a, b, c) {
   return [a, b, c].sort((x, y) => x - y)[1];
 }
 
-// Shared shape for AC/PD/MD: class base + middle of three mods + level.
+// Shared shape for PD and MD: class base + middle of three mods + level.
+// (AC parts company with them — it is built from the gear row instead, so
+// armor, a shield and a magic bonus can each be seen and edited.)
 // Returns '' (blank, stays editable) when the class is unknown, or when
 // there's nothing to compute from yet (no level and no relevant mods).
 function defenseCalc(f, defenseKey, modA, modB, modC) {
@@ -272,6 +274,95 @@ function potionSummary() {
     .filter(Boolean).join(', ');
 }
 
+// ── ARMOR ─────────────────────────────────────────────────────────────
+// Each class has its own armor table — the same three rows, different
+// numbers, and different attack penalties for wearing more than the class
+// is trained for. It lives in the class module as `armor`, one entry per
+// printed row, so a class file carries its table exactly as the book
+// prints it:
+//
+//   armor: {
+//     none:   { ac: 10 },
+//     light:  { ac: 13 },
+//     heavy:  { ac: 14, atk: -2 },
+//     shield: { ac: 1, atk: -2 },   // `ac` is only the field's placeholder
+//     default: 'light',             // the heaviest row with no penalty
+//   }
+//
+// The Shield box stays hand-typed — a magic shield is worth more than the
+// table's +1 — so the shield row contributes its penalty and a hint, not a
+// value. `atk` may be a function of the fields for a rule that depends on
+// the character (the ranger's shield, the cleric's heavy armor), and
+// `default` may be too (the cleric's, which follows their focus).
+//
+// Without a table — no class picked, or its file missing — Base AC stays
+// blank and hand-typed, exactly as max HP and recovery dice do.
+const ARMOR_ROWS = [
+  { key: 'none',  label: 'None' },
+  { key: 'light', label: 'Light' },
+  { key: 'heavy', label: 'Heavy' },
+];
+const ARMOR_KEYS = ARMOR_ROWS.map(r => r.key);
+
+function armorTable(f) {
+  const ci = getClassInfo(f.class);
+  return (ci && ci.armor) || null;
+}
+// A table value that may be a plain number or a rule about the character.
+function armorValue(v, f) {
+  if (typeof v === 'function') return v(f) || 0;
+  return v || 0;
+}
+// Which row the dropdown starts on: the class's heaviest penalty-free
+// armor. '' when the class is unknown, which leaves the field blank.
+function armorDefaultRow(f) {
+  const t = armorTable(f);
+  if (!t) return '';
+  const row = typeof t.default === 'function' ? t.default(f) : t.default;
+  return ARMOR_KEYS.includes(row) ? row : '';
+}
+function baseAcCalc(f) {
+  const t = armorTable(f);
+  const row = t && t[f.armor_type];
+  return row && row.ac != null ? row.ac : '';
+}
+
+// AC = base + shield + misc + the middle of Con/Dex/Wis + level. Base AC is
+// itself derived and lockable, so a player in something the table doesn't
+// cover locks that one box and the rest of the sum still works.
+function acCalc(f) {
+  const base = intOrNull(f.base_ac);
+  if (base === null) return '';
+  const mid = middleMod(intOrZero(f.con_mod), intOrZero(f.dex_mod), intOrZero(f.wis_mod));
+  return base + intOrZero(f.shield) + intOrZero(f.ac_misc) + mid + intOrZero(f.level);
+}
+
+// Wearing more armor than the class is trained for costs attack rolls, and
+// so does a shield for most classes. Talents undo this often enough — and
+// in ways too varied to encode (the druid's especially) — that one switch
+// turns the whole thing off.
+const ARMOR_NO_PENALTY = 'armor_no_penalty';
+function armorPenaltyWaived() { return !!state.checkboxes[ARMOR_NO_PENALTY]; }
+
+function armorAtkPenalty(f) {
+  if (armorPenaltyWaived()) return 0;
+  const t = armorTable(f);
+  if (!t) return 0;
+  const worn = t[f.armor_type];
+  let pen = worn ? armorValue(worn.atk, f) : 0;
+  // A shield you aren't carrying costs nothing; any value in the box means
+  // you are carrying one.
+  if (t.shield && intOrZero(f.shield) !== 0) pen += armorValue(t.shield.atk, f);
+  return pen;
+}
+// Whether this class can be penalised at all. Fighters and paladins can't,
+// so they never see the switch that turns penalties off.
+function armorHasPenalties(f) {
+  const t = armorTable(f);
+  if (!t) return false;
+  return ARMOR_KEYS.concat('shield').some(k => t[k] && t[k].atk !== undefined);
+}
+
 // ── BASIC ATTACKS ─────────────────────────────────────────────────────
 // Every class's basic attack is the same shape in 13A 2e — an ability mod
 // + level to hit, and level × the weapon's die + a scaling ability bonus
@@ -337,7 +428,7 @@ function attackBonusCalc(f, kind) {
   const lvl = intOrNull(f.level);
   if (lvl === null) return '';
   return signed(abilityModValue(f, f[kind + '_atk_ability'])
-              + lvl + intOrZero(f[kind + '_atk_misc']));
+              + lvl + intOrZero(f[kind + '_atk_misc']) + armorAtkPenalty(f));
 }
 
 // Hit damage: level × the weapon die, + the scaled ability mod. Blank
@@ -373,6 +464,10 @@ function attackWorking(f, kind, half) {
     if (s.flat) parts.push(String(s.flat));
   }
   if (misc) parts.push('misc ' + signed(misc));
+  if (half === 'atk') {
+    const armor = armorAtkPenalty(f);
+    if (armor) parts.push('armor ' + signed(armor));
+  }
   return parts.join(' + ');
 }
 
@@ -403,6 +498,39 @@ function populateAbilityOptions() {
   document.querySelectorAll('select[data-field$="_ability"]').forEach(sel => {
     ABILITIES.forEach(a => sel.appendChild(el('option', { value: a.key }, a.label)));
   });
+}
+
+function populateArmorOptions() {
+  const sel = document.querySelector('select[data-field="armor_type"]');
+  if (!sel) return;
+  ARMOR_ROWS.forEach(r => sel.appendChild(el('option', { value: r.key }, r.label)));
+}
+
+// The gear row's two class-dependent details: the switch only exists for a
+// class that can be penalised, and the Shield box hints at what the table
+// says a plain shield is worth.
+function updateArmorUi() {
+  const sw = document.getElementById('armor-no-penalty');
+  if (sw) {
+    const show = armorHasPenalties(state.fields);
+    sw.hidden = !show;
+    sw.classList.toggle('on', show && armorPenaltyWaived());
+    sw.setAttribute('aria-checked', show && armorPenaltyWaived() ? 'true' : 'false');
+  }
+  const shield = document.querySelector('[data-field="shield"]');
+  if (shield) {
+    const t = armorTable(state.fields);
+    const hint = t && t.shield && t.shield.ac != null ? t.shield.ac : null;
+    shield.placeholder = hint === null ? '' : signed(hint);
+  }
+}
+
+function toggleArmorPenalty() {
+  if (armorPenaltyWaived()) delete state.checkboxes[ARMOR_NO_PENALTY];
+  else state.checkboxes[ARMOR_NO_PENALTY] = true;
+  logAction('Armor attack penalty', armorPenaltyWaived() ? 'ignored' : 'applied');
+  recomputeDerived();
+  saveNow();
 }
 
 // Order matters: dependents come after their sources so one pass resolves
@@ -436,6 +564,12 @@ const DERIVED_FIELDS = {
   // Before recovery_avg, so the average sees the fresh expression.
   recovery_dice: { sources: ['class', 'level', 'con_mod'], calc: f => recoveryDiceCalc(f) },
   recovery_avg: { sources: ['recovery_dice'], calc: f => recoveryAvg(f.recovery_dice) },
+  // ── Armor ──
+  // Before the attack entries below: the penalty for what you're wearing is
+  // part of every attack bonus on the sheet.
+  armor_type: { sources: ['class'], calc: armorDefaultRow },
+  base_ac:    { sources: ['class', 'armor_type'], calc: baseAcCalc },
+
   // ── Basic attacks ──
   // The ability dropdowns come first: everything below reads them, and the
   // damage half mirrors the attack half until the player says otherwise —
@@ -469,10 +603,12 @@ const DERIVED_FIELDS = {
   melee_miss:   { sources: ['level'], calc: levelValue },
   ranged_miss:  { sources: ['class', 'level'],
                   calc: f => attackInfo(f, 'ranged').missDamage ? levelValue(f) : '' },
-  // Defenses take their base from the class module. The *_mod sources are
-  // themselves derived, but are defined above and so already fresh here.
-  ac: { sources: ['class', 'level', 'con_mod', 'dex_mod', 'wis_mod'],
-        calc: f => defenseCalc(f, 'ac', 'con_mod', 'dex_mod', 'wis_mod') },
+  // AC is the one defense that comes off the gear row rather than a flat
+  // class number — see acCalc. PD and MD take their base from the class
+  // module. The *_mod sources are themselves derived, but are defined above
+  // and so already fresh here.
+  ac: { sources: ['base_ac', 'shield', 'ac_misc', 'level', 'con_mod', 'dex_mod', 'wis_mod'],
+        calc: acCalc },
   pd: { sources: ['class', 'level', 'str_mod', 'con_mod', 'dex_mod'],
         calc: f => defenseCalc(f, 'pd', 'str_mod', 'con_mod', 'dex_mod') },
   md: { sources: ['class', 'level', 'int_mod', 'wis_mod', 'cha_mod'],
@@ -513,6 +649,7 @@ function recomputeDerived() {
   updateHpStatus();
   renderPotions();
   updateAttackHints();
+  updateArmorUi();
 }
 
 // Display-only tier label next to the character name.
@@ -2102,6 +2239,7 @@ function renderAdvances() {
 //               matching `[data-class-slot]` host. Slots today:
 //                 'attacks'      — extra cards in the Basic Attacks section
 //                 'recovery'     — beside the Recovery Dice field
+//                 'armor'        — beside the armor fields in Gear
 //                 'hp-side'      — inline panel right of recoveries + skulls
 //                 'skulls-under' — strip directly beneath the skull track
 //                 'sections'     — whole extra sections after Basic Attacks
@@ -2125,7 +2263,7 @@ function renderAdvances() {
 // reads inputs currently on screen — so an unmounted one can't be blanked.
 // Everything else goes in state.classData[<class>] via classData(). Both
 // save with `state`; only a deliberate "New Sheet" clears them.
-const CLASS_SLOTS = ['attacks', 'recovery', 'hp-side', 'skulls-under', 'sections'];
+const CLASS_SLOTS = ['attacks', 'recovery', 'armor', 'hp-side', 'skulls-under', 'sections'];
 const CLASS_DIR = 'classes/';
 
 // Populated by registerClass() as class files load; empty at startup.
@@ -2380,6 +2518,37 @@ function migrateAttackAutoCalc(s) {
   });
 }
 
+// Armor was a free-text box and Base AC a number you typed; both are now
+// driven by the class's armor table. Two things to preserve, both keyed off
+// the same tell — an `armor_type` that isn't one of the three rows means the
+// sheet predates the dropdown:
+//   • whatever was typed for armor moves to the name field beside it, and
+//     becomes a locked category when the word is recognisable;
+//   • a hand-typed Base AC is locked, so it isn't recomputed away.
+const ARMOR_WORDS = [
+  [/plate|chain|scale|banded|splint|brigandine|heavy/i, 'heavy'],
+  [/leather|hide|padded|studded|light/i,                'light'],
+  [/none|naked|unarmou?red|no armou?r/i,                'none'],
+];
+function migrateArmorType(s) {
+  if (!s || !s.fields) return;
+  if (!s.locks) s.locks = {};
+  const typed = String(s.fields.armor_type || '').trim();
+  if (ARMOR_KEYS.includes(typed)) return;   // already a category
+  if (String(s.fields.base_ac || '').trim()) s.locks.base_ac = true;
+  if (!typed) return;
+  if (!String(s.fields.armor_name || '').trim()) s.fields.armor_name = typed;
+  const hit = ARMOR_WORDS.find(([re]) => re.test(typed));
+  if (hit) {
+    s.fields.armor_type = hit[1];
+    s.locks.armor_type = true;
+  } else {
+    // Unrecognisable: the name is kept, the category falls back to the
+    // class default rather than guessing.
+    delete s.fields.armor_type;
+  }
+}
+
 function loadFromFile(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -2411,6 +2580,7 @@ function loadFromFile(event) {
       migrateUsage(state);
       migrateTrigger(state);
       migrateAttackAutoCalc(state);
+      migrateArmorType(state);
       normalizePrefs(state);
       applyState();
       autoSave();
@@ -2955,6 +3125,7 @@ try {
     migrateUsage(state);
     migrateTrigger(state);
     migrateAttackAutoCalc(state);
+    migrateArmorType(state);
     normalizePrefs(state);
   }
 } catch(e) {}
@@ -3005,6 +3176,8 @@ function wireStaticHandlers() {
     const sw = document.getElementById(cfg.id);
     if (sw) sw.addEventListener('click', () => togglePref(key));
   });
+  const armorSwitch = document.getElementById('armor-no-penalty');
+  if (armorSwitch) armorSwitch.addEventListener('click', toggleArmorPenalty);
   document.getElementById('theme-select').addEventListener('change', e => setTheme(e.target.value));
   document.getElementById('btn-save').addEventListener('click', saveToFile);
   document.getElementById('btn-load').addEventListener('click', () => document.getElementById('load-input').click());
@@ -3036,6 +3209,7 @@ function applyInputModes() {
 wireStaticHandlers();
 populateClassOptions();
 populateAbilityOptions();
+populateArmorOptions();
 applyInputModes();
 initLocks();
 applyState();

@@ -1,12 +1,21 @@
 // ── FIGHTER — 13th Age 2e ──
-// Base numbers and basic attacks. Anything else about the class — an
-// inline panel, whole new sections, auto-calculated fields, rest hooks —
-// can be added right here. See _template.js for the full module API.
+// Base numbers, armor table and basic attacks. Anything else about the
+// class — an inline panel, whole new sections, auto-calculated fields, rest
+// hooks — can be added right here. See _template.js for the module API.
 registerClass('fighter', {
 
-  // Base AC assumes the class's standard armor. In different armor, lock
-  // the AC field on the sheet and type your own; the lock is preserved.
-  defenses: { ac: 15, pd: 10, md: 10 },
+  // AC comes from the armor table below; these two are flat.
+  defenses: { pd: 10, md: 10 },
+
+  // BASE AC by armor type, and the attack penalty each carries. The
+  // shield `ac` is only the placeholder on the hand-typed Shield box.
+  armor: {
+    none:   { ac: 10 },
+    light:  { ac: 13 },
+    heavy:  { ac: 15 },
+    shield: { ac: 1 },
+    default: 'heavy',
+  },
 
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 7,

@@ -49,7 +49,9 @@
         el('div', { class: 'attack-stats' },
           el('span', { class: 'attack-label' }, 'Hit Dmg'),
           el('input', {
-            class: 'field-inline', 'data-field': p + '_damage',
+            // `field-grow` for the same reason the basic attack cards have
+            // it: at epic tier the expression runs to "10d12+31".
+            class: 'field-inline field-grow', 'data-field': p + '_damage',
             placeholder: '1d8+4', 'aria-label': cfg.title + ' hit damage'
           }),
           el('button', {
@@ -296,7 +298,19 @@
   // ── Registration ────────────────────────────────────────────────────
 
   registerClass('barbarian', {
-    defenses: { ac: 12, pd: 11, md: 10 },
+    // AC comes from the armor table below; these two are flat.
+    defenses: { pd: 11, md: 10 },
+
+    // BASE AC by armor type, and the attack penalty each carries. The
+    // shield `ac` is only the placeholder on the hand-typed Shield box.
+    armor: {
+      none:   { ac: 11 },
+      light:  { ac: 12 },
+      heavy:  { ac: 13, atk: -2 },
+      shield: { ac: 1 },
+      default: 'light',
+    },
+
     baseHp: 7,
     // Recovery dice = one per level, + Con mod, scaled by tier.
     recoveryDie: 12,

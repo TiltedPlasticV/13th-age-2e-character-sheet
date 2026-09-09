@@ -328,9 +328,17 @@
     <div class="section-head"><span class="icon">🎒</span> Gear & Equipment</div>
     <div class="section-body gear-grid">
       <div class="gear-row">
-        <div class="hp-item"><span class="hp-label">Armor</span><input class="field-inline field-grow" data-field="armor_type" placeholder="None" aria-label="Armor type"></div>
+        <div class="hp-item"><span class="hp-label">Armor</span><input class="field-inline field-grow" data-field="armor_name" placeholder="Chainmail" aria-label="Armor name"><select class="field-inline field-armor" data-field="armor_type" aria-label="Armor type" title="Your class's armor table sets Base AC from this, and any attack penalty it carries"></select></div>
         <div class="hp-item"><span class="hp-label">Base AC</span><input class="field-inline field-sm" data-field="base_ac" aria-label="Base AC"></div>
-        <div class="hp-item"><span class="hp-label">Shield</span><input class="field-inline field-sm" data-field="shield" aria-label="Shield bonus"></div>
+        <div class="hp-item"><span class="hp-label">Shield</span><input class="field-inline field-sm" data-field="shield" aria-label="Shield bonus" title="What your shield adds to AC — the table's usual +1, or more for a magic one. Leave it empty if you carry none."></div>
+        <div class="hp-item"><span class="hp-label">Misc</span><input class="field-inline field-sm" data-field="ac_misc" placeholder="±" aria-label="Miscellaneous AC bonus" title="Anything else on your AC — magic armor, a talent"></div>
+        <div class="class-slot" data-class-slot="armor"></div>
+        <div class="class-switch" id="armor-no-penalty" role="switch" tabindex="0" aria-checked="false" hidden
+             title="Talents can excuse a class from its armor and shield attack penalties. Turn this on and neither is applied.">
+          <span class="class-switch-label">No Armor Penalty</span>
+          <span class="class-switch-track"><span class="class-switch-knob"></span></span>
+        </div>
+        <div class="row-break" aria-hidden="true"></div>
         <div class="hp-item"><span class="hp-label">Melee</span><input class="field-inline field-grow" data-field="gear_melee" placeholder="Weapon" aria-label="Melee weapon gear"></div>
         <div class="hp-item"><span class="hp-label">Ranged</span><input class="field-inline field-grow" data-field="gear_ranged" placeholder="Weapon" aria-label="Ranged weapon gear"></div>
         <div class="hp-item"><span class="hp-label">Gold</span><input class="field-inline field-grow" data-field="gold" aria-label="Gold"></div>

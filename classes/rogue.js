@@ -57,9 +57,18 @@
 
   registerClass('rogue', {
 
-    // Base AC assumes the class's standard armor. In different armor, lock
-    // the AC field on the sheet and type your own; the lock is preserved.
-    defenses: { ac: 12, pd: 12, md: 10 },
+    // AC comes from the armor table below; these two are flat.
+    defenses: { pd: 12, md: 10 },
+
+    // BASE AC by armor type, and the attack penalty each carries. The
+    // shield `ac` is only the placeholder on the hand-typed Shield box.
+    armor: {
+      none:   { ac: 11 },
+      light:  { ac: 12 },
+      heavy:  { ac: 13, atk: -2 },
+      shield: { ac: 1, atk: -2 },
+      default: 'light',
+    },
 
     // max HP = (baseHp + Con mod) × level multiplier.
     baseHp: 6,
