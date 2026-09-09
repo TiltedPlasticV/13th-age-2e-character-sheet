@@ -6,7 +6,7 @@ registerClass('fighter', {
 
   // Base AC assumes the class's standard armor. In different armor, lock
   // the AC field on the sheet and type your own; the lock is preserved.
-  defenses: { ac: 15, pd: 12, md: 10 },
+  defenses: { ac: 15, pd: 10, md: 10 },
 
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 7,

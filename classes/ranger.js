@@ -6,7 +6,7 @@ registerClass('ranger', {
 
   // Base AC assumes the class's standard armor. In different armor, lock
   // the AC field on the sheet and type your own; the lock is preserved.
-  defenses: { ac: 14, pd: 11, md: 10 },
+  defenses: { ac: 13, pd: 11, md: 10 },
 
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 7,

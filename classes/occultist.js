@@ -6,7 +6,7 @@ registerClass('occultist', {
 
   // Base AC assumes the class's standard armor. In different armor, lock
   // the AC field on the sheet and type your own; the lock is preserved.
-  defenses: { ac: 10, pd: 10, md: 12 },
+  defenses: { ac: 11, pd: 10, md: 11 },
 
   // max HP = (baseHp + Con mod) × level multiplier.
   baseHp: 6,
