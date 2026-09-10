@@ -1,26 +1,19 @@
 // ═══════════════════════════════════════════════════════════════════════
 //  BARD — 13th Age 2e
-//  Base numbers, and the Strength-or-Dexterity choice that sets both the
-//  melee attack ability and the recovery die.
 //  See _template.js for the module API.
 // ═══════════════════════════════════════════════════════════════════════
 (function () {
 
-  // ── Recovery die ────────────────────────────────────────────────────
-  // A bard alone among the classes doesn't have one: it's d8 for a bard
-  // who fights with Strength, d6 for one who fights with Dexterity.
-  //
-  // That reads off the same decision as the melee attack dropdown, but it
-  // is deliberately *not* wired to it. Silently changing how much a bard
-  // heals because they retyped an attack field would be a surprise, and
-  // the choice is a build decision made once — so it gets a control of its
-  // own, sitting beside the dice it decides.
+  // A bard alone has no fixed recovery die: d8 fighting with Strength, d6 with
+  // Dexterity. That is the same decision the melee attack dropdown records, but
+  // it deliberately gets a control of its own — quietly changing how much a
+  // bard heals because they retyped an attack field would be a nasty surprise.
   const BARD_DIE = { str: 8, dex: 6 };
 
   // A plain field, not a derived one: there is no calculated value to hand
-  // back, only which of the two the player picked. Seeding the default
-  // here — the builder runs before renderClassContent syncs values out of
-  // state.fields — is what puts Strength in the box the first time.
+  // back, only which of the two the player picked. The default is seeded here
+  // because the builder runs before renderClassContent syncs values out of
+  // state.fields.
   function buildRecoveryChoice() {
     if (!state.fields.bard_recovery_ability) state.fields.bard_recovery_ability = 'str';
     return el('div', { class: 'hp-item bard-die' },
@@ -40,11 +33,8 @@
 
   registerClass('bard', {
 
-    // AC comes from the armor table below; these two are flat.
     defenses: { pd: 10, md: 11 },
 
-    // BASE AC by armor type, and the attack penalty each carries. The
-    // shield `ac` is only the placeholder on the hand-typed Shield box.
     armor: {
       none:   { ac: 10 },
       light:  { ac: 12 },
@@ -53,14 +43,11 @@
       default: 'light',
     },
 
-    // max HP = (baseHp + Con mod) × level multiplier.
     baseHp: 7,
 
-    // No `recoveryDie`: the derived entry below replaces the calculation
-    // that would have read it.
+    // No `recoveryDie`: the derived entry below replaces the calculation that
+    // would have read it.
 
-    // A bard picks Strength or Dexterity for melee attacks. The dropdown on
-    // the sheet starts on the first and remembers whichever you choose.
     attacks: { melee: { choice: ['str', 'dex'] } },
 
     slots: {
@@ -68,9 +55,9 @@
     },
 
     derived: {
-      // Same formula every class uses — one die per level plus the scaled
-      // Con mod — with the die coming from the dropdown instead of from a
-      // constant. The extra source is what makes changing it recompute.
+      // The formula every class uses, with the die coming from the dropdown
+      // instead of a constant. Listing it as a source is what makes changing
+      // the dropdown recompute.
       recovery_dice: {
         sources: ['class', 'level', 'con_mod', 'bard_recovery_ability'],
         calc: f => recoveryDiceFor(f, BARD_DIE[f.bard_recovery_ability] || BARD_DIE.str),
@@ -78,9 +65,8 @@
     },
 
     css: `
-      /* Sized like the other dropdowns on the sheet: room for the native
-         arrow, and wide enough for "Dexterity — d6" rather than stretched
-         across the row. */
+      /* Sized like the sheet's other dropdowns: room for the native arrow, and
+         wide enough for its longest label. */
       select.field-inline.bard-die-select {
         width: auto; padding-right: 16px; cursor: pointer;
         font-size: var(--fs-sm);

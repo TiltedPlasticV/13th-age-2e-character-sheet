@@ -342,11 +342,10 @@
    TYPOGRAPHIC SCALE — edit these to resize
    all text of a given size in one place
    ═══════════════════════════════════════════ */
-/* One token per step, named for how big it is and nothing else. A size gets
-   reused by whatever happens to want it, so naming a step after the first
-   thing that asked for it ("--fs-field", "--fs-tag") only ever described one
-   of its callers — and left the dense overlays with no name to ask for at
-   all. The ladder runs 4xs → 4xl with no gaps; --fs-xl is the body text. */
+/* One token per step, named for how big it is and nothing else: a step named
+   after whatever first asked for it ("--fs-field", "--fs-tag") only ever
+   described one of its callers. The ladder runs 4xs → 4xl with no gaps;
+   --fs-xl is the body text. */
 :root {
   --fs-4xs:  9px;
   --fs-3xs: 10px;
@@ -446,12 +445,9 @@ body {
   margin-bottom: 6px;
 }
 
-/* Grows with the name instead of clipping at a fixed width — the centre
-   track is `auto`, so the two `1fr` sides give way evenly and the name stays
-   centred. `min-width` must be a flat length: a percentage would resolve
-   against a track sized from this very input and collapse to the content
-   width. `max-width: 100%` keeps a long name from shoving the tier badge
-   off the row. */
+/* Grows with the name instead of clipping. `min-width` must be a flat length:
+   a percentage would resolve against a track sized from this very input and
+   collapse to the content width. */
 .char-name-row .field-inline {
   grid-column: 2;
   justify-self: center;
@@ -611,11 +607,9 @@ textarea.field-block:focus {
 .field-inline { display: inline-block; min-width: 20px; }
 
 /* A dropdown's open list is drawn on the browser's own surface, not on the
-   card behind the control. `--field-bg` is a translucent tint that only
-   reads as dark because the card composites behind it — over the popup's
-   light backdrop it stays light, and the field's pale text (--accent-glow
-   on usage, --highlight on class) disappears into it. So the options get
-   opaque theme colours of their own rather than inheriting the tint. */
+   card behind the control — so `--field-bg`, a translucent tint that only
+   reads as dark because the card composites behind it, leaves the field's
+   pale text invisible over the popup's light backdrop. Opaque colours here. */
 select option {
   background: var(--bg-card);
   color: var(--ink);
@@ -671,12 +665,6 @@ textarea.field-block {
   font-weight: 700; color: var(--highlight); width: 48px; text-align: center;
 }
 
-/* ── HP SECTION ── */
-.hp-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-}
-
 /* ── SIDE-BY-SIDE SECTION COMBO (e.g. ability scores + defenses) ── */
 .combo-row {
   display: grid; grid-template-columns: 3fr 2fr;
@@ -712,17 +700,19 @@ textarea.field-block {
   position: absolute; bottom: 4px; right: 2px;
 }
 
-/* ── COMPACT LIST GRIDS (backgrounds / icons / feats wrap multi-column) ──
+/* ── COMPACT LIST GRIDS (backgrounds / feats wrap multi-column) ──
    Wrapping flex rather than grid, so a row sizes to its content: with
    `field-sizing: content` on the name inputs a long entry widens its own row
    and pushes the next onto a new line. `min(100%, Npx)` lets the rows drop
-   to a single column on narrow screens. */
+   to a single column on narrow screens.
+
+   Icons used to be one of these. They are a subgrid table now — see ICON
+   RELATIONSHIPS — so nothing here touches them. */
 #backgrounds-list,
 #feats-list {
   display: flex; flex-wrap: wrap;
   gap: 6px 18px;
 }
-#icons-list { display: block; }
 #backgrounds-list .row {
   flex: 1 1 auto;
   min-width: min(100%, 220px);
@@ -736,8 +726,7 @@ textarea.field-block {
   min-width: min(100%, 260px);
 }
 #backgrounds-list .row,
-#feats-list .row,
-#icons-list .icon-rel-row {
+#feats-list .row {
   border-bottom: none;
 }
 /* Auto-grow the name inputs to fit their text. Unsupported in Firefox, where
@@ -891,9 +880,9 @@ textarea.field-block {
   filter: drop-shadow(0 0 4px var(--accent));
 }
 /* Sequential tracker (see applySequentialState): only the boundary boxes are
-   clickable. Disabled-unchecked goes fainter than plain unchecked so the one
-   "next available" skull stands out; disabled-checked stays fully visible —
-   it's clicking that's blocked, not reading. */
+   clickable. Disabled-unchecked goes fainter so the "next available" skull
+   stands out; disabled-checked stays visible — it's clicking that's blocked,
+   not reading. */
 .skull-box.disabled { cursor: not-allowed; }
 .skull-box.disabled:not(.checked) { opacity: 0.08; }
 .skull-box.disabled:not(.checked):hover { opacity: 0.08; }
@@ -1124,10 +1113,9 @@ textarea.field-block {
 
 /* ── ICON RELATIONSHIPS ──
    One grid owns the column tracks; header and rows take `subgrid`, so every
-   column sizes to the widest cell in the whole table. Widths then adapt to
-   each theme's font metrics with no hard-coded pixels, and the headers stay
-   aligned with their data. `#icons-list` is `display: contents` so the rows
-   renderIcons() appends inside it still join the parent grid. */
+   column sizes to the widest cell in the table and adapts to each theme's
+   font metrics with no hard-coded pixels. `#icons-list` is `display: contents`
+   so the rows renderIcons() appends still join the parent grid. */
 .icon-rel-grid {
   display: grid;
   /* The icon column is `minmax(0, 1fr)`: it takes the leftover space but can
@@ -1155,11 +1143,11 @@ textarea.field-block {
 /* Inline the arc-refresh glyph after "Available"/"Used" instead of letting
    its default display: flex break onto its own line. */
 .icon-rel-header .track-annotation { display: inline; font-size: inherit; }
+/* No hairline between rows: the header keeps its rule, and the columns are
+   aligned tightly enough by the subgrid that separators only add noise. */
 .icon-rel-row {
   padding: 2px 0;
-  border-bottom: 1px solid var(--hairline);
 }
-.icon-rel-row:last-child { border-bottom: none; }
 .icon-rel-row .field-inline { text-align: center; }
 /* Constrain the input UA defaults so they don't inflate auto columns. */
 .icon-rel-row > input.icon-dice,
@@ -1368,12 +1356,10 @@ textarea.field-block {
    ═══════════════════════════════════════════ */
 
 /* ── ANIMATION-ONLY OVERLAYS ──
-   Animation can be switched off (Utilities, or the OS reduce-motion
-   setting), and stopping one removes nothing: the element stays where its
-   base rule puts it, parking a sweep across the middle of every box. So an
-   overlay that exists *only* to carry an animation declares `opacity: 0`
-   and lets its own keyframes bring it in — off then means invisible, with
-   nothing needing to know which themes have one. Overlays that are static
+   Stopping an animation removes nothing: the element stays where its base
+   rule puts it, parking a sweep across the middle of every box. So an overlay
+   that exists *only* to carry an animation declares `opacity: 0` and lets its
+   keyframes bring it in — off then means invisible. Overlays that are static
    decoration (necromancer's torn edges, fighter's hairline) don't. */
 
 /* ── NECROMANCER — toxic glow, torn parchment edges, decay ── */
@@ -1549,11 +1535,10 @@ body[data-theme="paladin"] {
   background: linear-gradient(90deg, rgba(168, 200, 255, 0.10) 0%, var(--bg-card) 40%, var(--bg-card) 60%, rgba(255, 200, 64, 0.08) 100%);
 }
 
-/* ── LIGHT / DARK — no effects by design. The only rules here give the
-   sections a card of their own (elsewhere a section body sits straight on
-   the page ground, which needs the ground to be dark to read as depth), and
-   fix the two places where the shared stylesheet paints --bone text on a
-   background these palettes make the same tone. ── */
+/* ── LIGHT / DARK — no effects by design. These give the sections a card of
+   their own (elsewhere a section body sits on the page ground, which needs to
+   be dark to read as depth), and fix the two places where the shared
+   stylesheet paints --bone text on a background of the same tone. ── */
 [data-theme="light"] .section,
 [data-theme="dark"] .section {
   background: var(--bg-card);
@@ -1581,13 +1566,10 @@ body[data-theme="paladin"] {
 }
 
 /* ── UTILITY CLASSES ──
-   Compound `.field-inline.field-XX` and placement after every context rule
-   (`.hp-item .field-inline` and friends) means these always win on width.
-
-   `.note` is the one style for every small explanatory line on the sheet —
-   class-panel reminders, attack footnotes, the Backgrounds hint. `.note-row`
-   adds inline layout for notes sitting alongside small controls; an input
-   inside one inherits the smaller font-size. */
+   Compound `.field-inline.field-XX`, placed after every context rule, means
+   these always win on width. `.note` is the one style for every small
+   explanatory line on the sheet; `.note-row` adds inline layout for notes
+   sitting alongside small controls. */
 .note {
   font-size: 12px;
   line-height: 1.35;
@@ -1618,7 +1600,6 @@ body[data-theme="paladin"] {
 }
 .attack-stats .field-inline.field-grow { min-width: 70px; }
 .gear-row .field-inline.field-grow { min-width: 90px; text-align: left; }
-.field-inline.field-tiny { font-size: 10px; text-align: center; }
 
 /* ── HP STATUS BADGE (staggered / down / dead) ── */
 .hp-status-badge {
@@ -1853,10 +1834,8 @@ body.no-dice .dice-action { display: none; }
 /* ── BATTLE HELPER (right-hand overlay panel) ──
    A Utilities switch turns the whole module off, and when off the panel is
    gone rather than tucked away — nothing is torn down in JS, so switching it
-   back restores it with the open/collapsed state it had. The rail keeps its
-   place when the body collapses, so the control never moves out from under
-   the cursor. The widths stay variables because the narrow-screen rule
-   below rewrites them at the root. */
+   back restores the state it had. The widths stay variables because the
+   narrow-screen rule below rewrites them at the root. */
 :root { --bh-width: 320px; --bh-rail: 30px; }
 
 .battle-helper {
@@ -1874,14 +1853,10 @@ body.no-dice .dice-action { display: none; }
 .battle-helper.collapsed { transform: translateX(calc(var(--bh-width) - var(--bh-rail))); }
 body.no-battle-helper .battle-helper { display: none; }
 
-/* The rail is fixed over the right edge of the page, so wherever the sheet
-   reaches that edge — a phone, or just a window not much wider than the
-   container — it sits on top of the content and hides it. Reserve its strip
-   on the body instead and the sheet compresses to the left of it.
-   Deliberately tied to the module being on, not to the panel being open:
-   keying it to `open` would recentre the whole sheet on every toggle, and an
-   expanded panel is *meant* to sit over the sheet — you opened it to read
-   it, and it closes again. */
+/* Wherever the sheet reaches the right edge the fixed rail would sit on top
+   of it, so reserve its strip on the body and the sheet compresses to the
+   left. Tied to the module being on, not to the panel being open: keying it
+   to `open` would recentre the whole sheet on every toggle. */
 body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 
 .bh-rail {
@@ -2019,21 +1994,20 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 /* Turn structure: plain `.note` lines with a bold lead-in, the same shape
    the class panels use for a rules reminder. Only the spacing and the
    numbered list need saying. */
-/* `.note` is the sheet's shared small-print primitive, so it isn't touched
-   globally — but the panel is read at arm's length off a phone, and one
-   step up is the difference between skimming it and squinting at it. */
+/* `.note` is shared, so it isn't touched globally — but the panel is read at
+   arm's length, where one step up is the difference between skimming and
+   squinting. */
 .bh-body .note { font-size: var(--fs-md); }
 
 .bh-turn > * + * { margin-top: 4px; }
 .bh-turn-steps { margin: 0; padding-left: 17px; }
 .bh-turn-steps li { margin-top: 2px; }
 
-/* Where a battle-helper row points, for a moment after it is clicked.
-   The outline is *static*, with the fade laid over it: the reduced-motion
-   rules kill every animation with !important, so a highlight that existed
-   only as a keyframe would be invisible to exactly the people who most need
-   the sheet to be legible. The class is removed on a timer in JS, never on
-   animationend, for the same reason.
+/* Where a battle-helper row points, for a moment after it is clicked. The
+   outline is *static*, with the fade laid over it: the reduced-motion rules
+   kill every animation with !important, so a highlight that existed only as a
+   keyframe would be invisible to the people who most need it. The class is
+   removed on a JS timer, never on animationend, for the same reason.
 
    One rule covers every kind of target — a power block, a class panel, an
    attack card, a whole section — because an outline needs no layout and
@@ -2174,14 +2148,8 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 }
 
 /* ── REDUCED MOTION ──
-   The themes are static: colour, gradient and border only, with no glow or
-   sweep that repaints on a timer. What these rules actually stop is the
-   smooth scrolling and the colour cross-fade when the theme changes, plus
-   the three small pieces of feedback that are left — the staggered badge,
-   a new roll arriving in the log, and the outline on whatever a battle
-   helper row points at. One rule follows the OS setting, one the Utilities
-   switch. Last in the stylesheet, and !important, so they beat everything
-   above. */
+   One rule follows the OS setting, one the Utilities switch. Last in the
+   stylesheet, and !important, so they beat everything above. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation: none !important;
@@ -2194,20 +2162,16 @@ body.no-anim, body.no-anim *, body.no-anim *::before, body.no-anim *::after {
 }
 
 /* ── COLLAPSED SECTIONS ──
-   Screen only: a printed sheet is a record, so it shows every section
-   whether or not it was folded away on screen.
+   Screen only: a printed sheet is a record, so it shows every section whether
+   or not it was folded on screen.
 
-   A fold is an instant display toggle, deliberately. Animating it has been
-   tried twice — once on the Web Animations API, once as a `1fr` → `0fr`
-   grid row — and both read as jerky. The battle helper gets away with its
-   slide because a transform moves nothing but the panel; a section can't,
-   because the whole column below it has to move with it.
+   The fold is an instant display toggle, deliberately — animating it has been
+   tried twice (Web Animations, and a `1fr` → `0fr` grid row) and both read as
+   jerky, because the whole column below has to move with it.
 
-   Last in the stylesheet, and !important, for the same reason the rules
-   above are: a fold has to beat every layout rule that gives a section's
-   body a display — `.combo-row > .section > .section-body` ties this on
-   specificity, and a class module's injected CSS lands after this file
-   entirely. */
+   Last in the stylesheet and !important: a fold has to beat every layout rule
+   that gives a section's body a display, and a class module's injected CSS
+   lands after this file entirely. */
 @media screen {
   .section.collapsed > *:not(.section-head) { display: none !important; }
   .section.collapsed > .section-head { border-bottom: none; }
@@ -2222,7 +2186,13 @@ body.no-anim, body.no-anim *, body.no-anim *::before, body.no-anim *::after {
   #utilities-section { display: none; }
   .dice-tray { display: none; }
   .battle-helper { display: none; }
+  /* A control that only exists to *edit* the sheet is gone; anything that
+     *records* a value stays. So the padlock goes, but the ✦ prepared mark, the
+     class switches and every check-box remain — those are the character. */
   .roll-btn, .hp-adjust, .action-row { display: none; }
+  .add-row-btn, .remove-btn, .drag-handle, .lock-toggle { display: none; }
+  /* The number of skulls is already on the page as the number of skulls. */
+  .skulls-config { display: none; }
   body::before { display: none; }
   /* The panel doesn't print, so neither does the strip reserved for it. */
   body { background: #fff; color: #1a1510; padding-right: 0; }

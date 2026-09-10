@@ -1,22 +1,19 @@
 // ═══════════════════════════════════════════════════════════════════════
 //  BARBARIAN — 13th Age 2e
-//  Base numbers, raging strike / raging throw, and the Rage tracker.
 //  See _template.js for the module API.
 // ═══════════════════════════════════════════════════════════════════════
 (function () {
 
   // ── Raging attacks ──────────────────────────────────────────────────
-  // Both are "as your basic attack except …", so weapon, damage, average and
-  // attack bonus all derive from the basic attack fields — fill those in once
-  // and these mirror them. Each stays overridable in the usual way.
+  // Both are "as your basic attack except …", so everything on them derives
+  // from the basic attack fields — see `derived` below.
 
   function twiceLevel(f) {
     const lvl = intOrNull(f.level);
     return lvl === null ? '' : lvl * 2;
   }
 
-  // Crit range while raging: +4 on the usual 20+, i.e. 16+. Editable per
-  // attack in case something else widens it further.
+  // +4 on the usual 20+. Editable per attack in case something widens it more.
   function ragingCritFrom(prefix) {
     const n = intOrNull(state.fields[prefix + '_crit']);
     return (n === null || n < 2 || n > 20) ? 16 : n;
@@ -127,9 +124,8 @@
   }
 
   // ── Skull defense bonus ─────────────────────────────────────────────
-  // 1+ skulls gives +1 to all defenses, 2+ raises it to +2. A reminder only:
-  // it deliberately doesn't touch the AC/PD/MD fields, since the player judges
-  // when the bonus is actually in play better than the sheet can.
+  // 1+ skulls gives +1 to all defenses, 2+ raises it to +2. A reminder only —
+  // the player judges when it actually applies better than the sheet can.
   //
   // The brackets sit under skull boxes the sheet owns and rebuilds, so they
   // have to be measured rather than laid out — hence the MutationObserver.
@@ -157,21 +153,17 @@
       el('b', {}, bonus), ' to defenses'));
   }
 
-  // Extra space in front of the middle group, which is what pushes the +2
-  // bracket — and with it the +2 label — clear of the +1 one. It goes on the
-  // `[`, not on the first skull: `.skull-box` transitions `all`, so a margin
-  // set there animates and the re-measure below would read the layout it was
-  // moving away from. Set on elements the sheet owns and rebuilds, so it is
-  // re-applied after every rebuild and dropped again on unmount.
+  // Extra space in front of the middle group, pushing the +2 bracket and its
+  // label clear of the +1 one. It goes on the `[`, not on the first skull:
+  // `.skull-box` transitions `all`, so a margin set there animates and the
+  // re-measure below would read the layout it was moving away from.
   function setSkullLeadGap(px) {
     const open = document.querySelector('#skulls-row .skull-bracket');
     if (open) open.style.marginLeft = px ? px + 'px' : '';
   }
 
-  // Draws both brackets at whatever the track currently measures. Returns
-  // false when there is nothing to draw: too few skulls, or a track that has
-  // wrapped onto more than one line, where the brackets would point at the
-  // wrong skulls.
+  // False when there is nothing to draw: too few skulls, or a track that has
+  // wrapped, where the brackets would point at the wrong skulls.
   function drawSkullBonus(host, row) {
     host.innerHTML = '';
     const skulls = [...row.querySelectorAll('.skull-box')];
@@ -190,7 +182,7 @@
     return true;
   }
 
-  // How much the labels overlap, in px, once the required gap is counted.
+  // How much the labels overlap, once the required gap is counted.
   function labelOverlap(host) {
     const [a, b] = host.querySelectorAll('.skull-bonus-label');
     if (!a || !b) return 0;
@@ -202,8 +194,7 @@
     const host = document.getElementById('barb-skull-bonus');
     const row = document.getElementById('skulls-row');
     if (!host || !row) return;
-    // Measure unspaced first, so a font change in either direction is picked
-    // up — the gap shrinks back as readily as it grows.
+    // Unspaced first, so the gap shrinks back as readily as it grows.
     setSkullLeadGap(0);
     if (!drawSkullBonus(host, row)) return;
     // Widening the gap moves the labels apart, but the row is centred and
@@ -224,8 +215,7 @@
     }
   }
 
-  // Re-measure once the fonts a change asked for have actually arrived —
-  // until then the labels are still sized in the fallback face.
+  // Until the fonts arrive the labels are still sized in the fallback face.
   function repositionWhenFontsReady() {
     _reposition();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(_reposition);
@@ -251,7 +241,7 @@
     setSkullLeadGap(0);
   }
 
-  // ── Rage panel (inline, right of recoveries + skulls) ────────────────
+  // ── Rage panel ───────────────────────────────────────────────────────
 
   function setRaging(on, opts = {}) {
     const d = classData('barbarian');
@@ -278,7 +268,7 @@
   }
 
   // d12 + escalation die, 9+ starts the rage. Serves both the start-of-turn
-  // check and the first-time-damaged-each-battle check.
+  // check and the first-time-damaged-each-battle one.
   function rollRageDie() {
     const nat = rollDie(12);
     const esc = state.escalation || 0;
@@ -333,8 +323,7 @@
       ),
       el('div', { class: 'class-track-row' },
         el('button', {
-          // .dice-action marks a button that rolls, so it goes with the
-          // dice roller when that's switched off in Utilities.
+          // .dice-action goes with the dice roller when it is switched off.
           class: 'action-btn dice-action',
           title: 'Free action: roll d12 + escalation die — 9+ and you start raging',
           onclick: rollRageDie
@@ -357,11 +346,9 @@
   // ── Registration ────────────────────────────────────────────────────
 
   registerClass('barbarian', {
-    // AC comes from the armor table below; these two are flat.
+
     defenses: { pd: 11, md: 10 },
 
-    // BASE AC by armor type, and the attack penalty each carries. The
-    // shield `ac` is only the placeholder on the hand-typed Shield box.
     armor: {
       none:   { ac: 11 },
       light:  { ac: 12 },
@@ -371,12 +358,8 @@
     },
 
     baseHp: 7,
-    // Recovery dice = one per level, + Con mod, scaled by tier.
     recoveryDie: 12,
 
-    // A thrown weapon is still a Dexterity attack — only the damage
-    // changes, so the note points at the Dmg dropdown rather than doing
-    // anything itself.
     attacks: { ranged: { note: 'Thrown weapons add Strength damage instead of Dexterity.' } },
 
     slots: {
@@ -462,32 +445,22 @@
       unwatchSkulls();
     },
 
-    // The two rage trackers are the same kind of limited resource as a
-    // per-arc spell, so the battle helper lists them beside one. `left: 0`
-    // is what a ticked box reports — the panel drops those itself.
     battleHelper() {
       const d = classData('barbarian');
       const raging = !!d.raging;
-      // All three ways in are ways to *start* raging, so none of them is
-      // worth listing once you already are — they come back, still unspent,
-      // the moment the rage ends. `start()` is that shared condition; each
-      // row adds whether its own use has gone.
+      // All three are ways to *start* raging, so none is worth listing once
+      // you already are — they come back, unspent, the moment it ends.
       const start = spent => (raging || spent) ? 0 : 1;
       return [
-        // Free, at the start of every one of your turns, so it belongs with
-        // the at-will actions rather than with the two one-shot ways in.
-        // `target` is where the battle helper scrolls to when the row is
-        // clicked. The rage rows all live in one compact panel, so they
-        // point at the panel rather than at a tracker box inside it.
+        // Free and repeatable every turn, so it sits with the at-will actions
+        // rather than the two one-shot ways in.
         { name: 'Rage die', note: 'start of turn · 9+', track: 'atwill',
           trigger: 'free', target: '.rage-panel',
           title: 'Free action at the start of your turn: roll d12 + the '
                + 'escalation die, and on 9+ you start raging.',
           left: start(false) },
-        // The other side of the same switch: while raging these are what
-        // you attack with, in place of a basic attack.
-        // No note: the name plus the two attack cards on the sheet say it,
-        // and a reminder here pushed the row onto a second line.
+        // No note: the name and the two attack cards say it, and a reminder
+        // here pushed the row onto a second line.
         { name: 'Raging strike / throw', track: 'atwill', trigger: 'standard',
           target: '.rage-attack',
           title: 'While raging, these replace your basic attacks.',
@@ -499,8 +472,7 @@
       ];
     },
 
-    // A quick rest is post-battle: the rage ends and the when-hit check
-    // is available again.
+    // Post-battle: the rage ends and the when-hit check comes back.
     onQuickRest() {
       const d = classData('barbarian');
       const wasRaging = !!d.raging;
@@ -511,7 +483,7 @@
       if (wasRaging) logAction('Rage ended', 'The battle is over');
     },
 
-    // A full heal-up also turns the arc over, so the free start comes back.
+    // The arc turns over too, so the free start comes back.
     onFullHeal() {
       const d = classData('barbarian');
       delete d.raging;

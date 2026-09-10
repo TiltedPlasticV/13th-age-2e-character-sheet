@@ -26,19 +26,19 @@ let state = {
   locks: {},
   activeConditions: {},
   escalation: 0,
-  // Per-class bucket for class-module state that isn't a `data-field` input
-  // (toggles, counters). Keyed by class and never deleted on a class switch
-  // — see the CLASS MODULES block for the data-retention contract.
+  // Class-module state that isn't a `data-field` input (toggles, counters).
+  // Keyed by class and never deleted on a class switch.
   classData: {},
   theme: 'necromancer',
-  // Display preferences under one key, so the next one doesn't need
-  // threading through the load and reset paths. Settings, not character
-  // data: like the theme, they survive "New Sheet". See PREF_SWITCHES.
-  // `collapsed` is a set of data-section (or data-section-group) keys, not a
-  // list of every section: absent means open, so one added later opens by
-  // default.
+  // Settings, not character data: like the theme, these survive "New Sheet".
+  // `collapsed` holds only the folded sections — absent means open, so one
+  // added later opens by default.
   prefs: { animations: true, diceRoller: true, battleHelper: false, battleHelperOpen: true, collapsed: {} }
 };
+
+// The literal above is the schema, so pruneState() reads the valid key set off
+// it rather than repeating the list. Captured before anything can load over it.
+const STATE_KEYS = Object.keys(state);
 
 // ── AUTO-DERIVED FIELDS ───────────────────────────────────────────────
 // Each entry: calc(fields) returns the computed value (string), or ''
@@ -58,12 +58,10 @@ function abilityMod(score) {
   return signed(Math.floor((s - 10) / 2));
 }
 
-// ── ABILITY MODIFIER SCALING ──
-// One table, two users. Wherever 13A 2e adds an ability modifier to
-// something that already grows with level, it scales the same way: ×1
-// through 4th, ×2 at champion, ×4 at epic, plus a flat amount over the last
-// three levels. Basic attack damage reads it, and so does a recovery roll.
-// Ordered high → low so the first matching `min` wins, as TIERS does.
+// Wherever 13A 2e adds an ability modifier to something that already grows
+// with level, it scales the same way: ×1 through 4th, ×2 at champion, ×4 at
+// epic, plus a flat amount over the last three levels. Read by basic attack
+// damage and by recovery rolls. High → low, so the first matching `min` wins.
 const MOD_SCALING = [
   { min: 10, mult: 4, flat: 15 },
   { min: 9,  mult: 4, flat: 10 },
@@ -94,14 +92,11 @@ function diceAvg(diceStr) {
   if (!d) return '';
   return Math.floor(d.count * (d.sides + 1) / 2) + d.bonus;
 }
-function recoveryAvg(diceStr) { return diceAvg(diceStr); }
 
 // ── CLASS ROSTER ──────────────────────────────────────────────────────
-// Everything class-specific lives in `classes/<name>.js`, loaded the first
-// time that class is selected (see the CLASS MODULES block). All the sheet
-// needs up front is which classes *exist*, so the dropdown can be built
-// before any file has loaded. To add one: add the name here and drop the
-// file in beside this one — a copy of `classes/_template.js`.
+// All the sheet needs up front is which classes *exist*, so the dropdown can
+// be built before any class file has loaded. To add one: add the name here
+// and drop in a copy of `classes/_template.js`.
 const CLASS_ROSTER = [
   'barbarian', 'bard', 'cleric', 'commander', 'druid', 'fighter', 'monk',
   'necromancer', 'occultist', 'paladin', 'ranger', 'rogue', 'sorcerer', 'wizard',
@@ -115,8 +110,7 @@ const CLASS_ROSTER = [
 //   label: the section heading
 //   noun:  singular, for the add button ('+ Add Maneuver')
 // Kept here rather than in the class modules: it must be known before any
-// class file loads, so a player without `classes/rogue.js` still sees
-// Powers. Neither list is ever cleared — a class switch only hides rows.
+// class file loads, so a player without `classes/rogue.js` still sees Powers.
 const CLASS_ABILITY_SECTION = {
   bard:        { list: 'spells', label: 'Spells & Songs', noun: 'Spell' },
   cleric:      { list: 'spells', label: 'Spells',         noun: 'Spell' },
@@ -146,16 +140,12 @@ function maxHpCalc(f) {
   return (ci.baseHp + intOrZero(f.con_mod)) * mult;
 }
 
-// Recovery dice: one die per level, plus the tier-scaled Con mod — the same
-// scaling for every class without exception. Only the die varies, and it
-// rides in the class module as `recoveryDie`.
-//
-// Produces an expression ("5d8+6"), not a number — that's what the Roll
-// Recovery button and the Avg field parse. With no `recoveryDie` the field
-// stays blank and hand-typed.
+// One die per level plus the tier-scaled Con mod — the same for every class;
+// only the die varies. Produces an expression ("5d8+6"), not a number, which
+// is what the Roll Recovery button and the Avg field parse.
 //
 // Split from the calc below so a class whose die isn't a constant can reuse
-// the formula — the bard's is d8 or d6 depending on a choice they make.
+// the formula — see the bard's.
 function recoveryDiceFor(f, die) {
   if (die == null) return '';
   const lvl = intOrNull(f.level);
@@ -219,12 +209,10 @@ function defenseCalc(f, defenseKey) {
 }
 
 // ── HEALING POTIONS ─────────────────────────────────────
-// 13A 2e allocates healing potions per arc off the character's level, and
-// they are *replaced* rather than added to — an unused potion doesn't bank.
-// So the stock is a derived field per tier: the level table fills it, and a
-// potion bought or looted mid-arc is typed straight over it, locking that
-// tier alone. Spent ticks live in state.checkboxes under `potion_<tier>_N`,
-// beside `rec_` and `skull_`, so they save, load and reset for free.
+// 13A 2e allocates potions per arc off level, and they are *replaced* rather
+// than added to — an unused potion doesn't bank. So the stock is a derived
+// field per tier: one bought mid-arc is typed straight over it, locking that
+// tier alone. Spent ticks live in state.checkboxes as `potion_<tier>_N`.
 //
 // `cap` is a ceiling on the hp one drink restores, not on the character.
 const POTION_TIERS = [
@@ -250,29 +238,25 @@ function potionsAtLevel(f, tier) {
   const row = POTIONS_BY_LEVEL[intOrNull(f.level)];
   return row === undefined ? '' : (row[tier] || 0);
 }
-// How many of a tier the character has, ticked or not. A typo like "99" is
-// capped rather than drawing a hundred boxes — maxRecoveries' reasoning.
+// A typo like "99" is capped rather than drawing a hundred boxes.
 function potionStock(tier) {
   const n = intOrNull(state.fields['potions_' + tier]);
   if (n === null || n < 0) return 0;
   return Math.min(n, 20);
 }
 function potionKey(tier, i) { return 'potion_' + tier + '_' + i; }
-// Unspent potions of one tier — what the battle helper counts, and what
-// drinking one needs at least one of.
+// Unspent potions of one tier.
 function potionsLeft(tier) {
   const stock = potionStock(tier);
   let left = 0;
   for (let i = 0; i < stock; i++) if (!state.checkboxes[potionKey(tier, i)]) left++;
   return left;
 }
-// Two numbers and nothing else: the section head names them, the ticks
-// count them, and the row has to fit beside the magic items in a combo row.
+// Two numbers and nothing else — the row has to fit beside the magic items.
 function potionEffect(t) {
   return '+' + t.bonus + ' · ' + (t.cap === null ? 'no cap' : 'max ' + t.cap);
 }
-// The long form, for a tooltip — where there is room to say what the dice
-// are added to and what drinking one costs.
+// The long form, for a tooltip.
 function potionTitle(t) {
   return t.label + ' healing potion — heal a recovery +' + t.bonus + ' hp'
        + (t.cap === null ? '' : ', to a maximum of ' + t.cap)
@@ -286,28 +270,16 @@ function potionSummary() {
 }
 
 // ── ARMOR ─────────────────────────────────────────────────────────────
-// Each class has its own armor table — the same three rows, different
-// numbers, and different attack penalties for wearing more than the class
-// is trained for. It lives in the class module as `armor`, one entry per
-// printed row, so a class file carries its table exactly as the book
-// prints it:
-//
-//   armor: {
-//     none:   { ac: 10 },
-//     light:  { ac: 13 },
-//     heavy:  { ac: 14, atk: -2 },
-//     shield: { ac: 1, atk: -2 },   // `ac` is only the field's placeholder
-//     default: 'light',             // the heaviest row with no penalty
-//   }
+// Each class has its own armor table, carried in its module as `armor` — one
+// entry per printed row. See classes/_template.js for the shape.
 //
 // The Shield box stays hand-typed — a magic shield is worth more than the
-// table's +1 — so the shield row contributes its penalty and a hint, not a
-// value. `atk` may be a function of the fields for a rule that depends on
-// the character (the ranger's shield, the cleric's heavy armor), and
-// `default` may be too (the cleric's, which follows their focus).
+// table's +1 — so the shield row contributes its penalty and a placeholder,
+// not a value. `atk` and `default` may each be a function of the fields, for
+// a rule that depends on the character (the ranger's shield, the cleric's).
 //
 // Without a table — no class picked, or its file missing — Base AC stays
-// blank and hand-typed, exactly as max HP and recovery dice do.
+// blank and hand-typed, as max HP and recovery dice do.
 const ARMOR_ROWS = [
   { key: 'none',  label: 'None' },
   { key: 'light', label: 'Light' },
@@ -348,12 +320,9 @@ function acCalc(f) {
        + middleOf(f, 'ac').mod + intOrZero(f.level);
 }
 
-// The class's whole armor table as text, for the dropdown's tooltip: the
-// numbers behind the choice, so picking armor doesn't send anyone to the
-// book. Columns are pipe-separated rather than space-padded — a native
+// The class's armor table as tooltip text, so picking armor doesn't send
+// anyone to the book. Pipe-separated rather than space-padded: a native
 // tooltip renders in a proportional font, where padding lines nothing up.
-// Rows read live, so a penalty that depends on the character (the ranger's
-// shield) shows what it currently costs.
 const ARMOR_TIP_LEAD =
   "Your class's armor table sets Base AC from this, and any attack penalty it carries";
 
@@ -374,10 +343,8 @@ function armorTableTooltip(f) {
        + 'ARMOR TYPE | BASE AC | ATK PENALTY\n' + lines.join('\n');
 }
 
-// Wearing more armor than the class is trained for costs attack rolls, and
-// so does a shield for most classes. Talents undo this often enough — and
-// in ways too varied to encode (the druid's especially) — that one switch
-// turns the whole thing off.
+// Talents undo these penalties often enough, and in ways too varied to
+// encode, that one switch turns the whole thing off.
 const ARMOR_NO_PENALTY = 'armor_no_penalty';
 function armorPenaltyWaived() { return !!state.checkboxes[ARMOR_NO_PENALTY]; }
 
@@ -401,21 +368,16 @@ function armorHasPenalties(f) {
 }
 
 // ── BASIC ATTACKS ─────────────────────────────────────────────────────
-// Every class's basic attack is the same shape in 13A 2e — an ability mod
-// + level to hit, and level × the weapon's die + a scaling ability bonus
-// on a hit. Only *which* ability differs, so the whole progression lives
-// here and a class module carries nothing but its deviations.
+// Every class's basic attack is the same shape in 13A 2e — ability mod +
+// level to hit, level × the weapon's die + a scaling ability mod on a hit.
+// Only *which* ability differs, so a class module carries nothing but its
+// deviations. There is no weapon table: a die is one keystroke and covers
+// every weapon in the game.
 //
-// The player supplies the weapon: its name, and its damage die. No weapon
-// table — a die is one keystroke and covers every weapon in the game,
-// magical ones included. The `_misc` fields are the ± a magic weapon or a
-// talent adds; they're the one part of the sum the sheet can't know.
-//
-// Which ability each half uses is a dropdown, and the dropdown is itself a
-// derived field: the class fills it in, and choosing locks it exactly like
-// typing over a number. That is what makes the bard's and ranger's
-// Str-or-Dex choice, and thrown weapons adding Strength damage, need no
-// special case anywhere — the player just picks.
+// Which ability each half uses is itself a derived field, so the class fills
+// the dropdown in and choosing locks it like typing over a number. That is
+// why the bard's and ranger's Str-or-Dex choice, and thrown weapons adding
+// Strength damage, need no special case anywhere.
 const ABILITIES = [
   { key: 'str', label: 'Strength',     short: 'Str', mod: 'str_mod' },
   { key: 'dex', label: 'Dexterity',    short: 'Dex', mod: 'dex_mod' },
@@ -430,11 +392,9 @@ const ABILITY_MOD_FIELDS = ABILITIES.map(a => a.mod);
 
 function ability(key) { return ABILITY_BY_KEY[key] || ABILITY_BY_KEY.str; }
 function abilityShort(key) { return ability(key).short; }
-// Every tooltip that shows its working is built from these: one term per
-// thing being added, its contribution inside the brackets. "Base (10) +
-// Str (+4)" can't be misread the way "base 10 + Str +4" could, where the
-// sign looks like a fourth thing to add. A modifier keeps its sign; a
-// count — a level, a base — doesn't have one to keep.
+// One term per thing being added, its contribution in brackets: "Base (10) +
+// Str (+4)" can't be misread the way "base 10 + Str +4" can, where the sign
+// looks like a fourth thing to add.
 function calcTerm(label, value) { return label + ' (' + value + ')'; }
 
 // What a working-tooltip says while its field is still blank. A blank
@@ -451,9 +411,8 @@ function abilityShortByMod(modField) {
 // is what an empty dropdown would mean anyway.
 function abilityModValue(f, key) { return intOrZero(f[ability(key).mod]); }
 
-// The weapon's damage die, rolled once per level: "d8", "1d8" and "8" all
-// mean one d8. A count is only honoured when spelled with a `d` ("2d6"),
-// so "10" reads as a d10 rather than ten of something.
+// "d8", "1d8" and "8" all mean one d8. A count is only honoured when spelled
+// with a `d` ("2d6"), so "10" reads as a d10 rather than ten of something.
 function parseWeaponDie(str) {
   if (!str) return null;
   const m = String(str).replace(/\s+/g, '').match(/^(?:(\d+)d|d?)(\d+)$/i);
@@ -463,10 +422,8 @@ function parseWeaponDie(str) {
   return (count > 0 && sides > 0) ? { count, sides } : null;
 }
 
-// What a class does differently. Everything unstated falls back to these —
-// right for most of the roster, and still right when the class file is
-// missing, so basic attacks auto-calculate on a sheet that has no module
-// at all. See `attacks` in classes/_template.js.
+// Everything a class leaves unstated falls back to these, which are also
+// what a sheet with no class file at all uses.
 const ATTACK_DEFAULTS = {
   melee:  { ability: 'str' },
   ranged: { ability: 'dex' },
@@ -499,11 +456,15 @@ function attackDamageCalc(f, kind) {
   return (die.count * lvl) + 'd' + die.sides + (bonus === 0 ? '' : signed(bonus));
 }
 
-// The sum in words, for the field's tooltip. A number like "5d8+21" should
-// never be a mystery — least of all the flat +5 that appears at 8th level.
+// The sum in words, for the field's tooltip: a number like "5d8+21" should
+// never be a mystery, least of all the flat +5 that arrives at 8th level.
 function attackWorking(f, kind, half) {
   const lvl = intOrNull(f.level);
-  if (lvl === null) return 'Auto-calculated once you set your level';
+  // MOD_SCALING stops at 1st level, so modScaling() below returns undefined
+  // for a level of 0 or less — the same floor attackDamageCalc uses. Without
+  // it, a level typed as 0 threw out of recomputeDerived() and took the
+  // autosave with it.
+  if (lvl === null || lvl < 1) return 'Auto-calculated once you set your level';
   const abKey = f[kind + '_' + half + '_ability'];
   const mod = abilityModValue(f, abKey);
   const misc = intOrZero(f[kind + '_' + half + '_misc']);
@@ -528,9 +489,8 @@ function attackWorking(f, kind, half) {
   return parts.join(' + ');
 }
 
-// The sum behind a defense, for its tooltip — the same job the attack
-// tooltips do. Naming which of the three mods came out in the middle is the
-// point of it: that is the part of 13A's defense rule people misremember.
+// Naming which of the three mods came out in the middle is the point of this
+// one: it is the part of 13A's defense rule people misremember.
 function defenseWorking(f, key) {
   const lvl = intOrZero(f.level);
   if (key === 'initiative') {
@@ -563,18 +523,15 @@ function defenseWorking(f, key) {
     if (shield) parts.push(calcTerm('Shield', signed(shield)));
     if (misc) parts.push(calcTerm('Misc', signed(misc)));
   }
-  // Why that ability and not one of the other two. On its own line: it is
-  // the one part of the tooltip that isn't a term in the sum, and putting
-  // it in brackets beside a value would read as part of the arithmetic —
-  // the thing this format exists to avoid.
+  // On its own line: it is the one part of the tooltip that isn't a term in
+  // the sum, and in brackets it would read as part of the arithmetic.
   return parts.join(' + ') + '\n'
        + short + ' is the middle of ' + DEFENSE_MODS[key].map(abilityShortByMod).join('/');
 }
 
-// The sums behind the Hit Points block. Max HP is the one number on the
-// sheet where the order of operations is easy to get wrong — the Con mod
-// joins the class base *before* the level multiplier, not after — so the
-// brackets there are doing real work rather than just holding a value.
+// Max HP is the one number where the order of operations is easy to get
+// wrong — the Con mod joins the class base *before* the level multiplier —
+// so the brackets there are doing real work rather than just holding a value.
 function hpWorking(f, key) {
   if (key === 'max_hp') {
     const ci = getClassInfo(f.class);
@@ -595,9 +552,8 @@ function hpWorking(f, key) {
   }
 
   // recovery_dice. The die is read back out of the expression rather than
-  // from the class, because two classes choose theirs (see the bard's
-  // dropdown and the cleric's) and the tooltip has to describe whichever
-  // one actually produced the value.
+  // from the class: two classes choose theirs, and the tooltip has to
+  // describe whichever one produced the value.
   const lvl = intOrNull(f.level);
   if (lvl === null || lvl < 1 || lvl > 10) return HINT_NEEDS_LEVEL;
   const ci = getClassInfo(f.class);
@@ -627,9 +583,8 @@ function updateDefenseHints() {
   });
 }
 
-// Everything about the attack cards that isn't a field value: the tooltips
-// showing the working, the Str-or-Dex hint, and the thrown-weapon note.
-// All three follow the same numbers, so they refresh from one place.
+// Everything on the attack cards that isn't a field value: the working
+// tooltips, the Str-or-Dex hint and the thrown-weapon note.
 function updateAttackHints() {
   ['melee', 'ranged'].forEach(kind => {
     const info = attackInfo(state.fields, kind);
@@ -648,8 +603,8 @@ function updateAttackHints() {
   });
 }
 
-// Fill every ability dropdown. Like the class list, this runs before any
-// state is applied, so the option a saved sheet names already exists.
+// Runs before any state is applied, so the option a saved sheet names
+// already exists.
 function populateAbilityOptions() {
   document.querySelectorAll('select[data-field$="_ability"]').forEach(sel => {
     ABILITIES.forEach(a => sel.appendChild(el('option', { value: a.key }, a.label)));
@@ -662,9 +617,8 @@ function populateArmorOptions() {
   ARMOR_ROWS.forEach(r => sel.appendChild(el('option', { value: r.key }, r.label)));
 }
 
-// The gear row's two class-dependent details: the switch only exists for a
-// class that can be penalised, and the Shield box hints at what the table
-// says a plain shield is worth.
+// The switch only exists for a class that can be penalised, and the Shield
+// box hints at what the table says a plain shield is worth.
 function updateArmorUi() {
   const sel = document.querySelector('select[data-field="armor_type"]');
   if (sel) sel.title = armorTableTooltip(state.fields);
@@ -721,7 +675,7 @@ const DERIVED_FIELDS = {
   }},
   // Before recovery_avg, so the average sees the fresh expression.
   recovery_dice: { sources: ['class', 'level', 'con_mod'], calc: f => recoveryDiceCalc(f) },
-  recovery_avg: { sources: ['recovery_dice'], calc: f => recoveryAvg(f.recovery_dice) },
+  recovery_avg: { sources: ['recovery_dice'], calc: f => diceAvg(f.recovery_dice) },
   // ── Armor ──
   // Before the attack entries below: the penalty for what you're wearing is
   // part of every attack bonus on the sheet.
@@ -834,7 +788,7 @@ function updateTierBadge() {
   );
 }
 
-function setLockVisual(toggleEl, inputEl, locked) {
+function setLockVisual(toggleEl, locked) {
   toggleEl.textContent = locked ? '🔒' : '🔓';
   toggleEl.classList.toggle('locked', locked);
   toggleEl.setAttribute('aria-checked', locked ? 'true' : 'false');
@@ -857,15 +811,15 @@ function initLocks() {
     toggle.setAttribute('tabindex', '0');
     toggle.setAttribute('aria-label', `Lock ${key.replace(/_/g, ' ')} to manual value`);
     wrap.appendChild(toggle);
-    setLockVisual(toggle, input, !!state.locks[key]);
+    setLockVisual(toggle, !!state.locks[key]);
     toggle.addEventListener('click', () => {
       if (state.locks[key]) {
         delete state.locks[key];
-        setLockVisual(toggle, input, false);
+        setLockVisual(toggle, false);
         recomputeDerived();
       } else {
         state.locks[key] = true;
-        setLockVisual(toggle, input, true);
+        setLockVisual(toggle, true);
       }
       saveNow();
     });
@@ -873,7 +827,7 @@ function initLocks() {
     input.addEventListener('input', () => {
       if (!state.locks[key]) {
         state.locks[key] = true;
-        setLockVisual(toggle, input, true);
+        setLockVisual(toggle, true);
         saveNow();
       }
     });
@@ -881,9 +835,8 @@ function initLocks() {
 }
 
 // ── DISPLAY PREFERENCES ──
-// Each preference is one body class the stylesheet reacts to, so switching
-// it off changes nothing but CSS and switching it back needs no repair.
-// Deliberately out of the roll and animation code paths.
+// Each preference is one body class the stylesheet reacts to, so switching it
+// off changes nothing but CSS and switching it back needs no repair.
 const PREF_SWITCHES = {
   animations: {
     id: 'pref-animations', bodyClass: 'no-anim',
@@ -909,12 +862,9 @@ function normalizePrefs(s) {
     // The odd one out: opt-in rather than opt-out, so a sheet saved before
     // the panel existed doesn't load with something new covering its edge.
     battleHelper: p.battleHelper === true,
-    // The rail is only reachable while the module is on, so a stored
-    // "collapsed" from a sheet where it is off cannot be a choice anyone
-    // made — and an opt-in panel that arrives as a bare 30px rail is one
-    // nobody finds. So the collapse is remembered only alongside the module
-    // being on, which makes the first switch-on arrive expanded without
-    // needing a "have they seen it yet" flag that old saves wouldn't carry.
+    // Only remembered alongside the module being on: an opt-in panel that
+    // arrives as a bare 30px rail is one nobody finds, so the first switch-on
+    // always arrives expanded.
     battleHelperOpen: p.battleHelper === true ? p.battleHelperOpen !== false : true,
     collapsed: (p.collapsed && typeof p.collapsed === 'object') ? p.collapsed : {},
     tray: normalizeTrayGeom(p.tray),
@@ -924,9 +874,8 @@ function normalizePrefs(s) {
   };
 }
 
-// Tray geometry is four finite numbers or nothing. Anything else — an older
-// save, a hand-edited file — reads as "never moved", which puts the tray back
-// in its corner rather than somewhere unreachable.
+// Four finite numbers or nothing. Anything else reads as "never moved", which
+// puts the tray back in its corner rather than somewhere unreachable.
 function normalizeTrayGeom(t) {
   if (!t || typeof t !== 'object') return null;
   const g = {};
@@ -951,10 +900,8 @@ function applyPrefs() {
   renderBattleHelper();
 }
 
-// ── BATTLE HELPER ──
-// The panel's own open/collapsed state, kept apart from the switch that
-// makes it exist at all: turning the module off and back on brings it back
-// the way it was left. The panel is never open while hidden.
+// The panel's own open/collapsed state, kept apart from the switch that makes
+// it exist at all. Never open while hidden.
 function renderBattleHelper() {
   if (!state.prefs) normalizePrefs(state);
   const panel = document.getElementById('battle-helper');
@@ -977,15 +924,12 @@ function toggleBattleHelper() {
 }
 
 // ── BATTLE HELPER CONTENTS ──────────────────────────────────────────
-// The panel owns no state: every line in it is read back out of `state`
-// and the whole body is rebuilt from scratch. That makes "keep it in step
-// with the sheet" a single call from saveNow() instead of a subscription
-// per widget, and it means the panel can never hold a stale copy of
-// anything. Nothing in it is interactive — it reports, the sheet edits.
+// The panel owns no state: every line is read back out of `state` and the
+// body is rebuilt whole. That makes keeping it in step one call from
+// saveNow() rather than a subscription per widget. It reports; the sheet edits.
 
-// Short source tag per ability list, so a line here can be traced back to
-// the section it came from. The class-dependent list takes its noun from
-// CLASS_ABILITY_SECTION, so a fighter's read "Maneuver".
+// Source tag per ability list, so a row can be traced back to its section.
+// The class-dependent list takes its noun from CLASS_ABILITY_SECTION.
 const ABILITY_TAGS = {
   kinPowers: 'Kin', features: 'Feature', talents: 'Talent',
   powers: 'Power', spells: 'Spell',
@@ -996,19 +940,15 @@ function abilityTag(listKey) {
   return (spec && spec.list === 'powers') ? spec.noun : ABILITY_TAGS.powers;
 }
 
-// Only one of the two class-dependent lists is on the sheet at a time — a
-// rogue has Powers and no Spells — so the panel shows exactly what
-// applyAbilitySections() does. Spells left in the save data from a previous
-// class are hidden by that, not cleared: switch back and they return, here
-// and on the sheet alike.
+// Only one of the two class-dependent lists is on the sheet at a time, so the
+// panel shows exactly what applyAbilitySections() does.
 function abilityListVisible(listKey) {
   if (listKey !== 'spells' && listKey !== 'powers') return true;
   const spec = CLASS_ABILITY_SECTION[currentClassKey()];
   return !!spec && spec.list === listKey;
 }
 
-// Unticked boxes on one ability row. Level 0 deletes its key, so an unspent
-// use is simply an absent one; useLevel also reads the old boolean form.
+// Unticked boxes on one ability row.
 function unspentUses(item) {
   const total = usageUses(item);
   let left = 0;
@@ -1016,11 +956,9 @@ function unspentUses(item) {
   return left;
 }
 
-// Every per-battle / per-arc use still unspent, in sheet order.
-// Two rows are deliberately absent:
-//   • an unprepared spell — it can't be cast, so it isn't available;
-//   • a nameless row — there would be nothing to show, and a row being
-//     typed shouldn't flicker into the list a character at a time.
+// Every per-battle / per-arc use still unspent, in sheet order. Unprepared
+// spells and nameless rows are left out — one can't be cast, and the other
+// would flicker into the list a character at a time as it was typed.
 function availableAbilities() {
   const out = [];
   ABILITY_LISTS.forEach(key => {
@@ -1037,8 +975,7 @@ function availableAbilities() {
       if (isOutOfBattle(item)) return;
       const name = (item.name || '').trim();
       if (!name) return;
-      // `list` + `index` is the handle click-to-reveal points back with —
-      // see bhTargetEls() for the invariant that makes an index enough.
+      // `list` + `index` is the handle click-to-reveal points back with.
       const row = { name, trigger: triggerMode(item), source: abilityTag(key), track,
                     list: key, index: i };
       if (track === 'atwill') {
@@ -1046,8 +983,7 @@ function availableAbilities() {
         return;
       }
       // An unspent desperate box is one more use of the same ability, so it
-      // adds to the count rather than repeating the name on a second line —
-      // the ☠ says one of them is the one you get back by nearly dying.
+      // adds to the count rather than taking a second line.
       const desperate = USAGE_MODES[usageMode(item)].desperate
         && !useLevel(item.desperate && item.desperate[0], 2);
       const left = unspentUses(item) + (desperate ? 1 : 0);
@@ -1057,19 +993,15 @@ function availableAbilities() {
   return out;
 }
 
-// Is anything on the sheet tracked at all? Tells "you have spent
-// everything" apart from "you have marked nothing as tracked yet" — the
-// two empty lists want opposite advice.
+// Tells "you have spent everything" apart from "you have marked nothing as
+// tracked yet" — the two empty lists want opposite advice.
 function hasTrackedAbilities() {
   return ABILITY_LISTS.some(key => abilityListVisible(key)
     && (state[key] || []).some(item => usageTrack(item) && usageUses(item) > 0));
 }
 
-// A class module can add its own trackers — the barbarian's free rage start
-// and its when-hit check are neither spells nor features, but they are
-// exactly the kind of thing this panel exists to stop you forgetting. The
-// hook returns every tracker the class owns and the panel does the
-// filtering, so a class never has to know the rule.
+// A class module's own trackers. The hook returns every tracker the class
+// owns and the panel does the filtering, so a class never has to know the rule.
 function classAbilities() {
   const mod = activeClassModule();
   if (!mod || typeof mod.battleHelper !== 'function') return [];
@@ -1085,16 +1017,13 @@ function classAbilities() {
                  track: r.track, left: r.left === undefined ? 1 : r.left }));
 }
 
-// Potions are neither an ability nor a class's, but drinking one is a
-// standard action off a per-arc stock — the exact shape of what this panel
-// is for. The row points back at the Healing Potions section, where the
-// ticks and the drink buttons are.
+// Drinking one is a standard action off a per-arc stock — the same shape as
+// everything else here. The row points back at the Healing Potions section.
 function potionAbilities() {
   return POTION_TIERS.map(t => {
     const left = potionsLeft(t.key);
     if (!left) return null;
-    // No `note`: the panel is 290px wide and the dice, the cap and the
-    // price are all one click away on the sheet this row points at.
+    // No `note`: at 290px wide, and one click from the section itself.
     return {
       name: t.label + ' potion',
       trigger: 'standard', track: 'arc', left,
@@ -1105,22 +1034,18 @@ function potionAbilities() {
 }
 
 // ── The blocks the panel draws ──
-// Each one folds away when its heading is clicked, and remembers that in
-// collapsedMap() — the same store the sheet's own sections use, so it is a
-// display preference that survives "New Sheet" like the theme does. The
-// keys are prefixed so they can't collide with a data-section name.
+// Each folds away when its heading is clicked, remembered in collapsedMap() —
+// the same store the sheet's own sections use, under a prefixed key.
 //
-// The fold is re-implemented here rather than borrowed from
-// refreshCollapsibleSections(), which is bound to the `.section` chrome —
-// border, margin, heading band — that a 290px overlay panel has no room
-// for. What is worth sharing is the store and the caret, and both are.
+// The fold is re-implemented rather than borrowed from
+// refreshCollapsibleSections(), which is bound to the `.section` chrome a
+// 290px overlay panel has no room for. The store and the caret are shared.
 function bhSection(key, title, children) {
   const mapKey = 'bh-' + key;
   const collapsed = !!collapsedMap()[mapKey];
   const caret = el('span', { class: 'section-caret', 'aria-hidden': 'true' },
                    collapsed ? '▸' : '▾');
-  // Space/Enter reach this through the global keydown handler, which routes
-  // any focused role="button" to click().
+  // Space/Enter arrive via the global keydown handler.
   const head = el('div', {
     class: 'bh-head', role: 'button', tabindex: '0',
     'aria-expanded': collapsed ? 'false' : 'true',
@@ -1131,20 +1056,16 @@ function bhSection(key, title, children) {
   head.addEventListener('click', () => {
     const now = !sec.classList.contains('collapsed');
     if (now) collapsedMap()[mapKey] = true; else delete collapsedMap()[mapKey];
-    // saveNow() redraws the panel off the map just updated, so the caret and
-    // the fold follow from that rather than being set twice.
+    // saveNow() redraws the panel off the map just updated.
     saveNow();
   });
   return sec;
 }
 
 
-// The actions everyone has, whatever their class. They are not on the
-// sheet and carry no tick box, on purpose: a basic attack has nothing to
-// spend, and rally's first use is free with every one after gated on a save
-// rather than on a box, so a spent/unspent tracker would misdescribe both.
-// The row states the price of a second rally; the counting is the player's,
-// and the full wording is in the tooltip.
+// The actions everyone has, whatever their class. Neither carries a tick box
+// on purpose: a basic attack has nothing to spend, and rally is gated on a
+// save rather than a count, so a tracker would misdescribe both.
 const BH_UNIVERSAL = [
   { name: 'Basic attack', trigger: 'standard', track: 'atwill',
     target: '[data-section="attacks"]' },
@@ -1156,8 +1077,8 @@ const BH_UNIVERSAL = [
          + 'next round. No limit beyond making those saves.' },
 ];
 
-// The three headings, in the order they read during a turn: what you can
-// always do, then what you are spending down.
+// In the order they read during a turn: what you can always do, then what you
+// are spending down.
 const BH_GROUPS = [
   { key: 'atwill', label: 'At-will'    },
   { key: 'battle', label: 'Per battle' },
@@ -1165,22 +1086,15 @@ const BH_GROUPS = [
 ];
 
 // The tag column means one thing on every row: what the action costs you.
-// It used to be where the row came from — which left the rows that come
-// from nowhere in particular (a basic attack, rally) tagged with a trigger
-// while everything else was tagged with a section, so the column read as
-// two different things at once. The trigger is the half worth the width
-// mid-fight; provenance is still a hover away.
-//
-// `note` is a short rules reminder living on the row itself. A row that has
-// one gives it the slack instead of the name — see .bh-item.has-note.
+// Provenance is a hover away. `note` is a short rules reminder on the row
+// itself — see .bh-item.has-note.
 function rowTrigger(r) { return TRIGGERS[r.trigger] ? r.trigger : TRIGGER_DEFAULT; }
 
 // ── CLICK TO REVEAL ─────────────────────────────────────────────────
-// A row that has somewhere to point at scrolls the sheet to it and outlines
-// it for a moment. Targets are resolved when the row is clicked, never when
-// it is drawn: the ability lists and a class module's panels are both torn
-// down and rebuilt whenever anything changes, so an element captured at
-// render time would be a node that has since left the document.
+// A row that has somewhere to point at scrolls the sheet to it and outlines it
+// for a moment. Targets are resolved on click, never at render time: the lists
+// and panels are rebuilt whenever anything changes, so an element captured
+// when the row was drawn would already have left the document.
 const ABILITY_LIST_IDS = {
   kinPowers: 'kin-powers-list', features: 'features-list',
   talents: 'talents-list', powers: 'powers-list', spells: 'spells-list',
@@ -1195,20 +1109,18 @@ const BH_TARGET_MS = 1500;
 let _bhTargetEls = [];
 let _bhTargetTimer = 0;
 
-// Whether to draw the row as clickable. Deliberately doesn't resolve the
-// target: that would put a DOM query in every row of every redraw, and a
-// declared target that fails to resolve is already handled — the click
-// simply does nothing.
+// Deliberately doesn't resolve the target — that would put a DOM query in
+// every row of every redraw, and a click that resolves to nothing is harmless.
 function bhHasTarget(r) { return r.list !== undefined || !!r.target; }
 
-// Every element the row is about, in document order — a selector target
-// matches all of them, not just the first, because one row can legitimately
-// be about a pair: the barbarian's raging strike and raging throw are two
-// cards and one choice. The sheet scrolls to the first; all of them light.
+// Every element the row is about: a selector matches all of them, not just
+// the first, because one row can be about a pair — the barbarian's raging
+// strike and throw are two cards and one choice. The sheet scrolls to the
+// first; all of them light.
 //
 // renderPowerLike draws `.power-block`s straight from the state array in
-// order, so an ability row's index in that array is its block's index in
-// the list. That is the invariant the ability half of this rests on.
+// order, so an ability row's index is its block's index. That is the
+// invariant the ability half rests on.
 function bhTargetEls(r) {
   if (r.list !== undefined) {
     const list = document.getElementById(ABILITY_LIST_IDS[r.list]);
@@ -1218,23 +1130,14 @@ function bhTargetEls(r) {
   return r.target ? [...document.querySelectorAll(r.target)] : [];
 }
 
-// One row's worth of targets at a time, cleared on a timer rather than on
-// animationend — see .bh-target in the stylesheet for why the animation
-// can't be trusted to fire at all.
+// Cleared on a timer rather than on animationend — see .bh-target in the
+// stylesheet for why the animation can't be trusted to fire at all.
 //
-// Clicking a row that is already lit has to start the fade over, and that
-// is the whole reason for the reflow below. Removing a class and re-adding
-// it in one task is invisible to the animation: the browser compares
-// computed style only at the end of the task, sees `.bh-target` before and
-// after, and lets the running fade carry on to transparent — where
-// `forwards` then holds it. The row looked dead, and every further click
-// did the same nothing. Reading a layout property between the two commits
-// the removal, so the re-add is a genuine restart.
-//
-// Everything else here is already idempotent: the pending timer is
-// cancelled rather than stacked, and a browser's smooth scroll replaces an
-// in-flight one instead of queueing behind it. So a click is always the
-// same click, however fast they come.
+// The `void offsetWidth` is what makes clicking an already-lit row restart
+// its fade. Removing a class and re-adding it in one task is invisible to the
+// animation: the browser only compares computed style at the end of the task,
+// sees `.bh-target` both times and lets the running fade finish. Reading a
+// layout property between the two commits the removal.
 function bhFlash(nodes) {
   clearTimeout(_bhTargetTimer);
   _bhTargetEls.forEach(n => n.classList.remove('bh-target'));
@@ -1248,20 +1151,18 @@ function bhFlash(nodes) {
 
 function bhReveal(r) {
   const nodes = bhTargetEls(r);
-  // The row was drawn against a state that has since moved on — the ability
-  // deleted, the list reordered, the class switched. Nothing to point at.
+  // Drawn against a state that has since moved on. Nothing to point at.
   if (!nodes.length) return;
   const node = nodes[0];
-  // A folded section hides its children outright, and scrollIntoView does
-  // nothing for a display:none element. Open it, and leave it open — you
-  // asked to see what is in there.
+  // scrollIntoView does nothing for a display:none element. Open it, and
+  // leave it open — you asked to see what is in there.
   const section = node.closest('.section[data-section]');
   if (section && section.classList.contains('collapsed')) {
     setSectionCollapsed(section, false);
     saveNow();
   }
-  // Collapsing the panel doesn't reflow the sheet: the rail's strip is
-  // reserved whether it is open or not.
+  // Collapsing doesn't reflow the sheet — the rail's strip is reserved either
+  // way.
   if (state.prefs.battleHelperOpen && window.matchMedia(BH_NARROW).matches) {
     state.prefs.battleHelperOpen = false;
     renderBattleHelper();
@@ -1275,8 +1176,7 @@ function bhReveal(r) {
 
 function bhItem(r) {
   const trigger = TRIGGERS[rowTrigger(r)];
-  // role=button is what makes this keyboard-operable: the global keydown
-  // handler already routes Space/Enter on a focused role=button to click().
+  // role=button is what makes this keyboard-operable.
   const linked = bhHasTarget(r);
   return el('div', { class: 'bh-item' + (r.note ? ' has-note' : '')
                             + (linked ? ' linked' : ''),
@@ -1285,10 +1185,9 @@ function bhItem(r) {
                      tabindex: linked ? '0' : null,
                      onclick: linked ? () => bhReveal(r) : null },
     el('span', { class: 'bh-item-name' }, r.name,
-      // Spells earn a mark of their own: mid-fight the thing worth seeing at
-      // a glance is which of these costs a spell rather than a talent. Same
-      // glyph the Spells section head wears, so the two read as one thing.
-      // Decorative — the row's own title already says "Spell".
+      // Mid-fight, which of these costs a spell is worth seeing at a glance.
+      // Same glyph the Spells section head wears. Decorative — the row's own
+      // title already says "Spell".
       r.list === 'spells'
         ? el('span', { class: 'bh-item-mark', 'aria-hidden': 'true' }, '✦') : null),
     r.note ? el('span', { class: 'bh-item-note' }, r.note) : null,
@@ -1300,9 +1199,8 @@ function bhItem(r) {
 
 function buildBhUses() {
   const rows = availableAbilities().concat(classAbilities(), potionAbilities());
-  // The universal actions go in under the player's own, and are kept out of
-  // `rows` so they can't stand in for having any: an otherwise empty list
-  // still gets the note telling you how to fill it.
+  // Kept out of `rows` so they can't stand in for having any: an otherwise
+  // empty list still gets the note telling you how to fill it.
   const listed = rows.concat(BH_UNIVERSAL);
   const sec = bhSection('uses', 'Ready to use', []);
   BH_GROUPS.forEach(group => {
@@ -1310,13 +1208,9 @@ function buildBhUses() {
     if (!items.length) return;
     sec.appendChild(el('div', { class: 'bh-group' },
       trackAnnotation(group.key), el('span', {}, group.label)));
-    // Inside a cadence, rows cluster by what they cost you: every standard
-    // action together, then the free ones, then the reactions. That is the
-    // order TRIGGERS is declared in, so the declaration order *is* the
-    // reading order and there's no second list to keep in step with it.
-    // The clusters carry no heading — the tag column already names the
-    // trigger on every row — so the box around them is what says they go
-    // together.
+    // Inside a cadence, rows cluster by what they cost you, in the order
+    // TRIGGERS is declared — so declaration order *is* reading order. No
+    // headings: the tag column already names the trigger on every row.
     TRIGGER_KEYS.forEach(key => {
       const cluster = items.filter(r => rowTrigger(r) === key);
       if (!cluster.length) return;
@@ -1331,12 +1225,10 @@ function buildBhUses() {
   return sec;
 }
 
-// Post-battle healing, in the order you have to think about it: how many
-// recoveries you have to spend, then the healing the rules make you do,
-// then the healing you'd like to do. The last two are separate rows because
-// they answer different questions — one is a floor you cannot refuse, the
-// other is a ceiling you're working towards — and when you're staggered
-// both are true at once.
+// Post-battle healing in the order you think about it: what you have to
+// spend, then the healing the rules make you do, then the healing you'd like
+// to. The last two are separate rows because one is a floor and the other a
+// ceiling, and when you're staggered both are true at once.
 function buildBhStatus() {
   const max = maxRecoveries();
   let spent = 0;
@@ -1355,10 +1247,8 @@ function buildBhStatus() {
   return sec;
 }
 
-// "about 2 recoveries at 13 avg" — the same estimate both healing rows
-// want. An average is what it is worth: a rough count of what you are about
-// to burn, not a promise. Empty when the average isn't known, so the
-// sentence it sits in simply ends earlier rather than guessing.
+// "about 2 recoveries at 13 avg" — the same estimate both healing rows want.
+// Empty when the average isn't known, so the sentence just ends earlier.
 function bhRecoveryEstimate(hp) {
   const avg = intOrNull(state.fields.recovery_avg);
   if (avg === null || avg <= 0) return '';
@@ -1367,7 +1257,7 @@ function bhRecoveryEstimate(hp) {
 }
 
 // The floor: 13th Age makes you keep healing until you are out of the
-// staggered range, so this row is about what you have no choice over.
+// staggered range.
 function bhStaggerNode() {
   const cur = intOrNull(state.fields.current_hp);
   const stag = intOrNull(state.fields.staggered);
@@ -1389,8 +1279,7 @@ function bhStaggerNode() {
   );
 }
 
-// The ceiling: optional, so the row is simply absent at full HP rather than
-// saying so — there is nothing to decide then.
+// The ceiling: absent at full HP rather than saying so — nothing to decide.
 function bhToMaxNode() {
   const cur = intOrNull(state.fields.current_hp);
   const maxHp = intOrNull(state.fields.max_hp);
@@ -1404,13 +1293,9 @@ function bhToMaxNode() {
   );
 }
 
-// The one block that isn't read out of `state`: the turn structure is the
-// same for everybody. It is built here anyway rather than sitting in the
-// HTML, because the panel body is cleared and rebuilt on every change and
-// static markup inside it would not survive the first redraw.
-//
-// Condensed hard — a play aid gets read mid-turn, so the end-of-turn order
-// is the only part that earns numbered steps.
+// The one block that isn't read out of `state`. Built here rather than in the
+// HTML because the panel body is rebuilt on every change, and static markup
+// inside it would not survive the first redraw.
 function buildBhTurn() {
   return bhSection('turn', 'Anatomy of a turn', [
     el('div', { class: 'bh-turn' },
@@ -1427,10 +1312,9 @@ function buildBhTurn() {
   ]);
 }
 
-// Rebuilt whole, and only while the panel is on screen — reopening it draws
-// it fresh, so there is nothing to catch up on. The body is the scrolling
-// element, so its position is carried across the rebuild: an autosave
-// firing mid-scroll must not throw the player back to the top.
+// Rebuilt whole, and only while on screen — reopening draws it fresh. The
+// body is the scrolling element, so its position is carried across the
+// rebuild: an autosave firing mid-scroll must not jump the player to the top.
 function renderBattleHelperBody() {
   if (!state.prefs) normalizePrefs(state);
   const body = document.getElementById('bh-body');
@@ -1438,18 +1322,15 @@ function renderBattleHelperBody() {
   if (state.prefs.battleHelper !== true || state.prefs.battleHelperOpen !== true) return;
   const scrollTop = body.scrollTop;
   body.innerHTML = '';
-  // What you need mid-battle comes first; the recovery block is what you
-  // read once the fighting stops, and the turn structure is reference text
-  // you stop needing, so both sit under the list rather than pushing it
-  // down.
+  // What you need mid-battle comes first; the other two are read once the
+  // fighting stops, so they sit under the list rather than pushing it down.
   body.appendChild(buildBhUses());
   body.appendChild(buildBhStatus());
   body.appendChild(buildBhTurn());
   body.scrollTop = scrollTop;
 }
 
-// Toasted rather than logged: the log lives in the dice tray, which one of
-// these switches can hide.
+// Toasted rather than logged — one of these switches hides the log.
 function togglePref(key) {
   if (!state.prefs) normalizePrefs(state);
   state.prefs[key] = state.prefs[key] === false;
@@ -1459,19 +1340,16 @@ function togglePref(key) {
 }
 
 // ── COLLAPSIBLE SECTIONS ────────────────────────────────────────────
-// A section folds away when its heading is clicked. Which ones are folded is
-// a display preference rather than character data, so it rides in
-// state.prefs beside the animation and dice-roller switches and survives
-// "New Sheet" for the same reason the theme does.
+// Which sections are folded is a display preference rather than character
+// data, so it rides in state.prefs and survives "New Sheet".
 function collapsedMap() {
   if (!state.prefs) normalizePrefs(state);
   if (!state.prefs.collapsed) state.prefs.collapsed = {};
   return state.prefs.collapsed;
 }
 
-// Sections sharing a `data-section-group` wrapper — the half-width pair in a
-// combo-row — fold together and under one key, because half a folded band
-// reads as a layout bug rather than a choice.
+// The half-width pair in a combo-row folds together, under one key: half a
+// folded band reads as a layout bug rather than a choice.
 function sectionPeers(section) {
   const group = section.closest('[data-section-group]');
   return group ? Array.from(group.querySelectorAll('.section[data-section]')) : [section];
@@ -1482,9 +1360,8 @@ function sectionKey(section) {
   return group ? group.dataset.sectionGroup : section.dataset.section;
 }
 
-// Folding is the class and nothing else — see the COLLAPSED SECTIONS block
-// at the end of the stylesheet, which hides the body outright rather than
-// animating it away.
+// Folding is the class and nothing else — see COLLAPSED SECTIONS at the end
+// of the stylesheet.
 function setSectionCollapsed(section, collapsed) {
   sectionPeers(section).forEach(peer => {
     const head = peer.querySelector('.section-head');
@@ -1492,8 +1369,7 @@ function setSectionCollapsed(section, collapsed) {
     peer.classList.toggle('collapsed', collapsed);
     if (head) head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     if (caret) caret.textContent = collapsed ? '▸' : '▾';
-    // Textareas measure zero while hidden, so the ones coming back into view
-    // need re-measuring — see the zero guard in flushAutoGrow.
+    // Textareas measure zero while hidden, so re-measure on the way back.
     if (!collapsed) peer.querySelectorAll('textarea.field-block').forEach(autoGrow);
   });
   const map = collapsedMap();
@@ -1501,9 +1377,8 @@ function setSectionCollapsed(section, collapsed) {
   else delete map[sectionKey(section)];
 }
 
-// Wires any section not yet wired, then pushes the saved state onto all of
-// them. Idempotent, so it can run again whenever new sections appear —
-// a class module mounting its own, for instance.
+// Idempotent, so it can run again whenever new sections appear — a class
+// module mounting its own, for instance.
 function refreshCollapsibleSections() {
   const map = collapsedMap();
   document.querySelectorAll('.section[data-section]').forEach(section => {
@@ -1514,8 +1389,7 @@ function refreshCollapsibleSections() {
       head.setAttribute('role', 'button');
       head.setAttribute('tabindex', '0');
       head.title = 'Click to fold this section away';
-      // Space/Enter already reach this through the global keydown handler,
-      // which routes any focused role="button" to click().
+      // Space/Enter arrive via the global keydown handler.
       head.appendChild(el('span', { class: 'section-caret', 'aria-hidden': 'true' }, '▾'));
       head.addEventListener('click', () => {
         setSectionCollapsed(section, !section.classList.contains('collapsed'));
@@ -1533,9 +1407,8 @@ function setTheme(t) {
   saveNow();
 }
 
-// Show whichever third ability section the current class calls for, and
-// name it. Hiding is display-only — the rows stay in state and come back
-// untouched if the class changes back.
+// Hiding is display-only — the rows stay in state and come back untouched if
+// the class changes back.
 function applyAbilitySections() {
   const spec = CLASS_ABILITY_SECTION[currentClassKey()] || null;
   const kind = spec ? spec.list : '';
@@ -1549,18 +1422,23 @@ function applyAbilitySections() {
   }
 }
 
+// One timer, not one per call: a second toast arriving before the first had
+// timed out used to be cut short by the first one's pending removal, so the
+// message you were actually meant to read flashed past.
+let _toastTimer = 0;
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-// Textareas grow to fit their text. Measuring that (`scrollHeight`) forces a
-// synchronous layout of a two-column sheet, so doing it inline with a
+// Textareas grow to fit their text. Measuring `scrollHeight` forces a
+// synchronous layout of a two-column sheet, so measuring inline with a
 // keystroke re-flows everything between the keypress and the letter
-// appearing. Requests are queued and flushed on the next animation frame
-// instead, in one write→read→write pass: N textareas cost one layout.
+// appearing. Queued and flushed on the next frame instead, in one
+// write→read→write pass: N textareas cost one layout.
 const _growQueue = new Set();
 let _growFrame = 0;
 function autoGrow(ta) {
@@ -1572,47 +1450,40 @@ function flushAutoGrow() {
   _growFrame = 0;
   const list = [..._growQueue];
   _growQueue.clear();
-  // Release every height first, then read every height, then write them
-  // back. Interleaving these (the obvious per-textarea loop) makes each
-  // read re-run layout for the whole document.
+  // Release all, read all, write all. Interleaving these — the obvious
+  // per-textarea loop — makes each read re-run layout for the whole document.
   list.forEach(ta => { ta.style.height = 'auto'; });
   const heights = list.map(ta => ta.scrollHeight);
-  // A textarea inside a folded section measures zero. Writing that back
-  // would leave it collapsed when the section reopens, so keep the last
-  // good height and re-measure on expand instead.
+  // A textarea in a folded section measures zero; writing that back would
+  // leave it collapsed when the section reopens.
   list.forEach((ta, i) => { if (heights[i]) ta.style.height = heights[i] + 'px'; });
 }
 function autoGrowAll() {
   document.querySelectorAll('textarea.field-block').forEach(autoGrow);
 }
 
-// Deferring to the next frame is right for keystrokes, but wrong when a list
-// has just been rebuilt: the browser lays out once *before* that frame, with
-// every textarea still collapsed to one row. Near the bottom of the sheet the
-// document is briefly short enough that the scroll position gets clamped, and
-// growing the rows back afterwards doesn't restore it — the page jumps
-// upwards and you lose the row you were editing. Rebuilds therefore measure
-// straight away. It costs no extra layout: the queue is flushed in the same
-// single batched write→read→write pass, just now instead of in a frame's time.
+// Deferring to the next frame is right for keystrokes, wrong after a list
+// rebuild: the browser lays out once *before* that frame with every textarea
+// still one row tall, and near the bottom of the sheet the document is
+// briefly short enough for the scroll position to be clamped — growing the
+// rows back afterwards doesn't restore it. Costs no extra layout, it just
+// happens now instead of in a frame's time.
 function autoGrowAllNow() {
   autoGrowAll();
   if (_growFrame) { cancelAnimationFrame(_growFrame); _growFrame = 0; }
   flushAutoGrow();
 }
 
-// Sequential-tracker enforcement for ordered checkbox rows (recoveries,
-// skulls). Only the boundary boxes are interactive — the first unchecked and
-// the last checked; the rest get `.disabled` + `aria-disabled` and leave the
-// tab order. No gaps can form, which matches how the mechanics work in play
-// (you spend the *next* recovery, you fail the *next* death save) and keeps
+// Ordered checkbox rows (recoveries, skulls, potions): only the boundary
+// boxes are interactive — the first unchecked and the last checked — so no
+// gaps can form. That matches play (you spend the *next* recovery) and keeps
 // Quick Rest's "preserve skull 0, clear the rest" meaningful.
 function applySequentialState(boxes, prefix) {
   let firstUnchecked = -1;
   for (let i = 0; i < boxes.length; i++) {
     if (!state.checkboxes[prefix + i]) { firstUnchecked = i; break; }
   }
-  // All checked: firstUnchecked stays -1 and only the final box is live.
-  // None checked: lastChecked is -1 and only box 0 is.
+  // All checked: only the final box is live. None checked: only box 0 is.
   const lastChecked = firstUnchecked === -1 ? boxes.length - 1 : firstUnchecked - 1;
   boxes.forEach((box, i) => {
     const checked = !!state.checkboxes[prefix + i];
@@ -1628,9 +1499,8 @@ function applySequentialState(boxes, prefix) {
   });
 }
 
-// Number of recovery boxes: an explicit 0 is respected (some monsters of
-// the week have no recoveries!), blank defaults to 8, and a typo like
-// "888" is capped rather than rendering hundreds of boxes.
+// An explicit 0 is respected, blank defaults to 8, and a typo like "888" is
+// capped rather than rendering hundreds of boxes.
 function maxRecoveries() {
   const n = intOrNull(state.fields.max_recoveries);
   if (n === null || n < 0) return 8;
@@ -1652,8 +1522,7 @@ function renderRecoveries() {
     box.setAttribute('aria-checked', state.checkboxes['rec_' + i] ? 'true' : 'false');
     box.setAttribute('aria-label', `Recovery ${i + 1}`);
     box.addEventListener('click', () => {
-      // Disabled state is the authoritative gate — the keyboard handler
-      // also routes through el.click(), so this one check covers both.
+      // The gate for mouse and keyboard both — Space/Enter route via click().
       if (box.classList.contains('disabled')) return;
       const next = !state.checkboxes['rec_' + i];
       state.checkboxes['rec_' + i] = next;
@@ -1670,13 +1539,9 @@ function renderRecoveries() {
   row.insertAdjacentHTML('beforeend', trackAnnotationHtml('arc'));
 }
 
-// Draws each tier row's tick track from its stock field, and dims a tier
-// the character has none of. The number box stays on a dimmed row on
-// purpose: it is where a potion bought mid-arc gets typed in.
-//
-// Reached from recomputeDerived (the level moved) and from the `change`
-// handler (a stock typed over) — the two paths that keep the recovery
-// boxes in step, for the same reason.
+// Draws each tier's tick track from its stock field, and dims a tier the
+// character has none of. The number box stays on a dimmed row on purpose: it
+// is where a potion bought mid-arc gets typed in.
 function renderPotions() {
   const arc = document.getElementById('potions-arc');
   if (!arc) return;
@@ -1702,8 +1567,7 @@ function renderPotions() {
         'aria-label': t.label + ' potion ' + (i + 1),
       }, '✕');
       box.addEventListener('click', () => {
-        // The disabled class is the authoritative gate — Space/Enter come
-        // through el.click() too, so this one check covers both.
+        // The gate for mouse and keyboard both.
         if (box.classList.contains('disabled')) return;
         const next = !state.checkboxes[key];
         state.checkboxes[key] = next;
@@ -1775,8 +1639,8 @@ function renderSkulls() {
 }
 
 // Tiny hyperscript-style DOM helper. Attrs starting with `on` become event
-// listeners; everything else becomes an attribute (with `class`/`value`
-// shortcuts). Children may be nodes, strings, arrays, or null (skipped).
+// listeners, the rest become attributes (`class`/`value` are shortcuts).
+// Children may be nodes, strings, arrays, or null.
 function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
   Object.entries(attrs).forEach(([k, v]) => {
@@ -1794,13 +1658,11 @@ function el(tag, attrs = {}, ...children) {
 }
 
 // Refresh-cadence annotations rendered next to a use-tracker.
-// Add new types here (e.g. arc, recharge) and use trackAnnotationHtml(type) anywhere.
 const TRACK_TYPES = {
   arc:    { symbol: '↺', title: 'Refreshes per arc' },
   battle: { symbol: '⚔', title: 'Refreshes per battle' },
-  // Nothing on the sheet draws this one — an at-will has no uses to tick,
-  // which is the whole point of it. It lives here so the battle helper can
-  // head its at-will group the same way it heads the other two.
+  // Nothing on the sheet draws this one — an at-will has no uses to tick. It
+  // is here so the battle helper can head its at-will group like the others.
   atwill: { symbol: '∞', title: 'Always available' },
 };
 function trackAnnotation(type, opts = {}) {
@@ -1814,20 +1676,15 @@ function trackAnnotationHtml(type, opts = {}) {
 
 // Shared "use" tracker: N check-boxes backed by state[stateKey][idx][prop][u],
 // for powers, spells and icon relationships. opts:
-//   prop    which map on the row the ticks live in (default 'used'); icons
-//           pass 'available' for their second track, a desperate power
-//           'desperate' for its recharge box
+//   prop    which map the ticks live in (default 'used'); icons pass
+//           'available' for their second track, a desperate power 'desperate'
 //   glyph   what a ticked box shows (default '✕')
-//   states  how many levels a box cycles through (see below)
-//   variant extra class on the box, for a track that must read as a
-//           different kind of tick rather than one more of the same
+//   states  2 (off/on) or 3 (off/on/"twist", the icon track's
+//           available-but-with-a-guaranteed-complication state)
+//   variant extra class, for a track that must read as a different kind of tick
 //   title   hover text, when the box needs explaining on its own
 //
-// `states` is how many levels a box cycles through:
-//   2 (default) — off / on
-//   3           — off / on / "twist", the icon track's available-but-with-a-
-//                 guaranteed-complication state
-// Level 0 deletes the key, which keeps saves lean and reads the old boolean
+// Level 0 deletes the key, keeping saves lean and reading the old boolean
 // form as 1.
 function useLevel(v, states) {
   let n = v === true ? 1 : (parseInt(v, 10) || 0);
@@ -1952,24 +1809,19 @@ function renderIcons() {
 function addIcon() { state.icons.push({ dice: '', mod: '', name: '', used: {}, available: {} }); renderIcons(); saveNow(); }
 
 // ── USAGE MODES ───────────────────────────────────────────────────────
-// Every ability row is exactly one of these, so a single <select> answers
-// both "is this tracked?" and "when does it refresh?" — they aren't
-// independent questions, and splitting them would allow states like
-// "passive, refreshes per arc" that mean nothing.
+// Every ability row is exactly one of these, so a single <select> answers both
+// "is this tracked?" and "when does it refresh?" — splitting them would allow
+// states like "passive, refreshes per arc" that mean nothing.
 //
 // `track` is the TRACK_TYPES annotation, and doubles as the flag for both
-// "shows use checkboxes" and "a rest clears it": a Passive class feature or
-// an At-Will power has no tracker to draw and nothing to refresh.
+// "shows use checkboxes" and "a rest clears it". The stored value is the
+// token, never the label, so renaming a label isn't a data migration.
 //
-// The stored value is the token, never the label, so renaming a label later
-// isn't a data migration.
-//
-// `uses` fixes the number of boxes and takes the Uses field away with it:
-// a mode that is 1/arc by definition has nothing for the player to set.
-// `desperate` adds the second, differently-drawn box beside it.
+// `uses` fixes the number of boxes and takes the Uses field away with it;
+// `desperate` adds the second, differently-drawn box beside them.
 const USAGE_MODES = {
-  // The only mode with no trigger: a passive isn't set off by anything, so
-  // the control isn't drawn for it (the stored value stays put).
+  // The only mode with no trigger — the control isn't drawn, and the stored
+  // value stays put.
   passive:   { label: 'Passive', trigger: false },
   atwill:    { label: 'At-Will' },
   battle:    { label: 'Battle', track: 'battle' },
@@ -1982,22 +1834,15 @@ const USAGE_KEYS = Object.keys(USAGE_MODES);
 const USAGE_DEFAULT = 'passive';
 
 // ── TRIGGERS ──────────────────────────────────────────────────────────
-// What sets an ability off. Free text before, and it barely varied: rows
-// were a standard action or they were not really an action at all, so a
-// closed set says more in less space and gives the battle helper something
-// it can reason about.
+// What sets an ability off. A closed set rather than the free text it was,
+// so the battle helper has something it can reason about.
 //
-// A Passive row has no trigger by definition and doesn't draw the control
-// — the stored value is hidden, never cleared, so setting the row back to
-// a usable mode brings the same trigger back.
-//
-// `outOfBattle` is the one flag anything reads: a skill check or a bit of
-// roleplay has no place in a battle helper.
-// `short` is what the battle helper's tag column shows — the same word
+// `outOfBattle` is the one flag anything reads: a skill check has no place in
+// a battle helper. `short` is what the tag column shows — the same word
 // without the "action" the dropdown needs to read as a sentence.
-// Declared in the order they happen in play, because that order is what the
-// battle helper reads down: what you choose to spend on your own turn, then
-// what fires off your own roll, then what fires on somebody else's.
+//
+// Declared in the order they happen in play, which is the order the battle
+// helper reads down.
 const TRIGGERS = {
   standard:    { label: 'Standard action', short: 'Standard' },
   free:        { label: 'Free action',     short: 'Free' },
@@ -2009,51 +1854,41 @@ const TRIGGER_KEYS = Object.keys(TRIGGERS);
 // Most abilities cost a standard action, and it is the reading that puts a
 // row *in* the battle helper rather than quietly out of it.
 const TRIGGER_DEFAULT = 'standard';
-// An unknown token reads as the default rather than throwing, exactly as
-// usageMode() does — a row from a future format degrades instead of
-// breaking the list.
+// An unknown token reads as the default rather than throwing, as usageMode()
+// does.
 function triggerMode(item) {
   return (item && TRIGGERS[item.trigger]) ? item.trigger : TRIGGER_DEFAULT;
 }
 function isOutOfBattle(item) { return TRIGGERS[triggerMode(item)].outOfBattle === true; }
 
-// Every state array rendered by renderPowerLike. Used by the usage
-// migration and by the rest hooks, both of which walk all five alike.
+// Every state array rendered by renderPowerLike.
 const ABILITY_LISTS = ['kinPowers', 'features', 'talents', 'powers', 'spells'];
 
-// An unknown token reads as Passive rather than throwing, so a row from a
-// future format degrades to the harmless mode instead of breaking the list.
+// An unknown token reads as Passive rather than throwing.
 function usageMode(item) {
   return (item && USAGE_MODES[item.usage]) ? item.usage : USAGE_DEFAULT;
 }
 function usageTrack(item) { return USAGE_MODES[usageMode(item)].track; }
-// How many use boxes a row draws: the mode's fixed count, else whatever the
-// player typed into Uses (untracked modes draw none).
+// The mode's fixed count, else whatever the player typed into Uses.
 function usageUses(item) {
   const mode = USAGE_MODES[usageMode(item)];
   if (mode.uses) return mode.uses;
   return mode.track ? (parseInt(item.max_uses) || 0) : 0;
 }
 
-// Emptying a list drops the document's height by everything that was in it,
-// and the browser clamps the scroll position to the new, much shorter page.
-// Re-appending the rows restores the height but not the position. Chrome's
-// scroll anchoring often papers over this, but it works by holding onto a
-// node that stays put — and `innerHTML = ''` destroys every candidate inside
-// the list, so when the viewport is filled by list rows there is nothing left
-// to anchor to and the jump sticks. That's the view from the bottom of a long
-// spell list, which is exactly where it was reported. Restore it explicitly
-// rather than depending on the heuristic.
+// Emptying a list drops the document's height, and the browser clamps the
+// scroll position to the shorter page; re-appending the rows restores the
+// height but not the position. Chrome's scroll anchoring usually papers over
+// this, but it needs a node that stays put, and `innerHTML = ''` destroys
+// every candidate — so from the bottom of a long spell list the jump sticks.
 function captureScroll() { return { x: window.scrollX, y: window.scrollY }; }
 function restoreScroll(pos) {
   if (window.scrollX !== pos.x || window.scrollY !== pos.y) window.scrollTo(pos.x, pos.y);
 }
 
-// A rebuild also destroys whatever control the player was using — pick a
-// usage mode and focus lands back on <body>, so the keyboard flow ends on
-// the row you just changed. Note where focus was and put it back.
-// `preventScroll` matters: re-focusing must not undo the position restored
-// above.
+// A rebuild also destroys whatever control the player was using, dropping
+// focus back to <body>. `preventScroll` matters: re-focusing must not undo
+// the position restored above.
 function captureListFocus(list) {
   const active = document.activeElement;
   if (!active || !list.contains(active) || !active.className) return null;
@@ -2078,17 +1913,15 @@ function renderPowerLike(opts) {
   list.innerHTML = '';
   const rerender = () => renderPowerLike(opts);
   state[stateKey].forEach((item, i) => {
-    // A Passive or At-Will row has nothing to track, so the Uses count and
-    // its checkboxes aren't drawn. They are *hidden, never cleared* — set
-    // the row back to Battle or Arc and the same ticks come back.
+    // A Passive or At-Will row has nothing to track, so its Uses count and
+    // checkboxes aren't drawn — hidden, never cleared.
     const track = usageTrack(item);
     const mode = USAGE_MODES[usageMode(item)];
     const maxU = usageUses(item);
     const useChecks = el('div', { class: 'use-checks' });
     if (maxU > 0) {
       appendUses(useChecks, stateKey, i, maxU, item.used);
-      // Drawn as a skull rather than one more ✕ because it isn't one more of
-      // the same use: it's the one you get back by nearly dying.
+      // A skull rather than one more ✕: it isn't one more of the same use.
       if (mode.desperate) {
         appendUses(useChecks, stateKey, i, 1, item.desperate, {
           prop: 'desperate', glyph: '☠', variant: 'desperate',
@@ -2113,8 +1946,8 @@ function renderPowerLike(opts) {
       onchange: e => {
         const row = state[stateKey][i];
         row.usage = e.target.value;
-        // Battle and Arc almost always mean one use. Filling it in beats
-        // showing a tracked row with no boxes to tick.
+        // Battle and Arc almost always mean one use, and filling it in beats
+        // a tracked row with no boxes to tick.
         if (usageTrack(row) && !USAGE_MODES[usageMode(row)].uses
             && !(parseInt(row.max_uses) > 0)) row.max_uses = '1';
         rerender();
@@ -2202,8 +2035,7 @@ function renderSpells() {
     withPrep: true
   });
 }
-// The rest hooks clear use-trackers across every ability list, so they need
-// to redraw all five.
+// The rest hooks clear trackers across every ability list, so all five redraw.
 function renderAbilityLists() {
   renderKinPowers(); renderFeatures(); renderTalents(); renderPowers(); renderSpells();
 }
@@ -2226,10 +2058,10 @@ function toggleSpellPrep(i, btn) {
   saveNow();
 }
 
-// Drag-and-drop reordering for any `.power-block` list backed by a state
-// array. Only the `.drag-handle` arms the row, so text selection inside the
-// inputs still works. HTML5 drag events don't fire on touch devices, hence
-// the parallel touch path below — same hints, same reorder math.
+// Drag-and-drop reordering for any `.power-block` list. Only the
+// `.drag-handle` arms the row, so text selection inside the inputs still
+// works. HTML5 drag events don't fire on touch devices, hence the parallel
+// touch path below.
 function enableReorder(listId, stateKey, render) {
   const list = document.getElementById(listId);
   if (!list) return;
@@ -2410,37 +2242,16 @@ function renderAdvances() {
 //  CLASS MODULES — per-class sections, attacks, fields and behaviour
 // ══════════════════════════════════════════════════════════════════════
 //
-// A module is one declarative entry in CLASS_MODULES, keyed by the string
-// the class <select> stores. Every part is optional:
-//
-//   slots:      { <slot name>: () => Node } — content injected into the
-//               matching `[data-class-slot]` host. Slots today:
-//                 'attacks'      — extra cards in the Basic Attacks section
-//                 'recovery'     — beside the Recovery Dice field
-//                 'armor'        — beside the armor fields in Gear
-//                 'hp-side'      — inline panel right of recoveries + skulls
-//                 'skulls-under' — strip directly beneath the skull track
-//                 'sections'     — whole extra sections after Basic Attacks
-//               Adding a slot = add a host div + its name to CLASS_SLOTS.
-//   slotFit:    [ <slot name>, … ] — slots that should shrink to their
-//               content instead of taking their default share of the row.
-//               Adds `.slot-fit` to the host; only 'hp-side' styles it.
-//   derived:    DERIVED_FIELDS-shaped entries merged over the base set while
-//               this class is active, so class fields get the same
-//               auto-calculation and lock/override behaviour as built-ins.
-//   defenses:   { ac, pd, md } base values, and
-//   baseHp:     the per-class HP base — both read by DERIVED_FIELDS.
-//   css:        a stylesheet injected once on registration, so a class's
-//               look travels with its file.
-//   onMount / onUnmount:      DOM work the slots can't express.
-//   onQuickRest / onFullHeal: react to the rest buttons (see classHook).
+// A module is one declarative entry in CLASS_MODULES, keyed by the string the
+// class <select> stores. Every part of it is optional; classes/_template.js
+// documents the whole API and is the place to keep that current. Adding a slot
+// = add a host div to the HTML and its name to CLASS_SLOTS below.
 //
 // ── NOTHING IS EVER LOST WHEN SWITCHING CLASS ─────────────────────────
 // Class content is *unmounted*, never cleared. Class FIELDS are ordinary
-// `data-field` inputs with a class-prefixed key, and collectState() only
-// reads inputs currently on screen — so an unmounted one can't be blanked.
-// Everything else goes in state.classData[<class>] via classData(). Both
-// save with `state`; only a deliberate "New Sheet" clears them.
+// `data-field` inputs with a class-prefixed key, and collectState() only reads
+// inputs currently on screen — so an unmounted one can't be blanked. Everything
+// else goes in state.classData[<class>]. Only "New Sheet" clears either.
 const CLASS_SLOTS = ['attacks', 'recovery', 'armor', 'hp-side', 'skulls-under', 'sections'];
 const CLASS_DIR = 'classes/';
 
@@ -2462,10 +2273,9 @@ function injectClassCss(name, css) {
   document.head.appendChild(el('style', { id }, css));
 }
 
-// A classic <script> tag, not fetch() or import(): both of those are blocked
-// on file:// pages, and the sheet has to work opened straight off disk.
-// Loading is lazy and one-shot per class, and a missing file is not an
-// error — the sheet falls back to manual defenses and HP.
+// A classic <script> tag, not fetch() or import(): both are blocked on file://
+// pages. Lazy and one-shot per class, and a missing file is not an error — the
+// sheet falls back to manual defenses and HP.
 function loadClassModule(name) {
   if (_classLoad[name]) return _classLoad[name];
   _classLoad[name] = new Promise(resolve => {
@@ -2484,8 +2294,8 @@ function loadClassModule(name) {
 function currentClassKey() { return state.fields.class || ''; }
 function activeClassModule() { return CLASS_MODULES[currentClassKey()] || null; }
 
-// The current class's bucket of non-field state, created on first use.
-// Pass a class name to reach another class's bucket explicitly.
+// The current class's bucket of non-field state, created on first use. Pass a
+// name to reach another class's bucket.
 function classData(className) {
   const key = className || currentClassKey() || '_none';
   if (!state.classData) state.classData = {};
@@ -2493,8 +2303,7 @@ function classData(className) {
   return state.classData[key];
 }
 
-// Fire an optional lifecycle hook on the active module. Errors are
-// contained so a broken module can't take the rest of the sheet down.
+// Errors are contained so a broken module can't take the sheet down with it.
 function classHook(name) {
   const mod = activeClassModule();
   if (!mod || typeof mod[name] !== 'function') return;
@@ -2509,7 +2318,7 @@ function mountClassSlot(name) {
   host.innerHTML = '';
   const mod = activeClassModule();
   const build = mod && mod.slots && mod.slots[name];
-  // Sizing is re-applied on every mount, so it leaves with the class.
+  // Re-applied on every mount, so it leaves with the class.
   host.classList.toggle('slot-fit',
     !!(build && mod.slotFit && mod.slotFit.includes(name)));
   if (!build) return;
@@ -2519,12 +2328,10 @@ function mountClassSlot(name) {
   } catch (e) { console.warn('class slot ' + name, e); }
 }
 
-// Re-render every slot for the current class, then wire up what was built:
-// values out of state.fields, lock toggles, and a recompute so mirrored
-// values land immediately. Safe to call before the class file has loaded —
-// it renders what's known, kicks off the load and runs again on arrival.
-// `opts.notify` toasts a missing file: worth saying when the user just
-// picked the class, not on a page load they didn't ask for.
+// Re-render every slot, then wire up what was built. Safe to call before the
+// class file has loaded — it renders what's known, kicks off the load and runs
+// again on arrival. `opts.notify` toasts a missing file: worth saying when the
+// user just picked the class, not on a page load they didn't ask for.
 function renderClassContent(opts = {}) {
   const key = currentClassKey();
   if (key && !CLASS_MODULES[key] && !_classLoad[key]) {
@@ -2541,8 +2348,8 @@ function renderClassContent(opts = {}) {
     _mountedClass = key;
   }
   refreshDerivedIndex();
-  // Which third ability section shows, and what it's called, is a property
-  // of the class name alone — so this runs whether or not the file loaded.
+  // A property of the class name alone, so it runs whether or not the file
+  // loaded.
   applyAbilitySections();
   renderPowers();       // the row placeholders follow the section's noun
   CLASS_SLOTS.forEach(mountClassSlot);
@@ -2554,8 +2361,7 @@ function renderClassContent(opts = {}) {
   classHook('onMount');
   refreshCollapsibleSections();
   autoGrowAll();
-  // The class file arrives asynchronously and calls back through here, so
-  // this is where its battleHelper() rows first become reachable.
+  // Where a newly arrived class file's battleHelper() rows become reachable.
   renderBattleHelperBody();
 }
 
@@ -2567,17 +2373,16 @@ function saveNow() {
   clearTimeout(_saveTimer);
   if (_initializing || _applying) return;
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); } catch(e) {}
-  // Every mutation on the sheet ends here, which makes this the one place
-  // the battle helper has to be redrawn from — and it runs *after*
-  // collectState(), so state.fields is already current.
+  // Every mutation ends here, and after collectState(), so this is the one
+  // place the battle helper has to be redrawn from.
   renderBattleHelperBody();
 }
 function autoSave() {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(saveNow, 400);
 }
-// Flush any pending debounced save when the tab is hidden or closing, so
-// keystrokes inside the 400ms autosave window aren't lost.
+// Flush a pending save when the tab is hidden or closing, so keystrokes inside
+// the 400ms window aren't lost.
 window.addEventListener('pagehide', saveNow);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveNow();
@@ -2601,9 +2406,8 @@ function saveToFile() {
 }
 
 // Old saves carry one combined `powers` list and a free-text `talents` box.
-// Move both into the new lists so nothing typed goes missing, and into
-// *visible* ones: the combined list becomes Class Features, which every
-// sheet shows, rather than the class-dependent Powers section.
+// The combined list becomes Class Features — which every sheet shows — rather
+// than the class-dependent Powers section.
 function migrateAbilityLists(s) {
   if (!s || typeof s !== 'object') return;
   if (!Array.isArray(s.features)) {
@@ -2617,11 +2421,8 @@ function migrateAbilityLists(s) {
   }
 }
 
-// Usage was free text before it became a closed set. Map what's
-// recognisable and drop the rest to Passive: the unrecognised values are
-// exactly the rows the free-text field couldn't describe ("N/A", "always
-// on"), which is why the closed set exists. Idempotent — a value that is
-// already a token is left alone — so it can run on every load.
+// Usage was free text before it became a closed set. Map what's recognisable
+// and drop the rest to Passive. Idempotent, so it runs on every load.
 const USAGE_PATTERNS = [
   [/at.?-?will/i, 'atwill'],
   [/battle|encounter/i, 'battle'],
@@ -2640,22 +2441,17 @@ function migrateUsage(s) {
   });
 }
 
-// Triggers were free text before they became a closed set, and the real
-// sheets show what that looked like: "Std", "Skill check", "Interrupt
-// action (Getting hit)", "Miss with attack". Map what's recognisable and
-// let the rest read as the default.
+// Same story as usage: "Std", "Skill check", "Interrupt action (Getting hit)",
+// "Miss with attack". Map what's recognisable, default the rest.
 //
-// Note what this does *not* do: it never deletes `action`. The mapping is a
-// judgement call on rows the closed set can't describe exactly ("Multiple
-// triggers", "All actions"), and the sheet's first rule is that what the
-// player typed doesn't go missing — so the original text stays in the row,
-// unrendered, as the record of it. Idempotent, so it runs on every load.
+// It never deletes `action`. The mapping is a judgement call on rows the closed
+// set can't describe ("Multiple triggers", "All actions"), so the original text
+// stays in the row, unrendered, as the record of it.
 const TRIGGER_PATTERNS = [
   // Before the /attack/ fallback below, which would otherwise swallow
   // "Miss with attack" into a standard action.
   [/miss/i, 'missed'],
-  // Anything that fires off being hit, interrupts included — that is very
-  // nearly the only thing an interrupt action is ever spent on.
+  // Interrupts included — very nearly the only thing they are spent on.
   [/hit|damaged|interrupt/i, 'hit'],
   [/out.?of.?(battle|combat)|skill|ritual/i, 'outofbattle'],
   [/free/i, 'free'],
@@ -2675,12 +2471,10 @@ function migrateTrigger(s) {
   });
 }
 
-// Attack bonus and hit damage were hand-typed before they were derived, so
-// a sheet saved back then would have its numbers recomputed out from under
-// it on the next load. The weapon die is the tell: a card that has a value
-// but no die predates the automation, so its fields are locked and the
-// sheet opens exactly as it was left. Typing the die and clicking the
-// padlock is how you opt in.
+// Attack bonus and hit damage were hand-typed before they were derived. The
+// weapon die is the tell: a card with a value but no die predates the
+// automation, so its fields are locked and the sheet opens as it was left.
+// Typing the die and clicking the padlock is how you opt in.
 const LEGACY_ATTACK_FIELDS = {
   melee:  ['melee_damage', 'melee_vs_ac', 'melee_miss'],
   ranged: ['ranged_damage', 'ranged_vs_ac_near', 'ranged_vs_ac_far', 'ranged_miss'],
@@ -2696,13 +2490,10 @@ function migrateAttackAutoCalc(s) {
   });
 }
 
-// Armor was a free-text box and Base AC a number you typed; both are now
-// driven by the class's armor table. Two things to preserve, both keyed off
-// the same tell — an `armor_type` that isn't one of the three rows means the
-// sheet predates the dropdown:
-//   • whatever was typed for armor moves to the name field beside it, and
-//     becomes a locked category when the word is recognisable;
-//   • a hand-typed Base AC is locked, so it isn't recomputed away.
+// Armor was a free-text box and Base AC a number you typed. The tell is an
+// `armor_type` that isn't one of the three rows: whatever was typed moves to
+// the name field beside it and becomes a locked category if the word is
+// recognisable, and a hand-typed Base AC is locked so it isn't recomputed away.
 const ARMOR_WORDS = [
   [/plate|chain|scale|banded|splint|brigandine|heavy/i, 'heavy'],
   [/leather|hide|padded|studded|light/i,                'light'],
@@ -2721,10 +2512,34 @@ function migrateArmorType(s) {
     s.fields.armor_type = hit[1];
     s.locks.armor_type = true;
   } else {
-    // Unrecognisable: the name is kept, the category falls back to the
-    // class default rather than guessing.
+    // The name is kept; the category falls back to the class default.
     delete s.fields.armor_type;
   }
+}
+
+// Drop top-level keys the sheet no longer has. collectState() clones the whole
+// of `state`, so anything ever written to it rode along through every
+// save → load → save from then on: real saves still carry `showSpells` and
+// `defensesMigrated` from features removed long ago.
+//
+// Top level only. `fields`, `checkboxes` and `classData` are keyed by class and
+// by tracker, and a key belonging to a class you aren't playing right now is
+// exactly what the sheet promises to keep. `prefs` needs no pruning either —
+// normalizePrefs() rebuilds it from a fixed set of keys.
+//
+// Runs after the migrations, which are the one thing entitled to read an old
+// key.
+function pruneState(s) {
+  Object.keys(s).forEach(key => {
+    if (!STATE_KEYS.includes(key)) delete s[key];
+  });
+}
+
+// Everything downstream dereferences `fields` without checking, so both load
+// paths gate on it first.
+function isSheetData(parsed) {
+  return !!parsed && typeof parsed === 'object'
+      && typeof parsed.fields === 'object' && parsed.fields !== null;
 }
 
 function loadFromFile(event) {
@@ -2734,9 +2549,8 @@ function loadFromFile(event) {
   reader.onload = (e) => {
     try {
       const parsed = JSON.parse(e.target.result);
-      // A valid sheet always carries a `fields` object. Catches a
-      // mis-selected file before it overwrites the current state.
-      if (!parsed || typeof parsed !== 'object' || typeof parsed.fields !== 'object' || parsed.fields === null) {
+      // Catches a mis-selected file before it overwrites the current state.
+      if (!isSheetData(parsed)) {
         showToast('Not a valid character sheet');
         return;
       }
@@ -2759,6 +2573,7 @@ function loadFromFile(event) {
       migrateTrigger(state);
       migrateAttackAutoCalc(state);
       migrateArmorType(state);
+      pruneState(state);
       normalizePrefs(state);
       applyState();
       autoSave();
@@ -2776,13 +2591,12 @@ function applyState() {
     applyPrefs();
     document.querySelectorAll('[data-field]').forEach(el => { el.value = state.fields[el.dataset.field] || ''; });
     recomputeDerived();
-    // Sync each lock toggle's visual to the current state (visuals were
-    // created once at init; locks may have flipped on load/reset).
+    // Visuals were created once at init; locks may have flipped since.
     document.querySelectorAll('.lock-toggle').forEach(toggle => {
       const input = toggle.previousElementSibling;
       if (!input) return;
       const key = input.dataset.field;
-      if (key) setLockVisual(toggle, input, !!state.locks[key]);
+      if (key) setLockVisual(toggle, !!state.locks[key]);
     });
     [renderRecoveries, renderPotions, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpStatus].forEach(fn => {
       try { fn(); } catch(e) { console.warn(fn.name, e); }
@@ -2795,16 +2609,11 @@ function applyState() {
 }
 
 // ── REST / HEAL ACTIONS ──────────────────────────────────────────────
-// Skull/recovery state lives in `state.checkboxes` under keys like
-// `skull_3` / `rec_2`. We mutate that map and re-render the affected
-// trackers; the renderers read the same keys back out.
+// Skull and recovery state lives in `state.checkboxes` as `skull_3` / `rec_2`;
+// these mutate that map and re-render the affected trackers.
 
-// Clear the use-trackers on every ability row that refreshes here. Matched
-// on refresh cadence rather than mode, so a mode added later refreshes with
-// whichever track it declares and no call site needs updating — Arc /
-// Desperate rides in on 'arc' that way. Because usage is a closed set this
-// is exact: Passive and At-Will rows have no track and are skipped by
-// definition, not by guessing at what the player typed.
+// Matched on refresh cadence rather than usage mode, so a mode added later
+// refreshes with whichever track it declares and no call site changes.
 // Returns how many rows actually had ticks, for the log line.
 function clearUses(tracks) {
   let n = 0;
@@ -2820,8 +2629,7 @@ function clearUses(tracks) {
   return n;
 }
 
-// Icon relationship dice are rolled fresh each arc, so both tracks go with
-// them — the rolled-but-unspent one and the spent one.
+// Rolled fresh each arc, so both tracks go — rolled-but-unspent and spent.
 function clearIconTracks() {
   let n = 0;
   (state.icons || []).forEach(ic => {
@@ -2835,10 +2643,10 @@ function clearIconTracks() {
 function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 
 // ── RESTS ──────────────────────────────────────────────────────
-// A rest touches more of the sheet than any other button, and none of it is
-// undoable, so each one says what it will do in three places that must agree:
-// the button's tooltip, the confirm before it runs, and the log entry after.
-// One list, read three ways — the log swaps in what actually changed.
+// A rest touches more of the sheet than any other button and none of it is
+// undoable, so each says what it will do in three places that must agree: the
+// tooltip, the confirm, and the log entry after. One list read three ways —
+// the log swaps in what actually changed.
 const REST_PLANS = {
   quick: {
     label: 'Quick Rest',
@@ -2869,21 +2677,21 @@ const REST_PLANS = {
 
 function restBullets(plan) { return plan.effects.map(e => '• ' + e).join('\n'); }
 function restTooltip(plan) { return plan.lead + '\n' + restBullets(plan); }
-// Native, like the one on New Sheet: the sheet has no dialog of its own, and
-// a rest is rare enough that a plain browser prompt is the honest cost.
+// Native, like New Sheet's: a rest is rare enough that a plain browser prompt
+// is the honest cost.
 function confirmRest(plan) {
   return confirm(plan.ask + '\n\n' + restBullets(plan) + '\n\nThis cannot be undone.');
 }
-// One entry, one line per thing that actually changed — a rest that found
-// nothing to do says so rather than logging a list of zeroes.
+// One line per thing that actually changed — a rest that found nothing to do
+// says so rather than logging a list of zeroes.
 function logRest(plan, done) {
   logAction(plan.label, done.length
     ? done.map(d => '• ' + d).join('\n')
     : 'Nothing needed refreshing');
 }
 
-// A checkbox key is only "set" when its value is truthy: unticking writes
-// `false` rather than removing the key, so counting keys would over-report.
+// Unticking writes `false` rather than removing the key, so counting keys
+// would over-report.
 function clearCheckboxes(re) {
   let n = 0;
   Object.keys(state.checkboxes).forEach(key => {
@@ -2925,14 +2733,12 @@ function quickRest() {
 function fullHealUp() {
   if (!confirmRest(REST_PLANS.full)) return;
   const done = [];
-  // Potions are restocked rather than refreshed — the allocation comes off
-  // the level-derived stock fields, so clearing the ticks *is* the restock,
-  // and a level gained between arcs restocks at the new level.
+  // Potions are restocked, not refreshed: the stock fields are level-derived,
+  // so clearing the ticks *is* the restock, at whatever level you are now.
   const skulls = clearCheckboxes(/^skull_\d+$/);
   const recs = clearCheckboxes(/^rec_\d+$/);
   const potionTicks = clearCheckboxes(/^potion_[a-z]+_\d+$/);
-  // Set current HP from max HP. If max is blank, leave current blank rather
-  // than writing "undefined" or stale data into the field.
+  // If max is blank, leave current blank rather than writing stale data.
   const max = state.fields.max_hp || '';
   const hadTemp = intOrZero(state.fields.temp_hp);
   const prevHp = state.fields.current_hp || '';
@@ -2940,9 +2746,7 @@ function fullHealUp() {
   setFieldDom('current_hp');
   state.fields.temp_hp = '';
   setFieldDom('temp_hp');
-  // A character already at full HP was not healed, and saying so buries the
-  // lines that did happen. Same for every other line here: the log reports
-  // changes, not intentions.
+  // The log reports changes, not intentions.
   if (max !== prevHp) {
     done.push(max
       ? 'Current HP → ' + max + (prevHp ? ' (was ' + prevHp + ')' : '')
@@ -2951,8 +2755,7 @@ function fullHealUp() {
   if (hadTemp) done.push(hadTemp + ' temp HP cleared');
   if (recs) done.push(plural(recs, 'recovery', 'recoveries') + ' restored');
   if (skulls) done.push(plural(skulls, 'death-save skull', 'death-save skulls') + ' cleared');
-  // A full heal-up ends the arc, so per-battle *and* per-arc trackers go
-  // with it, icon relationships included.
+  // Ends the arc, so per-battle *and* per-arc trackers go, icons included.
   const refreshed = clearUses(['battle', 'arc']);
   if (refreshed) done.push(plural(refreshed, 'ability', 'abilities') + ' refreshed');
   const iconsReset = clearIconTracks();
@@ -2964,9 +2767,7 @@ function fullHealUp() {
   renderIcons();
   classHook('onFullHeal');
   updateHpStatus();
-  // Only when something was actually drunk. The summary is read after the
-  // ticks are gone, so it is the stock the player now has rather than the
-  // one they had left.
+  // Read after the ticks are gone, so it is the stock they now have.
   if (potionTicks) {
     const potions = potionSummary();
     done.push(potions ? 'Potions restocked (' + potions + ')'
@@ -2977,16 +2778,15 @@ function fullHealUp() {
   showToast('Fully healed');
 }
 
-// Push a state.fields value back into its DOM input (the reverse of the
-// input listener's sync). Used by actions that mutate fields directly.
+// The reverse of the input listener's sync, for actions that mutate fields
+// directly.
 function setFieldDom(key) {
   const node = document.querySelector(`[data-field="${key}"]`);
   if (node) node.value = state.fields[key] || '';
 }
 
-// ── HP STATUS (staggered / down / dead) ─────────────────────────────
 // Purely visual: compares current HP against the staggered and death
-// thresholds and shows a pulsing badge next to the Temp HP card.
+// thresholds and shows a pulsing badge beside the Temp HP card.
 function updateHpStatus() {
   const badge = document.getElementById('hp-status');
   if (!badge) return;
@@ -3080,9 +2880,8 @@ function exprDetail(expr, r) {
   return `${expr}: [${r.rolls.join(', ')}]` + (r.bonus ? ' ' + signed(r.bonus) : '');
 }
 
-// Open or closed is a preference like the tray's position, not a fact about
-// the DOM: a roll that pops it open is the player opening it, and it should
-// still be open after a reload.
+// A preference like the tray's position, not a fact about the DOM: a roll that
+// pops it open should leave it open after a reload.
 function applyTrayOpen() {
   const tray = trayEl();
   if (!tray) return;
@@ -3098,8 +2897,7 @@ function setTrayOpen(open) {
   const changed = state.prefs.trayOpen !== !!open;
   state.prefs.trayOpen = !!open;
   applyTrayOpen();
-  // Every roll opens the tray; only the one that actually changes the
-  // setting is worth a save.
+  // Every roll opens the tray; only a real change is worth a save.
   if (changed) saveNow();
 }
 
@@ -3107,11 +2905,11 @@ function openDiceTray() { setTrayOpen(true); }
 function toggleDiceTray() { setTrayOpen(!(state.prefs && state.prefs.trayOpen)); }
 
 // ── DICE TRAY AS A WINDOW ───────────────────────────────────────
-// Drag the header to move it, drag the corner grip to resize it. The four
-// numbers live in `state.prefs.tray` beside the display switches, so a layout
-// survives a reload and rides along in a saved file — clamped back into view
-// on arrival, since a sheet can be opened on a smaller screen than it was
-// saved on. No stored geometry means the corner the stylesheet gives it.
+// Drag the header to move it, the corner grip to resize it. The four numbers
+// live in `state.prefs.tray`, so a layout survives a reload and rides along in
+// a saved file — clamped back into view on arrival, since a sheet can be
+// opened on a smaller screen than it was saved on. No stored geometry means
+// the corner the stylesheet gives it.
 const TRAY_MIN_W = 240;   // narrower and the quick-roll buttons wrap
 const TRAY_MIN_H = 170;   // header, escalation row, buttons, one log entry
 const TRAY_EDGE  = 8;     // never let the whole of an edge leave the viewport
@@ -3122,9 +2920,8 @@ const TRAY_OPEN_H = 340;
 function trayEl() { return document.getElementById('dice-tray'); }
 function trayGeom() { return (state.prefs && state.prefs.tray) || null; }
 
-// Size is clamped to the viewport; position is clamped by what is actually on
-// screen, so a collapsed tray — a header and nothing else — can sit lower
-// than an open one could. Opening it clamps again at its full height.
+// Size is clamped to the viewport; position to what is actually on screen, so
+// a collapsed tray can sit lower than an open one. Opening clamps again.
 function clampTray(g) {
   const tray = trayEl();
   const vw = window.innerWidth, vh = window.innerHeight;
@@ -3151,23 +2948,21 @@ function applyTrayGeometry() {
     return;
   }
   clampTray(g);
-  // Anchored top-left once moved: the stylesheet's bottom-left corner can't
-  // express a dragged position, and mixing the two makes a resize grow in
-  // the wrong direction.
+  // Anchored top-left once moved: mixing that with the stylesheet's
+  // bottom-left corner makes a resize grow in the wrong direction.
   tray.style.left = g.x + 'px';
   tray.style.top = g.y + 'px';
   tray.style.right = 'auto';
   tray.style.bottom = 'auto';
-  // A collapsed tray is exactly its header; the stored size waits for it to
-  // be opened again.
+  // A collapsed tray is exactly its header; the stored size waits.
   const open = !tray.classList.contains('collapsed');
   if (open) { tray.style.width = g.w + 'px'; tray.style.height = g.h + 'px'; }
   else { tray.style.removeProperty('width'); tray.style.removeProperty('height'); }
   tray.classList.toggle('sized', open);
 }
 
-// The first drag or resize turns the corner-anchored tray into a positioned
-// one. Measuring it first is what makes that conversion move nothing.
+// The first drag turns the corner-anchored tray into a positioned one.
+// Measuring it first is what makes that conversion move nothing.
 function trayGeomForEdit() {
   if (!state.prefs) normalizePrefs(state);
   if (state.prefs.tray) return state.prefs.tray;
@@ -3190,9 +2985,9 @@ function resetTrayGeometry() {
   saveNow();
 }
 
-// One drag state for both gestures: they differ only in what the pointer's
-// travel is added to. `moved` is what keeps a click on the header the toggle
-// it already was — until the pointer has actually gone somewhere.
+// One drag state for both gestures — they differ only in what the pointer's
+// travel is added to. `moved` is what keeps a plain click on the header a
+// toggle.
 let _trayDrag = null;
 const TRAY_DRAG_SLOP = 4;
 
@@ -3254,9 +3049,8 @@ function wireDiceTrayWindow() {
   const grip = document.getElementById('dice-tray-grip');
   if (!head) return;
   head.addEventListener('click', trayHeadClick);
-  // Both clicks of a double-click still reach the toggle, which lands back
-  // where it started: the reset is about where the tray is, not whether it
-  // is open.
+  // Both clicks of a double-click reach the toggle and cancel out: the reset
+  // is about where the tray is, not whether it is open.
   head.addEventListener('dblclick', resetTrayGeometry);
   head.addEventListener('pointerdown', e => { _traySuppressClick = false; trayPointerDown('move', e); });
   head.addEventListener('pointermove', trayPointerMove);
@@ -3268,19 +3062,17 @@ function wireDiceTrayWindow() {
     grip.addEventListener('pointerup', trayPointerUp);
     grip.addEventListener('pointercancel', trayPointerUp);
   }
-  // A viewport that shrinks under a tray parked at its edge would put it out
-  // of reach; the clamp inside applyTrayGeometry walks it back.
+  // A shrinking viewport would put a tray parked at the edge out of reach.
   window.addEventListener('resize', () => { if (trayGeom()) applyTrayGeometry(); });
   // The header is set in a webfont, so its collapsed width — what a parked
-  // tray is clamped against — is not final until that font arrives.
+  // tray clamps against — isn't final until that font arrives.
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => { if (trayGeom()) applyTrayGeometry(); });
   }
 }
 
-// Prepend an entry to the dice & action log (newest on top, capped at 30)
-// and pop the tray open so the result is visible. The log is intentionally
-// not persisted — it's table chatter, not character data.
+// Newest on top, capped at 30, and pops the tray open. Not persisted — it's
+// table chatter, not character data.
 function logRoll(title, detail, total, cls) {
   openDiceTray();
   const log = document.getElementById('roll-log');
@@ -3295,15 +3087,15 @@ function logRoll(title, detail, total, cls) {
   ));
   while (log.children.length > 30) log.removeChild(log.lastChild);
 }
-// Automated sheet actions (damage applied, rests, …) log here too, so
-// every button that mutates state leaves a visible summary of what it did.
+// Automated actions (damage, rests, …) log here too, so every button that
+// mutates state leaves a visible summary.
 function logAction(title, detail, value) {
   logRoll(title, detail, value === undefined ? '' : value, 'action');
 }
 
-// Shared d20 roll. Reports the natural die (13A cares about even/odd
-// triggers), flags nat 1/20, and adds the escalation die for attacks only —
-// an active Fear pill blocks it. `opts.critFrom` widens the crit range.
+// Reports the natural die (13A cares about even/odd triggers), flags nat 1/20,
+// and adds the escalation die for attacks only — an active Fear pill blocks
+// it. `opts.critFrom` widens the crit range.
 function rollD20(title, bonus, opts = {}) {
   const critFrom = opts.critFrom || 20;
   const nat = rollDie(20);
@@ -3335,8 +3127,7 @@ function rollDamage(field, title) {
   logRoll(title, exprDetail(expr, r), r.total);
 }
 
-// Spend the next unspent recovery, roll the recovery dice, and apply the
-// healing to current HP (capped at max when max is known).
+// Spend the next unspent recovery, roll it, and apply the healing.
 function rollRecovery() {
   collectState();
   const expr = (state.fields.recovery_dice || '').trim();
@@ -3361,11 +3152,10 @@ function rollRecovery() {
   saveNow();
 }
 
-// Drinking a potion is a standard action that spends a potion *and* a
-// recovery: you heal the recovery's worth plus the potion's dice, and the
-// tier's cap limits what that one drink can restore. With no recoveries
-// left it declines rather than half-working, the same call rollRecovery
-// makes — the potion is still on the sheet to spend by hand.
+// A potion spends a potion *and* a recovery: you heal the recovery's worth
+// plus the potion's dice, up to the tier's cap. With no recoveries left it
+// declines rather than half-working — the potion is still there to spend by
+// hand.
 function drinkPotion(tier) {
   const t = POTION_TIERS.find(x => x.key === tier);
   if (!t) return;
@@ -3407,9 +3197,8 @@ function drinkPotion(tier) {
   saveNow();
 }
 
-// Icon relationship roll: Nd6, each 5 or 6 earning a use. Whether a use
-// comes with a twist is decided when it's played, not here — that's what
-// the 3-state "available" track is for.
+// Nd6, each 5 or 6 earning a use. Whether a use comes with a twist is decided
+// when it's played — that's what the 3-state "available" track is for.
 function rollIconDice(i) {
   const ic = state.icons[i];
   const n = Math.min(Math.max(parseInt(ic.dice) || 0, 0), 3);
@@ -3440,7 +3229,6 @@ const ROLL_HANDLERS = {
   ranged_dmg:      () => rollDamage('ranged_damage', 'Ranged damage'),
 };
 
-// ── ESCALATION DIE ──────────────────────────────────────────────────
 // Persisted in state.escalation (0–6). Attack rolls add it automatically.
 function renderEscalation() {
   const v = state.escalation || 0;
@@ -3455,8 +3243,7 @@ function bumpEscalation(delta) {
   saveNow();
 }
 
-// ── CONDITION PILLS ─────────────────────────────────────────────────
-// Standard 13A conditions as toggleable chips; tooltips carry the rules
+// Standard 13A conditions as toggleable chips, tooltips carrying the rules
 // reminder. Active keys persist in state.activeConditions.
 const CONDITIONS = [
   { key: 'confused',   label: 'Confused',   tip: 'Your attacks target a random nearby ally; you can\'t make opportunity attacks (save ends).' },
@@ -3509,17 +3296,15 @@ document.addEventListener('input', (e) => {
   if (e.target.tagName === 'TEXTAREA') autoGrow(e.target);
   if (e.target.dataset && e.target.dataset.field) {
     const key = e.target.dataset.field;
-    // Sync synchronously, or recomputeDerived reads the last saved value.
+    // Synchronous, or recomputeDerived reads the last saved value.
     state.fields[key] = e.target.value;
     // Only when the edited field actually feeds a derived value — typing in
     // `notes` shouldn't walk DERIVED_FIELDS.
     if (DERIVED_SOURCES.has(key)) recomputeDerived();
-    // Swaps the whole class-module layer; nothing is cleared. notify: the
-    // user picked this class, so say so if its file is missing.
+    // Swaps the whole class-module layer; nothing is cleared.
     if (key === 'class') renderClassContent({ notify: true });
-    // Not derived sources, but they drive the staggered/down badge.
-    // The autosave below redraws the battle helper too, but 400ms late.
-    // These are the fields it reads out loud, so they get it immediately.
+    // Not derived sources, but they drive the staggered/down badge — and the
+    // autosave below would redraw the battle helper 400ms late.
     if (['current_hp', 'temp_hp', 'staggered', 'dead', 'max_hp'].includes(key)) {
       updateHpStatus();
       renderBattleHelperBody();
@@ -3528,9 +3313,7 @@ document.addEventListener('input', (e) => {
   autoSave();
 });
 
-// Space / Enter toggle any focused custom checkbox (recoveries, skulls,
-// power-use trackers, prep buttons, incremental advances) or switch
-// (lock toggles on auto-derived fields).
+// Space / Enter toggle any focused custom checkbox, switch or button.
 document.addEventListener('keydown', (e) => {
   if (e.key !== ' ' && e.key !== 'Enter') return;
   const el = e.target;
@@ -3541,19 +3324,27 @@ document.addEventListener('keydown', (e) => {
   el.click();
 });
 
-// Re-render trackers only after the user commits a value (blur / Enter), so
-// typing "12" doesn't briefly redraw with 1 box on the first keystroke.
+// Only after the value is committed (blur / Enter), so typing "12" doesn't
+// briefly redraw with one box.
 document.addEventListener('change', (e) => {
   if (!e.target.dataset) return;
   if (e.target.dataset.field === 'max_recoveries') renderRecoveries();
   if (/^potions_/.test(e.target.dataset.field || '')) renderPotions();
 });
 
-// Load from localStorage on init
+// Load from localStorage on init. Gated on the same check the file loader
+// makes: a stored blob that parses but isn't a sheet was assigned to `state`
+// regardless. A stored `null` then threw on the first dereference below, and
+// this try swallowed it — leaving `state` as null for the init further down,
+// which died outside the try and took the whole page with it. Anything else
+// shaped wrong (an array, a hand-edited file) came through as a sheet with no
+// fields. Neither is recoverable, so an unusable blob is now left where it is
+// and the sheet opens blank.
 try {
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    state = JSON.parse(saved);
+  const parsed = saved ? JSON.parse(saved) : null;
+  if (isSheetData(parsed)) {
+    state = parsed;
     migrateAbilityLists(state);
     if (!state.checkboxes) state.checkboxes = {};
     if (!state.backgrounds) state.backgrounds = [];
@@ -3572,13 +3363,13 @@ try {
     migrateTrigger(state);
     migrateAttackAutoCalc(state);
     migrateArmorType(state);
+    pruneState(state);
     normalizePrefs(state);
   }
 } catch(e) {}
 
-// Every static button is wired here rather than with inline onclick, so the
-// markup stays CSP-friendly and each entry point that mutates state is
-// listed in one place.
+// Wired here rather than with inline onclick, so the markup stays CSP-friendly
+// and every entry point that mutates state is listed in one place.
 function wireStaticHandlers() {
   const ACTIONS = {
     'add-background': addBackground,
@@ -3595,8 +3386,7 @@ function wireStaticHandlers() {
     'hp-heal':        applyHeal,
     'roll-recovery':  rollRecovery,
   };
-  // One drink action per tier, generated so that adding a tier stays a
-  // single edit in POTION_TIERS rather than three scattered ones.
+  // One drink action per tier, generated from POTION_TIERS.
   POTION_TIERS.forEach(t => { ACTIONS['drink-' + t.key] = () => drinkPotion(t.key); });
   document.querySelectorAll('[data-action]').forEach(btn => {
     const fn = ACTIONS[btn.dataset.action];
@@ -3616,7 +3406,7 @@ function wireStaticHandlers() {
   document.getElementById('esc-reset').addEventListener('click', () => {
     state.escalation = 0; renderEscalation(); saveNow();
   });
-  // Enter in the amount field applies damage — the common case in play.
+  // Enter applies damage — the common case in play.
   document.getElementById('hp-adjust-amt').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); applyDamage(); }
   });
@@ -3633,7 +3423,7 @@ function wireStaticHandlers() {
   document.getElementById('load-input').addEventListener('change', loadFromFile);
 }
 
-// Numeric keypad on mobile, for positive integers only. Signed values (mods,
+// Numeric keypad on mobile, positive integers only. Signed values (mods,
 // vs-AC, initiative) and dice notation stay plain text: iOS's numeric keypad
 // has no `-`, so those fields would become untypeable.
 const NUMERIC_FIELDS = [
@@ -3672,9 +3462,9 @@ if (state.spells.length === 0) { addSpell(); }
 if (state.feats.length === 0) { addFeat(); }
 _initializing = false;
 
-// Recalculate textarea heights once webfonts have loaded (fallback-font
-// metrics differ enough to mis-wrap text and lock in a too-tall height),
-// and again whenever the viewport width changes wrap points.
+// Fallback-font metrics differ enough to mis-wrap text and lock in a too-tall
+// height, so re-measure once the webfonts land — and again when a resize moves
+// the wrap points.
 if (document.fonts && document.fonts.ready) {
   document.fonts.ready.then(autoGrowAll);
 }

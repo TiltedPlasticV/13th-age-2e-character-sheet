@@ -1,14 +1,11 @@
 // ═══════════════════════════════════════════════════════════════════════
 //  ROGUE — 13th Age 2e
-//  Base numbers plus the Bravado point tracker.
 //  See _template.js for the module API.
 // ═══════════════════════════════════════════════════════════════════════
 (function () {
 
-  // ── Bravado points ──────────────────────────────────────────────────
-  // A plain counter, so it lives in classData('rogue') and survives a
-  // class switch. Never negative.
-
+  // A plain counter, so it lives in classData('rogue') and survives a class
+  // switch. Never negative.
   function bravado() {
     return intOrZero(classData('rogue').bravado);
   }
@@ -16,6 +13,8 @@
   function setBravado(n, how) {
     const d = classData('rogue');
     const next = Math.max(0, n);
+    // The log reports changes, not intentions.
+    if (next === bravado()) return;
     if (next) d.bravado = next; else delete d.bravado;
     const box = document.getElementById('rogue-bravado-value');
     if (box) box.textContent = String(next);
@@ -53,15 +52,10 @@
     );
   }
 
-  // ── Registration ────────────────────────────────────────────────────
-
   registerClass('rogue', {
 
-    // AC comes from the armor table below; these two are flat.
     defenses: { pd: 12, md: 10 },
 
-    // BASE AC by armor type, and the attack penalty each carries. The
-    // shield `ac` is only the placeholder on the hand-typed Shield box.
     armor: {
       none:   { ac: 11 },
       light:  { ac: 12 },
@@ -70,14 +64,9 @@
       default: 'light',
     },
 
-    // max HP = (baseHp + Con mod) × level multiplier.
     baseHp: 6,
-
-    // Recovery dice = one per level, + Con mod, scaled by tier.
     recoveryDie: 8,
 
-    // A rogue hits with Dexterity in melee, not Strength — and unlike most
-    // classes, a missed *ranged* attack still deals damage equal to level.
     attacks: {
       melee:  { ability: 'dex' },
       ranged: { missDamage: true },
@@ -87,15 +76,13 @@
       'hp-side': buildBravadoPanel,
     },
 
-    // Bravado is spent within a battle and doesn't carry out of it, so the
-    // quick rest clears it — the ⚔ on the panel's own button is the same
-    // action, for when the battle ends without one.
+    // Bravado doesn't carry out of a battle. The panel's own ⚔ button is the
+    // same action, for when a battle ends without a quick rest.
     onQuickRest() {
       if (bravado()) setBravado(0, 'cleared');
     },
 
-    // The counter needs no more room than its buttons — let the recoveries
-    // column have the rest.
+    // The counter needs no more room than its buttons.
     slotFit: ['hp-side'],
 
     css: `
