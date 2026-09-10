@@ -823,8 +823,14 @@ function initLocks() {
       }
       saveNow();
     });
-    // Typing into a derived field auto-locks it.
+    // Typing into a derived field auto-locks it — but only if the value
+    // actually changed. Restoring a closed tab replays the browser's own form
+    // state onto every input and fires `input` for each one, values identical;
+    // taking those at face value locked the whole sheet on reopen. `state`
+    // still holds the pre-edit value here: this listener is on the input, so
+    // it runs before the delegated one that writes the field.
     input.addEventListener('input', () => {
+      if (input.value === String(state.fields[key] || '')) return;
       if (!state.locks[key]) {
         state.locks[key] = true;
         setLockVisual(toggle, true);
