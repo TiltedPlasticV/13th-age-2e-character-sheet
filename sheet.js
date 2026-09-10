@@ -788,8 +788,8 @@ function updateTierBadge() {
   );
 }
 
+// The padlock itself is drawn in CSS off `.locked`; the state is the class.
 function setLockVisual(toggleEl, locked) {
-  toggleEl.textContent = locked ? '🔒' : '🔓';
   toggleEl.classList.toggle('locked', locked);
   toggleEl.setAttribute('aria-checked', locked ? 'true' : 'false');
   toggleEl.title = locked
@@ -812,6 +812,14 @@ function initLocks() {
     toggle.setAttribute('aria-label', `Lock ${key.replace(/_/g, ' ')} to manual value`);
     wrap.appendChild(toggle);
     setLockVisual(toggle, !!state.locks[key]);
+    // A click must not put focus *into* the padlock. Nothing draws a ring for
+    // it — the field's outline belongs to the input — but `:focus-within`
+    // still counts it, which left the reveal lit after the pointer had gone:
+    // a padlock the player never focused and couldn't make fade. Cancelling
+    // the mousedown default leaves focus where it was, so the only focus the
+    // sheet has is the one it shows. Tab still reaches the toggle, and the
+    // click fires either way.
+    toggle.addEventListener('mousedown', e => e.preventDefault());
     toggle.addEventListener('click', () => {
       if (state.locks[key]) {
         delete state.locks[key];
@@ -1756,8 +1764,9 @@ function renderBackgrounds() {
         onclick: () => {
           collectState();
           const b = state.backgrounds[i];
-          rollD20(`${b.name || 'Background'} (+ ability mod)`,
-                  intOrZero(state.fields.level) + intOrZero(b.bonus));
+          const lvl = intOrZero(state.fields.level), bg = intOrZero(b.bonus);
+          rollD20(b.name || 'Background', lvl + bg,
+                  { breakdown: [['bg', bg], ['lvl', lvl]], totalNote: ' + mod' });
         }
       }, '🎲'),
       el('button', {
@@ -1800,7 +1809,7 @@ function renderIcons() {
       el('span', { style: 'display:flex; align-items:center;' },
         el('button', {
           class: 'roll-btn',
-          title: 'Roll relationship dice: each 5 or 6 earns a use',
+          title: 'Roll to earn uses: each 5 or 6 earns one (spending a use is a plain d20)',
           'aria-label': `Roll ${ic.name || 'icon'} relationship dice`,
           onclick: () => rollIconDice(i)
         }, '🎲'),
@@ -3109,14 +3118,17 @@ function rollD20(title, bonus, opts = {}) {
   const esc = (opts.escalation && !fearBlocked) ? (state.escalation || 0) : 0;
   const total = nat + bonus + esc;
   const parts = [`d20: ${nat} (${nat % 2 === 0 ? 'even' : 'odd'})`];
-  if (bonus) parts.push(signed(bonus));
+  // A named breakdown replaces the lump bonus where the player still owes the
+  // roll something the sheet can't know — see the background button.
+  if (opts.breakdown) opts.breakdown.forEach(([label, v]) => { if (v) parts.push(`${label} ${signed(v)}`); });
+  else if (bonus) parts.push(signed(bonus));
   if (esc) parts.push(`esc +${esc}`);
   if (fearBlocked && (state.escalation || 0) > 0) parts.push('fear: no esc');
   if (critFrom < 20) parts.push(`crit ${critFrom}+`);
   let cls = '';
   if (nat >= critFrom) { cls = 'crit'; title += ' — CRIT!'; }
-  else if (nat === 1) { cls = 'fumble'; title += ' — natural 1'; }
-  logRoll(title, parts.join('  '), total, cls);
+  else if (nat === 1) { cls = 'fumble'; title += ' — natural 1 😔'; }
+  logRoll(title, parts.join('  '), total + (opts.totalNote || ''), cls);
 }
 
 function rollAttack(weaponField, fallbackTitle, bonusField) {
@@ -3203,18 +3215,21 @@ function drinkPotion(tier) {
   saveNow();
 }
 
-// Nd6, each 5 or 6 earning a use. Whether a use comes with a twist is decided
-// when it's played — that's what the 3-state "available" track is for.
+// Nd6, each 5 or 6 earning a use. This roll only *earns* uses — spending one
+// is an ordinary d20, so the log says "gained" and totals in ticks rather than
+// a bare number that could be read either way. Whether a use comes with a
+// twist is decided when it's played — that's the 3-state "available" track.
 function rollIconDice(i) {
   const ic = state.icons[i];
   const n = Math.min(Math.max(parseInt(ic.dice) || 0, 0), 3);
   if (!n) { showToast('Set the number of dice first'); return; }
   const rolls = [];
   for (let k = 0; k < n; k++) rolls.push(rollDie(6));
-  const successes = rolls.filter(v => v >= 5).length;
-  const label = successes ? `${successes} use${successes > 1 ? 's' : ''}` : 'no 5s or 6s';
-  logRoll(`${ic.name || 'Icon'} — ${label}`, `[${rolls.join(', ')}]`,
-          successes, successes ? 'crit' : '');
+  const gained = rolls.filter(v => v >= 5).length;
+  logRoll(`${ic.name || 'Icon'} — ${gained ? plural(gained, 'use', 'uses') + ' gained!' : 'nothing gained'}`,
+          `${n}d6: [${rolls.join(', ')}]  each 5–6 earns a use`,
+          gained ? '✓'.repeat(gained) : '—',
+          gained ? 'crit' : '');
 }
 
 const ROLL_HANDLERS = {
