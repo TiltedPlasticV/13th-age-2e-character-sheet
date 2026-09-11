@@ -2180,8 +2180,8 @@ function openPowerDialog(stateKey, index) {
   const item = state[stateKey][index];
   if (!dlg || !item) return;
   _powerDialog = { stateKey, item };
-  renderPowerDialog();
   if (!dlg.open) dlg.showModal();
+  renderPowerDialog();
   if (!item.name) {
     const name = dlg.querySelector('.power-name');
     if (name) name.focus();
