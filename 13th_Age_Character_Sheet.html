@@ -28,6 +28,7 @@
     <div class="desc-row">
       <input class="field-inline" data-field="description" placeholder="Physical description, personality…">
     </div>
+    <div class="zone" data-zone="toolbar" data-zone-holds="utilities"></div>
   </div>
 
   <!-- CSS multi-column: the sections balance themselves across two columns
@@ -353,7 +354,8 @@
       <div class="section-head"><span class="icon">💎</span> Magic Items</div>
       <div class="section-body">
         <div class="hp-item"><span class="hp-label">Max Attuned</span><input class="field-inline field-grow" data-field="max_magic" aria-label="Maximum attuned magic items"></div>
-        <textarea rows="1" class="field-block" data-field="magic_items" placeholder="Magic items, runes, wondrous gear…"></textarea>
+        <div id="magic-items-list" class="powers-list"></div>
+        <button class="add-row-btn" data-action="add-magic-item">+ Add Item</button>
       </div>
     </div>
 
@@ -458,10 +460,25 @@
         <span class="class-switch-label">Battle Helper</span>
         <span class="class-switch-track"><span class="class-switch-knob"></span></span>
       </div>
+      <div class="class-switch" id="pref-fixed-layout" role="switch" tabindex="0" aria-checked="false"
+           title="Every section in the same place, on one screen with no scrolling — long lists scroll inside their own box. Needs a large window.">
+        <span class="class-switch-label">Fixed Layout</span>
+        <span class="class-switch-track"><span class="class-switch-knob"></span></span>
+      </div>
     </div>
   </div>
 
   </div><!-- .sheet-columns -->
+
+  <!-- FIXED LAYOUT — empty unless the Utilities switch is on. applyLayout()
+       moves each section listed in data-zone-holds into its zone, and back to
+       where it came from when the switch goes off. -->
+  <div class="fixed-zones" id="fixed-zones">
+    <div class="zone" data-zone="character" data-zone-holds="unique abilities backgrounds icons feats notes"></div>
+    <div class="zone" data-zone="combat" data-zone-holds="defenses hp potions conditions advances"></div>
+    <div class="zone" data-zone="attacks" data-zone-holds="attacks sections gear magic-items"></div>
+    <div class="zone" data-zone="abilities" data-zone-holds="kin-powers features talents powers spells"></div>
+  </div>
 
 </div>
 
@@ -505,6 +522,19 @@
     <!-- Contents go here. -->
   </div>
 </div>
+
+<!-- ABILITY POPUP — the whole of one power, spell or talent row, opened from
+     its name while the fixed layout shows the lists one line per row -->
+<dialog class="power-dialog" id="power-dialog" aria-label="Ability details">
+  <div class="power-dialog-head">
+    <span class="power-dialog-title" id="power-dialog-title"></span>
+    <button class="remove-btn" id="power-dialog-close" title="Close" aria-label="Close">×</button>
+  </div>
+  <div class="power-dialog-body" id="power-dialog-body"></div>
+  <div class="power-dialog-foot">
+    <button class="action-btn" id="power-dialog-delete">× Delete</button>
+  </div>
+</dialog>
 
 <div class="toast" id="toast"></div>
 

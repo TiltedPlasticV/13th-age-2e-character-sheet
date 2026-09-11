@@ -21,6 +21,8 @@ let state = {
   talents: [],
   powers: [],
   spells: [],
+  // Same row shape, minus usage and trigger; `prepared` reads as attuned.
+  magicItems: [],
   feats: [],
   advances: {},
   locks: {},
@@ -33,7 +35,7 @@ let state = {
   // Settings, not character data: like the theme, these survive "New Sheet".
   // `collapsed` holds only the folded sections — absent means open, so one
   // added later opens by default.
-  prefs: { animations: true, diceRoller: true, battleHelper: false, battleHelperOpen: true, collapsed: {} }
+  prefs: { animations: true, diceRoller: true, battleHelper: false, battleHelperOpen: true, fixedLayout: false, collapsed: {} }
 };
 
 // The literal above is the schema, so pruneState() reads the valid key set off
@@ -880,6 +882,7 @@ function normalizePrefs(s) {
     // arrives as a bare 30px rail is one nobody finds, so the first switch-on
     // always arrives expanded.
     battleHelperOpen: p.battleHelper === true ? p.battleHelperOpen !== false : true,
+    fixedLayout: p.fixedLayout === true,
     collapsed: (p.collapsed && typeof p.collapsed === 'object') ? p.collapsed : {},
     tray: normalizeTrayGeom(p.tray),
     // Closed unless it has been opened, which is how the markup ships — an
@@ -912,6 +915,7 @@ function applyPrefs() {
   });
   applyTrayOpen();
   renderBattleHelper();
+  applyLayout();
 }
 
 // The panel's own open/collapsed state, kept apart from the switch that makes
@@ -946,7 +950,7 @@ function toggleBattleHelper() {
 // The class-dependent list takes its noun from CLASS_ABILITY_SECTION.
 const ABILITY_TAGS = {
   kinPowers: 'Kin', features: 'Feature', talents: 'Talent',
-  powers: 'Power', spells: 'Spell',
+  powers: 'Power', spells: 'Spell', magicItems: 'Magic item',
 };
 function abilityTag(listKey) {
   if (listKey !== 'powers') return ABILITY_TAGS[listKey];
@@ -1117,6 +1121,9 @@ const ABILITY_LIST_IDS = {
 // queries can't be read back out. Below it the panel covers most of the
 // sheet, so a jump would land on something still hidden behind it.
 const BH_NARROW = '(max-width: 600px)';
+// The same, for the fixed layout's breakpoint: narrower than this the open
+// panel covers the last zone instead of sitting beside it.
+const BH_FIXED_BESIDE = '(min-width: 1900px)';
 // Matches the .bh-target fade in sheet.css, which holds the final,
 // transparent frame until this fires. The two have to agree.
 const BH_TARGET_MS = 1500;
@@ -1171,13 +1178,15 @@ function bhReveal(r) {
   // scrollIntoView does nothing for a display:none element. Open it, and
   // leave it open — you asked to see what is in there.
   const section = node.closest('.section[data-section]');
-  if (section && section.classList.contains('collapsed')) {
+  if (section && section.classList.contains('collapsed') && !_fixedActive) {
     setSectionCollapsed(section, false);
     saveNow();
   }
   // Collapsing doesn't reflow the sheet — the rail's strip is reserved either
   // way.
-  if (state.prefs.battleHelperOpen && window.matchMedia(BH_NARROW).matches) {
+  const covered = window.matchMedia(BH_NARROW).matches
+    || (_fixedActive && !window.matchMedia(BH_FIXED_BESIDE).matches);
+  if (state.prefs.battleHelperOpen && covered) {
     state.prefs.battleHelperOpen = false;
     renderBattleHelper();
     saveNow();
@@ -1353,6 +1362,82 @@ function togglePref(key) {
   saveNow();
 }
 
+// ── FIXED LAYOUT ──
+// Not a PREF_SWITCHES entry: it only applies while the window is big enough,
+// and it moves sections rather than just restyling them. The pref is what the
+// player asked for; the body class is what the window allows. The switch
+// shows the latter, so it never reads "on" over a sheet that isn't.
+const FIXED_MIN_W = 1600;
+const FIXED_MIN_H = 850;
+let _fixedActive = false;
+let _printing = false;
+
+function fixedLayoutFits() {
+  return window.innerWidth >= FIXED_MIN_W && window.innerHeight >= FIXED_MIN_H;
+}
+function fixedLayoutActive() { return _fixedActive; }
+
+// Each section is moved whole and returned to a marker left where it was, so
+// nothing is rebuilt and every input keeps its value, listeners and locks.
+function zoneItem(key) {
+  return document.querySelector(`.section[data-section="${key}"]`)
+      || document.querySelector(`[data-class-slot="${key}"]`);
+}
+
+function applyLayout() {
+  if (!state.prefs) normalizePrefs(state);
+  const on = !_printing && state.prefs.fixedLayout === true && fixedLayoutFits();
+  const sw = document.getElementById('pref-fixed-layout');
+  if (sw) {
+    sw.classList.toggle('on', on);
+    sw.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+  if (on === _fixedActive) return;
+  _fixedActive = on;
+  const focused = document.activeElement;
+  document.querySelectorAll('.zone[data-zone-holds]').forEach(zone => {
+    zone.dataset.zoneHolds.split(/\s+/).forEach(key => {
+      const node = zoneItem(key);
+      if (!node) return;
+      if (!node._zoneHome) {
+        node._zoneHome = document.createComment(' ' + key + ' ');
+        node.before(node._zoneHome);
+      }
+      if (on) zone.appendChild(node);
+      else node._zoneHome.after(node);
+    });
+  });
+  document.body.classList.toggle('layout-fixed', on);
+  if (focused && focused !== document.activeElement && focused.isConnected) {
+    focused.focus({ preventScroll: true });
+  }
+  autoGrowAll();
+  // Class modules that measure (the barbarian's skull brackets) re-measure on
+  // resize, and a new layout is the same event as far as they can tell.
+  window.dispatchEvent(new Event('resize'));
+}
+
+function toggleFixedLayout() {
+  if (!state.prefs) normalizePrefs(state);
+  const turningOn = !_fixedActive;
+  state.prefs.fixedLayout = turningOn && fixedLayoutFits();
+  applyLayout();
+  if (turningOn && !_fixedActive) {
+    showToast(`The fixed layout needs a window at least ${FIXED_MIN_W} × ${FIXED_MIN_H} — `
+      + `this one is ${window.innerWidth} × ${window.innerHeight}`, 6000);
+  } else {
+    showToast(_fixedActive ? 'Fixed layout on' : 'Fixed layout off');
+  }
+  saveNow();
+}
+
+// A window shrunk below the minimum falls back to the flowing sheet, and
+// grows back into the fixed one, without touching the pref.
+window.addEventListener('resize', applyLayout);
+// The print stylesheet is written against the flowing sheet.
+window.addEventListener('beforeprint', () => { _printing = true; applyLayout(); });
+window.addEventListener('afterprint', () => { _printing = false; applyLayout(); });
+
 // ── COLLAPSIBLE SECTIONS ────────────────────────────────────────────
 // Which sections are folded is a display preference rather than character
 // data, so it rides in state.prefs and survives "New Sheet".
@@ -1406,6 +1491,9 @@ function refreshCollapsibleSections() {
       // Space/Enter arrive via the global keydown handler.
       head.appendChild(el('span', { class: 'section-caret', 'aria-hidden': 'true' }, '▾'));
       head.addEventListener('click', () => {
+        // Folding would move the sections below it, which is the one thing
+        // the fixed layout promises not to do.
+        if (_fixedActive) return;
         setSectionCollapsed(section, !section.classList.contains('collapsed'));
         saveNow();
       });
@@ -1440,12 +1528,12 @@ function applyAbilitySections() {
 // timed out used to be cut short by the first one's pending removal, so the
 // message you were actually meant to read flashed past.
 let _toastTimer = 0;
-function showToast(msg) {
+function showToast(msg, ms = 2000) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), ms);
 }
 
 // Textareas grow to fit their text. Measuring `scrollHeight` forces a
@@ -1466,11 +1554,17 @@ function flushAutoGrow() {
   _growQueue.clear();
   // Release all, read all, write all. Interleaving these — the obvious
   // per-textarea loop — makes each read re-run layout for the whole document.
-  list.forEach(ta => { ta.style.height = 'auto'; });
-  const heights = list.map(ta => ta.scrollHeight);
+  // Overflow is hidden while measuring: a scrollbar on the one-row box would
+  // narrow it and wrap the text into extra lines.
+  list.forEach(ta => { ta.style.height = 'auto'; ta.style.overflowY = 'hidden'; });
+  // scrollHeight stops at the padding, and the box is sized border-box.
+  const heights = list.map(ta => ta.scrollHeight && ta.scrollHeight + ta.offsetHeight - ta.clientHeight);
   // A textarea in a folded section measures zero; writing that back would
   // leave it collapsed when the section reopens.
-  list.forEach((ta, i) => { if (heights[i]) ta.style.height = heights[i] + 'px'; });
+  list.forEach((ta, i) => {
+    if (heights[i]) ta.style.height = heights[i] + 'px';
+    ta.style.overflowY = '';
+  });
 }
 function autoGrowAll() {
   document.querySelectorAll('textarea.field-block').forEach(autoGrow);
@@ -1918,138 +2012,235 @@ function restoreListFocus(list, mark) {
   if (node) node.focus({ preventScroll: true });
 }
 
-// Unified renderer for powers and spells. opts:
-//   listId, stateKey, namePlaceholder, descPlaceholder, withPrep
+// What the fixed layout's one-line row says in place of its two dropdowns. A
+// tracked row's boxes already carry its cadence, and a standard action is
+// what nearly everything is.
+function usageSummary(item) {
+  const mode = usageMode(item);
+  if (mode === 'passive') return USAGE_MODES.passive.label;
+  const trigger = triggerMode(item);
+  return [mode === 'atwill' ? USAGE_MODES.atwill.label : '',
+          trigger === TRIGGER_DEFAULT ? '' : TRIGGERS[trigger].short]
+    .filter(Boolean).join(' · ');
+}
+
+// One ability row. Drawn in its list and, whole, in the popup; `rerender`
+// redraws whichever of the two it belongs to.
+function buildPowerBlock(opts, i, rerender) {
+  const { stateKey, namePlaceholder, descPlaceholder, prepLabel, noUsage } = opts;
+  const item = state[stateKey][i];
+  // A Passive or At-Will row has nothing to track, so its Uses count and
+  // checkboxes aren't drawn — hidden, never cleared.
+  const track = usageTrack(item);
+  const mode = USAGE_MODES[usageMode(item)];
+  const maxU = usageUses(item);
+  const useChecks = el('div', { class: 'use-checks' });
+  if (maxU > 0) {
+    appendUses(useChecks, stateKey, i, maxU, item.used);
+    // A skull rather than one more ✕: it isn't one more of the same use.
+    if (mode.desperate) {
+      appendUses(useChecks, stateKey, i, 1, item.desperate, {
+        prop: 'desperate', glyph: '☠', variant: 'desperate',
+        label: 'Desperate use',
+        title: 'Desperate use — regained once per arc when you fail a death '
+             + 'save or spend your last recovery'
+      });
+    }
+    useChecks.appendChild(trackAnnotation(track));
+  }
+  const prepBtn = prepLabel ? el('div', {
+    class: 'prep-btn' + (item.prepared !== false ? ' active' : ''),
+    role: 'checkbox', tabindex: '0',
+    'aria-checked': item.prepared !== false ? 'true' : 'false',
+    'aria-label': prepLabel, title: prepLabel,
+    onclick: ev => togglePrepared(stateKey, i, ev.currentTarget)
+  }, '✦') : null;
+  const usageSel = el('select', {
+    class: 'field-inline power-usage', 'aria-label': 'Usage',
+    title: 'How this refreshes. Battle and Arc rows are cleared by the rest '
+         + 'buttons; Passive and At-Will rows are left alone.',
+    onchange: e => {
+      const row = state[stateKey][i];
+      row.usage = e.target.value;
+      // Battle and Arc almost always mean one use, and filling it in beats
+      // a tracked row with no boxes to tick.
+      if (usageTrack(row) && !USAGE_MODES[usageMode(row)].uses
+          && !(parseInt(row.max_uses) > 0)) row.max_uses = '1';
+      rerender();
+      saveNow();
+    }
+  }, USAGE_KEYS.map(k => el('option', { value: k }, USAGE_MODES[k].label)));
+  usageSel.value = usageMode(item);
+  const triggerSel = el('select', {
+    class: 'field-inline power-trigger', 'aria-label': 'Trigger',
+    title: 'What sets this off. An Out of battle row — a skill check, '
+         + 'a bit of roleplay — is left out of the battle helper.',
+    onchange: e => { state[stateKey][i].trigger = e.target.value; rerender(); saveNow(); }
+  }, TRIGGER_KEYS.map(k => el('option', { value: k }, TRIGGERS[k].label)));
+  triggerSel.value = triggerMode(item);
+  const header = el('div', { class: 'power-header' },
+    el('span', { class: 'drag-handle', title: 'Drag to reorder' }, '⋮⋮'),
+    prepBtn,
+    el('input', {
+      class: 'field-inline power-name', value: item.name, placeholder: namePlaceholder,
+      oninput: e => { state[stateKey][i].name = e.target.value; }
+    }),
+    // The fixed layout's stand-ins for the name and the two dropdowns.
+    el('button', {
+      class: 'power-open' + (item.name ? '' : ' unnamed'), type: 'button',
+      title: 'Show the whole ' + abilityTag(stateKey).toLowerCase(),
+      onclick: () => openPowerDialog(stateKey, i)
+    }, item.name || namePlaceholder),
+    noUsage ? null : el('span', { class: 'power-summary' }, usageSummary(item)),
+    (noUsage || mode.trigger === false) ? null : triggerSel,
+    noUsage ? null : usageSel,
+    maxU > 0 ? useChecks : null,
+    (track && !mode.uses) ? el('input', {
+      class: 'field-inline field-sm', value: item.max_uses || '',
+      placeholder: 'Uses', title: 'Number of use checkboxes',
+      inputmode: 'numeric',
+      onchange: e => { state[stateKey][i].max_uses = e.target.value; rerender(); saveNow(); }
+    }) : null,
+    el('button', {
+      class: 'remove-btn',
+      onclick: () => { state[stateKey].splice(i, 1); rerender(); saveNow(); }
+    }, '×')
+  );
+  const desc = el('textarea', {
+    rows: '1', class: 'field-block', placeholder: descPlaceholder,
+    oninput: e => { state[stateKey][i].desc = e.target.value; }
+  });
+  desc.value = item.desc || '';
+  const blockClasses = 'power-block' + (prepLabel && item.prepared === false ? ' unprepared' : '');
+  return el('div', { class: blockClasses }, header, desc);
+}
+
+// Unified renderer for powers, spells and magic items. opts:
+//   listId, stateKey, namePlaceholder, descPlaceholder,
+//   prepLabel  the ✦ toggle's name ('Prepared'); omitted, no toggle
+//   noUsage    no trigger or usage, so no use boxes either
 function renderPowerLike(opts) {
-  const { listId, stateKey, namePlaceholder, descPlaceholder, withPrep } = opts;
-  const list = document.getElementById(listId);
+  const list = document.getElementById(opts.listId);
   const focusMark = captureListFocus(list);
   const scrollPos = captureScroll();
+  // The fixed layout's section scroll box clamps the same way.
+  const box = list.closest('.section-body');
+  const boxTop = box ? box.scrollTop : 0;
   list.innerHTML = '';
   const rerender = () => renderPowerLike(opts);
-  state[stateKey].forEach((item, i) => {
-    // A Passive or At-Will row has nothing to track, so its Uses count and
-    // checkboxes aren't drawn — hidden, never cleared.
-    const track = usageTrack(item);
-    const mode = USAGE_MODES[usageMode(item)];
-    const maxU = usageUses(item);
-    const useChecks = el('div', { class: 'use-checks' });
-    if (maxU > 0) {
-      appendUses(useChecks, stateKey, i, maxU, item.used);
-      // A skull rather than one more ✕: it isn't one more of the same use.
-      if (mode.desperate) {
-        appendUses(useChecks, stateKey, i, 1, item.desperate, {
-          prop: 'desperate', glyph: '☠', variant: 'desperate',
-          label: 'Desperate use',
-          title: 'Desperate use — regained once per arc when you fail a death '
-               + 'save or spend your last recovery'
-        });
-      }
-      useChecks.appendChild(trackAnnotation(track));
-    }
-    const prepBtn = withPrep ? el('div', {
-      class: 'prep-btn' + (item.prepared !== false ? ' active' : ''),
-      role: 'checkbox', tabindex: '0',
-      'aria-checked': item.prepared !== false ? 'true' : 'false',
-      'aria-label': 'Prepared', title: 'Prepared',
-      onclick: ev => toggleSpellPrep(i, ev.currentTarget)
-    }, '✦') : null;
-    const usageSel = el('select', {
-      class: 'field-inline power-usage', 'aria-label': 'Usage',
-      title: 'How this refreshes. Battle and Arc rows are cleared by the rest '
-           + 'buttons; Passive and At-Will rows are left alone.',
-      onchange: e => {
-        const row = state[stateKey][i];
-        row.usage = e.target.value;
-        // Battle and Arc almost always mean one use, and filling it in beats
-        // a tracked row with no boxes to tick.
-        if (usageTrack(row) && !USAGE_MODES[usageMode(row)].uses
-            && !(parseInt(row.max_uses) > 0)) row.max_uses = '1';
-        rerender();
-        saveNow();
-      }
-    }, USAGE_KEYS.map(k => el('option', { value: k }, USAGE_MODES[k].label)));
-    usageSel.value = usageMode(item);
-    const triggerSel = el('select', {
-      class: 'field-inline power-trigger', 'aria-label': 'Trigger',
-      title: 'What sets this off. An Out of battle row — a skill check, '
-           + 'a bit of roleplay — is left out of the battle helper.',
-      onchange: e => { state[stateKey][i].trigger = e.target.value; saveNow(); }
-    }, TRIGGER_KEYS.map(k => el('option', { value: k }, TRIGGERS[k].label)));
-    triggerSel.value = triggerMode(item);
-    const header = el('div', { class: 'power-header' },
-      el('span', { class: 'drag-handle', title: 'Drag to reorder' }, '⋮⋮'),
-      prepBtn,
-      el('input', {
-        class: 'field-inline power-name', value: item.name, placeholder: namePlaceholder,
-        oninput: e => { state[stateKey][i].name = e.target.value; }
-      }),
-      mode.trigger === false ? null : triggerSel,
-      usageSel,
-      maxU > 0 ? useChecks : null,
-      (track && !mode.uses) ? el('input', {
-        class: 'field-inline field-sm', value: item.max_uses || '',
-        placeholder: 'Uses', title: 'Number of use checkboxes',
-        inputmode: 'numeric',
-        onchange: e => { state[stateKey][i].max_uses = e.target.value; rerender(); saveNow(); }
-      }) : null,
-      el('button', {
-        class: 'remove-btn',
-        onclick: () => { state[stateKey].splice(i, 1); rerender(); saveNow(); }
-      }, '×')
-    );
-    const desc = el('textarea', {
-      rows: '1', class: 'field-block', placeholder: descPlaceholder,
-      oninput: e => { state[stateKey][i].desc = e.target.value; }
-    });
-    desc.value = item.desc || '';
-    const blockClasses = 'power-block' + (withPrep && item.prepared === false ? ' unprepared' : '');
-    list.appendChild(el('div', { class: blockClasses }, header, desc));
+  state[opts.stateKey].forEach((item, i) => {
+    list.appendChild(buildPowerBlock(opts, i, rerender));
   });
-  enableReorder(listId, stateKey, rerender);
+  enableReorder(opts.listId, opts.stateKey, rerender);
   autoGrowAllNow();
   restoreScroll(scrollPos);
+  if (box) box.scrollTop = boxTop;
   restoreListFocus(list, focusMark);
 }
 
-function renderKinPowers() {
-  renderPowerLike({
-    listId: 'kin-powers-list', stateKey: 'kinPowers',
-    namePlaceholder: 'Kin power name',
-    descPlaceholder: 'What it does…'
-  });
+function abilityListOpts(stateKey) {
+  switch (stateKey) {
+    case 'kinPowers':
+      return { listId: 'kin-powers-list', stateKey, namePlaceholder: 'Kin power name',
+               descPlaceholder: 'What it does…' };
+    case 'features':
+      return { listId: 'features-list', stateKey, namePlaceholder: 'Feature name',
+               descPlaceholder: 'What it does…' };
+    case 'talents':
+      return { listId: 'talents-list', stateKey, namePlaceholder: 'Talent name',
+               descPlaceholder: 'What it does…' };
+    case 'powers':
+      return { listId: 'powers-list', stateKey, namePlaceholder: abilityTag('powers') + ' name',
+               descPlaceholder: 'Target, effect…' };
+    case 'spells':
+      return { listId: 'spells-list', stateKey, namePlaceholder: 'Spell name',
+               descPlaceholder: 'Target, attack, effect…', prepLabel: 'Prepared' };
+    case 'magicItems':
+      return { listId: 'magic-items-list', stateKey, namePlaceholder: 'Magic item name',
+               descPlaceholder: 'Chakra, bonus, quirk…',
+               prepLabel: 'Attuned', noUsage: true };
+  }
 }
-function renderFeatures() {
-  renderPowerLike({
-    listId: 'features-list', stateKey: 'features',
-    namePlaceholder: 'Feature name',
-    descPlaceholder: 'What it does…'
-  });
+function renderAbilityList(stateKey) { renderPowerLike(abilityListOpts(stateKey)); }
+
+function renderKinPowers() { renderAbilityList('kinPowers'); }
+function renderFeatures() { renderAbilityList('features'); }
+function renderTalents() { renderAbilityList('talents'); }
+function renderPowers() { renderAbilityList('powers'); }
+function renderSpells() { renderAbilityList('spells'); }
+function renderMagicItems() { renderAbilityList('magicItems'); }
+
+// ── ABILITY POPUP ──
+// Held by the row object rather than its index, so a deleted row can't leave
+// the popup showing whichever row slid into the gap.
+let _powerDialog = null;   // { stateKey, item }
+
+function openPowerDialog(stateKey, index) {
+  const dlg = document.getElementById('power-dialog');
+  const item = state[stateKey][index];
+  if (!dlg || !item) return;
+  _powerDialog = { stateKey, item };
+  renderPowerDialog();
+  if (!dlg.open) dlg.showModal();
+  if (!item.name) {
+    const name = dlg.querySelector('.power-name');
+    if (name) name.focus();
+  }
 }
-function renderTalents() {
-  renderPowerLike({
-    listId: 'talents-list', stateKey: 'talents',
-    namePlaceholder: 'Talent name',
-    descPlaceholder: 'What it does…'
-  });
+
+function renderPowerDialog() {
+  const body = document.getElementById('power-dialog-body');
+  const d = _powerDialog;
+  if (!body || !d) return;
+  const index = state[d.stateKey].indexOf(d.item);
+  if (index < 0) { closePowerDialog(); return; }
+  const focusMark = captureListFocus(body);
+  const opts = abilityListOpts(d.stateKey);
+  document.getElementById('power-dialog-title').textContent = abilityTag(d.stateKey);
+  body.innerHTML = '';
+  body.appendChild(buildPowerBlock(opts, index, () => {
+    renderAbilityList(d.stateKey);
+    renderPowerDialog();
+  }));
+  autoGrowAllNow();
+  restoreListFocus(body, focusMark);
 }
-function renderPowers() {
-  const spec = CLASS_ABILITY_SECTION[currentClassKey()];
-  const noun = (spec && spec.list === 'powers') ? spec.noun : 'Power';
-  renderPowerLike({
-    listId: 'powers-list', stateKey: 'powers',
-    namePlaceholder: noun + ' name',
-    descPlaceholder: 'Target, effect…'
-  });
+
+function closePowerDialog() {
+  const dlg = document.getElementById('power-dialog');
+  const d = _powerDialog;
+  _powerDialog = null;
+  if (dlg && dlg.open) dlg.close();
+  document.getElementById('power-dialog-body').innerHTML = '';
+  // Picks up anything typed in the popup.
+  if (d) renderAbilityList(d.stateKey);
 }
-function renderSpells() {
-  renderPowerLike({
-    listId: 'spells-list', stateKey: 'spells',
-    namePlaceholder: 'Spell name',
-    descPlaceholder: 'Target, attack, effect…',
-    withPrep: true
+
+function wirePowerDialog() {
+  const dlg = document.getElementById('power-dialog');
+  if (!dlg) return;
+  document.getElementById('power-dialog-close').addEventListener('click', closePowerDialog);
+  // The row's own × is hidden in here: beside the close button it read as one.
+  document.getElementById('power-dialog-delete').addEventListener('click', () => {
+    const d = _powerDialog;
+    const index = d ? state[d.stateKey].indexOf(d.item) : -1;
+    if (index >= 0) state[d.stateKey].splice(index, 1);
+    closePowerDialog();
+    saveNow();
   });
+  // Esc closes the dialog natively, without redrawing the list.
+  dlg.addEventListener('close', () => { if (_powerDialog) closePowerDialog(); });
+  // A backdrop click lands on the dialog element itself.
+  dlg.addEventListener('click', e => { if (e.target === dlg) closePowerDialog(); });
 }
+
+// A new, nameless row in the fixed layout has nothing to click, so it opens
+// straight into the popup.
+function addAbilityRow(add, stateKey) {
+  add();
+  if (fixedLayoutActive()) openPowerDialog(stateKey, state[stateKey].length - 1);
+}
+
 // The rest hooks clear trackers across every ability list, so all five redraw.
 function renderAbilityLists() {
   renderKinPowers(); renderFeatures(); renderTalents(); renderPowers(); renderSpells();
@@ -2064,12 +2255,16 @@ function addFeature() { state.features.push(blankPowerRow()); renderFeatures(); 
 function addTalent() { state.talents.push(blankPowerRow()); renderTalents(); saveNow(); }
 function addPower() { state.powers.push(blankPowerRow()); renderPowers(); saveNow(); }
 function addSpell() { state.spells.push(Object.assign(blankPowerRow(), { prepared: true })); renderSpells(); saveNow(); }
+function addMagicItem() { state.magicItems.push(blankMagicItem()); renderMagicItems(); saveNow(); }
+function blankMagicItem() { return { name: '', desc: '', prepared: true }; }
 
-function toggleSpellPrep(i, btn) {
-  state.spells[i].prepared = !state.spells[i].prepared;
-  btn.classList.toggle('active', state.spells[i].prepared);
-  btn.setAttribute('aria-checked', state.spells[i].prepared ? 'true' : 'false');
-  btn.closest('.power-block').classList.toggle('unprepared', !state.spells[i].prepared);
+// Absent reads as on, as it is drawn.
+function togglePrepared(stateKey, i, btn) {
+  const item = state[stateKey][i];
+  item.prepared = item.prepared === false;
+  btn.classList.toggle('active', item.prepared);
+  btn.setAttribute('aria-checked', item.prepared ? 'true' : 'false');
+  btn.closest('.power-block').classList.toggle('unprepared', !item.prepared);
   saveNow();
 }
 
@@ -2436,6 +2631,15 @@ function migrateAbilityLists(s) {
   }
 }
 
+// Magic items were one free-text box. Whatever it held becomes the description
+// of a single item, for the player to split up.
+function migrateMagicItems(s) {
+  if (!s || typeof s !== 'object' || Array.isArray(s.magicItems)) return;
+  const text = s.fields && s.fields.magic_items;
+  s.magicItems = text ? [Object.assign(blankMagicItem(), { desc: text })] : [];
+  if (s.fields) delete s.fields.magic_items;
+}
+
 // Usage was free text before it became a closed set. Map what's recognisable
 // and drop the rest to Passive. Idempotent, so it runs on every load.
 const USAGE_PATTERNS = [
@@ -2571,6 +2775,7 @@ function loadFromFile(event) {
       }
       state = parsed;
       migrateAbilityLists(state);
+      migrateMagicItems(state);
       if (!state.checkboxes) state.checkboxes = {};
       if (!state.backgrounds) state.backgrounds = [];
       if (!state.icons) state.icons = [];
@@ -2613,7 +2818,7 @@ function applyState() {
       const key = input.dataset.field;
       if (key) setLockVisual(toggle, !!state.locks[key]);
     });
-    [renderRecoveries, renderPotions, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpStatus].forEach(fn => {
+    [renderRecoveries, renderPotions, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderMagicItems, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpStatus].forEach(fn => {
       try { fn(); } catch(e) { console.warn(fn.name, e); }
     });
     // After renderClassContent, so a class module's own sections are wired.
@@ -3306,7 +3511,7 @@ function renderConditions() {
 function resetSheet() {
   if (!confirm('Start a new blank sheet? Any unsaved changes will be lost.')) return;
   // Settings (theme, prefs) survive a reset; only character data is cleared.
-  state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], kinPowers: [], features: [], talents: [], powers: [], spells: [], feats: [], advances: {}, locks: {}, activeConditions: {}, classData: {}, escalation: 0, theme: state.theme, prefs: state.prefs };
+  state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], kinPowers: [], features: [], talents: [], powers: [], spells: [], magicItems: [], feats: [], advances: {}, locks: {}, activeConditions: {}, classData: {}, escalation: 0, theme: state.theme, prefs: state.prefs };
   try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
   applyState();
   showToast('New sheet');
@@ -3367,6 +3572,7 @@ try {
   if (isSheetData(parsed)) {
     state = parsed;
     migrateAbilityLists(state);
+    migrateMagicItems(state);
     if (!state.checkboxes) state.checkboxes = {};
     if (!state.backgrounds) state.backgrounds = [];
     if (!state.icons) state.icons = [];
@@ -3395,11 +3601,12 @@ function wireStaticHandlers() {
   const ACTIONS = {
     'add-background': addBackground,
     'add-icon':       addIcon,
-    'add-kin-power':  addKinPower,
-    'add-feature':    addFeature,
-    'add-talent':     addTalent,
-    'add-power':      addPower,
-    'add-spell':      addSpell,
+    'add-kin-power':  () => addAbilityRow(addKinPower, 'kinPowers'),
+    'add-feature':    () => addAbilityRow(addFeature, 'features'),
+    'add-talent':     () => addAbilityRow(addTalent, 'talents'),
+    'add-power':      () => addAbilityRow(addPower, 'powers'),
+    'add-spell':      () => addAbilityRow(addSpell, 'spells'),
+    'add-magic-item': () => addAbilityRow(addMagicItem, 'magicItems'),
     'add-feat':       addFeat,
     'quick-rest':     quickRest,
     'full-heal':      fullHealUp,
@@ -3419,6 +3626,7 @@ function wireStaticHandlers() {
     if (fn) btn.addEventListener('click', fn);
   });
   wireDiceTrayWindow();
+  wirePowerDialog();
   document.querySelectorAll('[data-action="quick-rest"]').forEach(b => { b.title = restTooltip(REST_PLANS.quick); });
   document.querySelectorAll('[data-action="full-heal"]').forEach(b => { b.title = restTooltip(REST_PLANS.full); });
   document.getElementById('bh-rail').addEventListener('click', toggleBattleHelper);
@@ -3435,6 +3643,7 @@ function wireStaticHandlers() {
     const sw = document.getElementById(cfg.id);
     if (sw) sw.addEventListener('click', () => togglePref(key));
   });
+  document.getElementById('pref-fixed-layout').addEventListener('click', toggleFixedLayout);
   const armorSwitch = document.getElementById('armor-no-penalty');
   if (armorSwitch) armorSwitch.addEventListener('click', toggleArmorPenalty);
   document.getElementById('theme-select').addEventListener('change', e => setTheme(e.target.value));
@@ -3480,6 +3689,7 @@ if (state.features.length === 0) { addFeature(); }
 if (state.talents.length === 0) { addTalent(); }
 if (state.powers.length === 0) { addPower(); }
 if (state.spells.length === 0) { addSpell(); }
+if (state.magicItems.length === 0) { addMagicItem(); }
 if (state.feats.length === 0) { addFeat(); }
 _initializing = false;
 

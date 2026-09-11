@@ -623,6 +623,11 @@ textarea.field-block {
   line-height: 1.6;
   overflow-y: hidden;
 }
+/* Grows with its text up to most of a screen, then scrolls. On paper it
+   prints whole. */
+@media screen {
+  textarea.field-block { max-height: 80vh; overflow-y: auto; }
+}
 
 /* ── STAT GRID ── */
 .stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
@@ -2160,6 +2165,240 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
   :root { --bh-width: min(320px, calc(100vw - 48px)); }
 }
 
+/* ── ABILITY POPUP ──
+   One ability row, whole, over a dimmed sheet. The backdrop is a plain dim
+   rather than a theme colour: it only has to push the sheet back. */
+.power-dialog {
+  margin: auto;
+  width: min(680px, calc(100vw - 40px));
+  max-height: 85vh;
+  padding: 0;
+  background: var(--bg-card);
+  color: var(--ink);
+  border: 1px solid var(--field-border);
+  border-radius: 6px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  font-family: var(--body-font);
+  font-size: var(--fs-xl);
+}
+.power-dialog[open] { display: flex; flex-direction: column; }
+.power-dialog::backdrop { background: rgba(0,0,0,0.55); }
+.power-dialog-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 8px 4px 12px;
+  border-bottom: 1px solid var(--field-border);
+  font-family: var(--heading-font); font-size: var(--fs-md);
+  letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+}
+.power-dialog-body { padding: 8px; overflow-y: auto; }
+.power-dialog-foot { display: flex; justify-content: flex-end; padding: 0 8px 8px; }
+.power-dialog .drag-handle,
+.power-dialog .power-header > .remove-btn { display: none; }
+.power-dialog .power-block textarea.field-block { min-height: 8em; }
+
+/* The name-as-a-button and the one-word summary that stand in for the row's
+   name field and dropdowns in the fixed layout. Nowhere else. */
+.power-open, .power-summary { display: none; }
+
+/* ── FIXED LAYOUT ──
+   The whole sheet on one screen: a header band, then four zones the sections
+   are moved into (see applyLayout). The page never scrolls — what doesn't
+   fit scrolls inside its own section. */
+.fixed-zones, .zone { display: none; }
+
+@media screen {
+  body.layout-fixed { height: 100vh; overflow: hidden; }
+  body.layout-fixed .sheet-container {
+    max-width: none; height: 100vh;
+    padding: 6px 12px 10px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  body.layout-fixed .sheet-columns { display: none; }
+
+  body.layout-fixed .fixed-zones {
+    flex: 1; min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* An `auto` row grows to the tallest zone and pushes the sheet off the
+       bottom of the screen; this one is the screen. */
+    grid-template-rows: minmax(0, 1fr);
+    gap: 12px;
+  }
+  /* Where there is room beside it, the open battle helper gets its own strip
+     rather than covering the last zone. Narrower, it overlays, as it does on
+     the flowing sheet. */
+  @media (min-width: 1900px) {
+    body.layout-fixed:not(.no-battle-helper):has(.battle-helper:not(.collapsed)) {
+      padding-right: var(--bh-width);
+    }
+  }
+  body.layout-fixed .zone {
+    display: flex; flex-direction: column;
+    gap: var(--section-gap, 8px);
+    min-width: 0; min-height: 0;
+  }
+
+  /* When a zone runs short, sections give up height in three tiers and
+     scroll what no longer fits, each down to a floor that still shows a row
+     or two: the reference sections first, then the lists and the smaller
+     tables, and the combat sections only once everything else is at its
+     floor — the barbarian's four attack cards and rage panel. The lists also
+     take whatever a zone has spare.
+     Shrinking is shared out by weight × height, so the weights are orders of
+     magnitude apart: even a fraction of a pixel handed to the wrong section
+     is a scrollbar. And none is below 1 — weights summing to less than that
+     only ever take that fraction of the shortfall. */
+  body.layout-fixed .zone > .section {
+    position: relative; margin-bottom: 0;
+    flex: 0 1 auto; min-height: 76px;
+    display: flex; flex-direction: column;
+  }
+  /* Too small to be worth a scrollbar. */
+  body.layout-fixed .zone > .section:is([data-section="abilities"], [data-section="defenses"]) { flex-shrink: 0; }
+  body.layout-fixed .zone > .section > .section-head { flex-shrink: 0; }
+  /* A list's add button rides in its heading, and stays put while the list
+     scrolls. */
+  body.layout-fixed .zone > .section > .section-body > .add-row-btn {
+    position: absolute; top: 3px; right: 8px; z-index: 3;
+    padding: 1px 8px;
+  }
+  /* Padding rather than the usual margin: a scroll box clips at its padding
+     edge, and the padlocks sit a few pixels outside the fields they belong
+     to. */
+  body.layout-fixed .zone > .section > .section-body {
+    min-height: 0; overflow-y: auto;
+    margin: 0; padding: 4px;
+  }
+  body.layout-fixed .zone > .section:is([data-section="unique"], [data-section="backgrounds"],
+    [data-section="icons"], [data-section="potions"], [data-section="conditions"]) { flex-shrink: 1000; }
+  body.layout-fixed .zone > .section:is([data-section="kin-powers"], [data-section="features"],
+    [data-section="talents"], [data-section="powers"], [data-section="spells"],
+    [data-section="magic-items"], [data-section="feats"]) { flex: 1 1000 auto; }
+  body.layout-fixed .zone > .section:is([data-section="advances"],
+    [data-section="gear"]) { flex-shrink: 1000000; }
+  body.layout-fixed .zone > .section[data-section="notes"] { flex: 1 1000000 auto; }
+  /* A class's own sections join the zone's column as if they were the zone's. */
+  body.layout-fixed .zone > .class-slot:not(:empty) { display: contents; }
+
+  /* Folding is off — it would move everything below the fold. */
+  body.layout-fixed .section-caret { display: none; }
+  body.layout-fixed .section[data-section] > .section-head { cursor: default; }
+  body.layout-fixed .section[data-section] > .section-head:hover { color: var(--accent); }
+
+  /* Header band: one row — name, class line, description, Utilities — with
+     every field sized to what is typed in it. Utilities fold into two rows
+     where the band is too narrow for one. */
+  body.layout-fixed .sheet-header {
+    container-type: inline-size;
+    display: flex; align-items: center; gap: 14px;
+    padding: 0 0 6px; margin: 0; text-align: left;
+  }
+  body.layout-fixed .sheet-header::after { display: none; }
+  body.layout-fixed .char-name-row { display: flex; align-items: center; gap: 10px; margin: 0; flex-shrink: 0; }
+  body.layout-fixed .char-name-row .field-inline {
+    font-size: var(--fs-3xl); min-width: 120px; text-align: left;
+  }
+  body.layout-fixed .tier-badge { padding: 1px 8px 2px; font-size: var(--fs-3xs); letter-spacing: 2px; }
+  body.layout-fixed .char-subtitle {
+    flex-shrink: 0; flex-wrap: nowrap; gap: 5px;
+    font-size: var(--fs-sm); letter-spacing: 1px;
+  }
+  body.layout-fixed .char-subtitle .field-inline {
+    field-sizing: content; width: auto; min-width: 2ch;
+    font-size: var(--fs-sm); letter-spacing: 1px;
+  }
+  body.layout-fixed .char-subtitle select.field-inline { padding-right: 16px; }
+  body.layout-fixed .char-subtitle input.field-inline[data-field="kin"] { min-width: 40px; }
+  body.layout-fixed .desc-row { flex: 1; min-width: 120px; margin: 0; }
+  body.layout-fixed .desc-row .field-inline { text-align: left; font-size: var(--fs-sm); }
+  body.layout-fixed .zone[data-zone="toolbar"] { display: block; flex-shrink: 0; }
+  body.layout-fixed .zone[data-zone="toolbar"] > .section {
+    display: flex; flex-direction: row; align-items: center; gap: 14px;
+    margin: 0; min-height: 0; border: none; background: none; box-shadow: none;
+  }
+  @container (max-width: 1800px) {
+    body.layout-fixed .zone[data-zone="toolbar"] > .section {
+      flex-direction: column; align-items: flex-end; gap: 3px;
+    }
+  }
+  body.layout-fixed .zone[data-zone="toolbar"] > .section::before,
+  body.layout-fixed .zone[data-zone="toolbar"] > .section::after,
+  body.layout-fixed .zone[data-zone="toolbar"] > .section > .section-head { display: none; }
+  body.layout-fixed .zone[data-zone="toolbar"] .toolbar {
+    padding: 0; gap: 6px; flex-wrap: nowrap; align-items: center;
+  }
+  body.layout-fixed .zone[data-zone="toolbar"] .prefs-row { gap: 10px; }
+  body.layout-fixed .zone[data-zone="toolbar"] .toolbar :is(button, select) {
+    padding: 1px 6px; letter-spacing: 1px; font-size: var(--fs-3xs);
+  }
+  body.layout-fixed .zone[data-zone="toolbar"] .class-switch { gap: 4px; }
+  body.layout-fixed .zone[data-zone="toolbar"] .class-switch-label { font-size: var(--fs-3xs); letter-spacing: 0.5px; }
+  body.layout-fixed .zone[data-zone="toolbar"] .class-switch-track { width: 30px; height: 16px; }
+  body.layout-fixed .zone[data-zone="toolbar"] .class-switch-knob { top: 1px; left: 1px; width: 12px; height: 12px; }
+  body.layout-fixed .zone[data-zone="toolbar"] .class-switch.on .class-switch-knob { left: 15px; }
+
+  /* Denser versions of the sections, for the narrower zones. */
+  body.layout-fixed .zone > .section > .section-head { letter-spacing: 2px; white-space: nowrap; overflow: hidden; }
+
+  body.layout-fixed .zone .stat-grid { grid-template-columns: repeat(3, 1fr); }
+  body.layout-fixed .zone .stat-card {
+    display: grid; grid-template-columns: 1fr 1fr; align-items: center;
+    padding: 2px 4px;
+  }
+  body.layout-fixed .zone .stat-card .stat-label { grid-column: 1 / -1; letter-spacing: 1px; margin: 0; }
+  body.layout-fixed .zone .defense-card .stat-label {
+    font-size: var(--fs-3xs); letter-spacing: 0.5px; white-space: nowrap;
+  }
+
+  /* The bonus badges share the top two rows with the title and the weapon,
+     so the formula and damage lines get the card's full width. */
+  body.layout-fixed .zone .attack-card {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 8px; row-gap: 3px; align-items: center;
+  }
+  body.layout-fixed .zone .attack-card-body { display: contents; }
+  body.layout-fixed .zone .attack-card-body > * { grid-column: 1 / -1; margin-bottom: 0; }
+  body.layout-fixed .zone .attack-card-body > .attack-title { grid-row: 1; grid-column: 1; }
+  body.layout-fixed .zone .attack-card-body > .attack-weapon { grid-row: 2; grid-column: 1; }
+  body.layout-fixed .zone .attack-ac-group { grid-row: 1 / 3; grid-column: 2; align-self: start; }
+  body.layout-fixed .zone .attack-ac-badge {
+    display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 1px;
+  }
+  body.layout-fixed .zone .attack-ac-badge .attack-ac-label { grid-column: 1 / -1; text-align: center; }
+  body.layout-fixed .zone .attack-stats { gap: 4px; }
+  /* A select is as wide as its longest option unless told otherwise, and
+     "Constitution" twice is what wrapped the formula line. */
+  body.layout-fixed .zone .attack-formula select.field-inline.field-ability { field-sizing: content; }
+
+  body.layout-fixed .zone .action-row { gap: 5px; }
+  body.layout-fixed .zone .action-btn { padding: 3px 8px; letter-spacing: 1px; }
+  /* Notes has the room the rest of its zone leaves, and scrolls in it. */
+  body.layout-fixed .section[data-section="notes"] > .section-body { flex: 1; overflow: hidden; }
+  body.layout-fixed .section[data-section="notes"] textarea.field-block {
+    flex: 1; height: auto !important; max-height: none;
+  }
+  /* One line per ability row: the name opens the popup, and only the
+     prepared mark and the use boxes stay interactive in the list. */
+  body.layout-fixed .powers-list .power-header { margin-bottom: 0; flex-wrap: nowrap; gap: 6px; }
+  body.layout-fixed .powers-list :is(.power-name, .power-trigger, .power-usage,
+    .power-header > .field-sm, .power-header > .remove-btn, textarea.field-block) { display: none; }
+  body.layout-fixed .powers-list .power-open {
+    display: block; flex: 1; min-width: 0;
+    padding: 1px 3px; text-align: left;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    background: none; border: 1px solid transparent; border-radius: 3px;
+    font-family: var(--heading-font); font-size: var(--fs-lg); font-weight: 700;
+    color: var(--highlight); cursor: pointer;
+  }
+  body.layout-fixed .powers-list .power-open:hover { border-color: var(--highlight-dim); }
+  body.layout-fixed .powers-list .power-open:focus-visible { outline: 2px solid var(--highlight); outline-offset: 1px; }
+  body.layout-fixed .powers-list .power-open.unnamed { color: var(--ink-faint); font-style: italic; font-weight: 400; }
+  body.layout-fixed .powers-list .power-summary:not(:empty) {
+    display: inline; flex-shrink: 0; white-space: nowrap;
+    font-size: var(--fs-xs); color: var(--ink-faint);
+  }
+}
+
 /* ── REDUCED MOTION ──
    One rule follows the OS setting, one the Utilities switch. Last in the
    stylesheet, and !important, so they beat everything above. */
@@ -2186,8 +2425,8 @@ body.no-anim, body.no-anim *, body.no-anim *::before, body.no-anim *::after {
    that gives a section's body a display, and a class module's injected CSS
    lands after this file entirely. */
 @media screen {
-  .section.collapsed > *:not(.section-head) { display: none !important; }
-  .section.collapsed > .section-head { border-bottom: none; }
+  body:not(.layout-fixed) .section.collapsed > *:not(.section-head) { display: none !important; }
+  body:not(.layout-fixed) .section.collapsed > .section-head { border-bottom: none; }
 }
 
 /* ── PRINT ── */
