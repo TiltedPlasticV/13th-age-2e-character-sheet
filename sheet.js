@@ -760,7 +760,6 @@ function recomputeDerived() {
     if (el && el.value !== newVal) el.value = newVal;
   });
   updateTierBadge();
-  updateHpStatus();
   renderPotions();
   updateAttackHints();
   updateDefenseHints();
@@ -1381,7 +1380,8 @@ function fixedLayoutActive() { return _fixedActive; }
 // nothing is rebuilt and every input keeps its value, listeners and locks.
 function zoneItem(key) {
   return document.querySelector(`.section[data-section="${key}"]`)
-      || document.querySelector(`[data-class-slot="${key}"]`);
+      || document.querySelector(`[data-class-slot="${key}"]`)
+      || document.querySelector(`[data-section-group="${key}"]`);
 }
 
 function applyLayout() {
@@ -2818,7 +2818,7 @@ function applyState() {
       const key = input.dataset.field;
       if (key) setLockVisual(toggle, !!state.locks[key]);
     });
-    [renderRecoveries, renderPotions, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderMagicItems, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpStatus].forEach(fn => {
+    [renderRecoveries, renderPotions, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderMagicItems, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent].forEach(fn => {
       try { fn(); } catch(e) { console.warn(fn.name, e); }
     });
     // After renderClassContent, so a class module's own sections are wired.
@@ -2986,7 +2986,6 @@ function fullHealUp() {
   renderAbilityLists();
   renderIcons();
   classHook('onFullHeal');
-  updateHpStatus();
   // Read after the ticks are gone, so it is the stock they now have.
   if (potionTicks) {
     const potions = potionSummary();
@@ -3003,26 +3002,6 @@ function fullHealUp() {
 function setFieldDom(key) {
   const node = document.querySelector(`[data-field="${key}"]`);
   if (node) node.value = state.fields[key] || '';
-}
-
-// Purely visual: compares current HP against the staggered and death
-// thresholds and shows a pulsing badge beside the Temp HP card.
-function updateHpStatus() {
-  const badge = document.getElementById('hp-status');
-  if (!badge) return;
-  badge.className = 'hp-status-badge';
-  badge.textContent = '';
-  const cur = intOrNull(state.fields.current_hp);
-  if (cur === null) return;
-  const stag = intOrNull(state.fields.staggered);
-  const dead = intOrNull(state.fields.dead);
-  if (dead !== null && cur <= dead) {
-    badge.classList.add('down'); badge.textContent = '☠ DEAD';
-  } else if (cur <= 0) {
-    badge.classList.add('down'); badge.textContent = '☠ DOWN';
-  } else if (stag !== null && cur <= stag) {
-    badge.classList.add('staggered'); badge.textContent = '⚠ STAGGERED';
-  }
 }
 
 // ── DAMAGE / HEAL QUICK-APPLY ───────────────────────────────────────
@@ -3054,11 +3033,8 @@ function applyDamage() {
   state.fields.current_hp = String(cur);
   setFieldDom('temp_hp');
   setFieldDom('current_hp');
-  updateHpStatus();
-  const status = document.getElementById('hp-status').textContent;
   logAction('Damage taken',
-    (absorbed ? `${absorbed} soaked by temp HP · ` : '') +
-    `HP → ${hpFraction(cur)}` + (status ? ` · ${status}` : ''),
+    (absorbed ? `${absorbed} soaked by temp HP · ` : '') + `HP → ${hpFraction(cur)}`,
     '−' + n);
   saveNow();
   showToast(absorbed ? `−${n} (${absorbed} soaked by temp HP)` : `−${n} HP`);
@@ -3073,7 +3049,6 @@ function applyHeal() {
   if (maxHp !== null && cur > maxHp) cur = maxHp;
   state.fields.current_hp = String(cur);
   setFieldDom('current_hp');
-  updateHpStatus();
   logAction('Healed', `HP → ${hpFraction(cur)}`, '+' + n);
   saveNow();
   showToast(`+${n} HP`);
@@ -3369,7 +3344,6 @@ function rollRecovery() {
   state.fields.current_hp = String(cur);
   setFieldDom('current_hp');
   renderRecoveries();
-  updateHpStatus();
   logRoll(`Recovery (${max - slot - 1} left)`,
           `${exprDetail(expr, r)} · HP → ${hpFraction(cur)}`, '+' + r.total);
   saveNow();
@@ -3410,7 +3384,6 @@ function drinkPotion(tier) {
   setFieldDom('current_hp');
   renderPotions();
   renderRecoveries();
-  updateHpStatus();
   logRoll(`${t.label} potion (${stock - slot - 1} left)`,
           `${exprDetail(expr, rec)} · ${exprDetail(t.bonus, potion)}`
           + (healed < rolled ? ` · capped at ${t.cap}` : '')
@@ -3529,10 +3502,9 @@ document.addEventListener('input', (e) => {
     if (DERIVED_SOURCES.has(key)) recomputeDerived();
     // Swaps the whole class-module layer; nothing is cleared.
     if (key === 'class') renderClassContent({ notify: true });
-    // Not derived sources, but they drive the staggered/down badge — and the
-    // autosave below would redraw the battle helper 400ms late.
+    // Not derived sources, but the autosave below would redraw the battle
+    // helper 400ms late.
     if (['current_hp', 'temp_hp', 'staggered', 'dead', 'max_hp'].includes(key)) {
-      updateHpStatus();
       renderBattleHelperBody();
     }
   }

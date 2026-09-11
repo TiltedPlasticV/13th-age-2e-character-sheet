@@ -68,10 +68,9 @@
       <div class="section-head"><span class="icon">⛊</span> Defenses</div>
       <div class="section-body">
         <div class="defense-row">
-          <div class="defense-card"><div class="stat-label">Armor Class</div><input class="field-inline" data-field="ac" placeholder="—" aria-label="Armor Class"></div>
-          <div class="defense-card"><div class="stat-label">Physical Def</div><input class="field-inline" data-field="pd" placeholder="—" aria-label="Physical Defense"></div>
-          <div class="defense-card"><div class="stat-label">Mental Def</div><input class="field-inline" data-field="md" placeholder="—" aria-label="Mental Defense"></div>
-          <div class="defense-card"><div class="stat-label">Initiative</div><input class="field-inline" data-field="initiative" placeholder="—" aria-label="Initiative"><button class="roll-btn" data-roll="init" title="Roll initiative: d20 + bonus" aria-label="Roll initiative">🎲</button></div>
+          <div class="defense-card"><div class="stat-label">AC</div><input class="field-inline" data-field="ac" placeholder="—" aria-label="Armor Class"></div>
+          <div class="defense-card"><div class="stat-label">PD</div><input class="field-inline" data-field="pd" placeholder="—" aria-label="Physical Defense"></div>
+          <div class="defense-card"><div class="stat-label">MD</div><input class="field-inline" data-field="md" placeholder="—" aria-label="Mental Defense"></div>
         </div>
       </div>
     </div>
@@ -81,7 +80,7 @@
   <div class="section" data-section="hp">
     <div class="section-head"><span class="icon">♥</span> Hit Points & Recoveries</div>
     <div class="section-body">
-      <!-- Heart (Staggered/MaxHP/Dead) + Current + Temp HP all inline -->
+      <!-- Thresholds | current & temp HP | initiative -->
       <div class="hp-top-row">
         <div class="hp-heart-block">
           <div class="hp-heart-side">
@@ -97,15 +96,23 @@
             <span class="hp-label">Dead</span>
           </div>
         </div>
-        <div class="hp-current-card">
-          <input class="field-inline" data-field="current_hp" placeholder="—" aria-label="Current hit points">
-          <span class="hp-label">Current HP</span>
+        <div class="hp-now">
+          <div class="hp-current-card">
+            <input class="field-inline" data-field="current_hp" placeholder="—" aria-label="Current hit points">
+            <span class="hp-label">Current HP</span>
+          </div>
+          <div class="hp-current-card hp-temp">
+            <input class="field-inline" data-field="temp_hp" placeholder="0" aria-label="Temporary hit points">
+            <span class="hp-label">Temp HP</span>
+          </div>
         </div>
-        <div class="hp-current-card hp-temp">
-          <input class="field-inline" data-field="temp_hp" placeholder="0" aria-label="Temporary hit points">
-          <span class="hp-label">Temp HP</span>
+        <div class="hp-current-card hp-init">
+          <div class="hp-init-box">
+            <input class="field-inline" data-field="initiative" placeholder="—" aria-label="Initiative">
+            <button class="roll-btn" data-roll="init" title="Roll initiative: d20 + bonus" aria-label="Roll initiative">🎲</button>
+          </div>
+          <span class="hp-label">Initiative</span>
         </div>
-        <span class="hp-status-badge" id="hp-status" aria-live="polite"></span>
       </div>
       <hr class="hp-divider">
       <!-- Lower half: recovery info + recoveries + skulls on the left, the
@@ -131,7 +138,7 @@
           <button class="action-btn" data-action="hp-damage" title="Apply damage: subtracts from temp HP first, then current HP">🗡 Damage</button>
           <button class="action-btn" data-action="hp-heal" title="Apply healing to current HP, capped at max HP">✚ Heal</button>
         </div>
-        <span class="action-sep" aria-hidden="true"></span>
+        <span class="sep-v" aria-hidden="true"></span>
         <button class="action-btn" data-action="roll-recovery" title="Spend the next recovery: rolls your recovery dice and adds the result to current HP">🎲 Recovery</button>
         <button class="action-btn" data-action="quick-rest">⚔ Quick Rest</button>
         <button class="action-btn" data-action="full-heal">↺ Full Heal-Up</button>
@@ -472,11 +479,11 @@
   </div><!-- .sheet-columns -->
 
   <!-- FIXED LAYOUT — empty unless the Utilities switch is on. applyLayout()
-       moves each section listed in data-zone-holds into its zone, and back to
-       where it came from when the switch goes off. -->
+       moves each section (or section group) listed in data-zone-holds into its
+       zone, and back to where it came from when the switch goes off. -->
   <div class="fixed-zones" id="fixed-zones">
-    <div class="zone" data-zone="character" data-zone-holds="unique abilities backgrounds icons feats notes"></div>
-    <div class="zone" data-zone="combat" data-zone-holds="defenses hp potions conditions advances"></div>
+    <div class="zone" data-zone="character" data-zone-holds="unique abilities-defenses backgrounds icons feats notes"></div>
+    <div class="zone" data-zone="combat" data-zone-holds="hp potions conditions advances"></div>
     <div class="zone" data-zone="attacks" data-zone-holds="attacks sections gear magic-items"></div>
     <div class="zone" data-zone="abilities" data-zone-holds="kin-powers features talents powers spells"></div>
   </div>

@@ -675,7 +675,7 @@ textarea.field-block {
 .stat-label {
   font-family: var(--heading-font); font-size: var(--fs-xs);
   letter-spacing: 2px; text-transform: uppercase;
-  color: var(--ink-dim); margin-bottom: 2px;
+  font-weight: 700; color: var(--ink-dim); margin-bottom: 2px;
 }
 
 .stat-mod .field-inline {
@@ -689,15 +689,16 @@ textarea.field-block {
 }
 
 /* ── DEFENSE ROW ── */
-.defense-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.defense-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
 
 .defense-card {
-  text-align: center; padding: 6px 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 4px 6px;
   background: var(--bg-card-alt); border: 1px solid var(--field-border);
   border-radius: 4px; transition: background 0.4s;
 }
 
-.defense-card .stat-label { margin-bottom: 2px; }
+.defense-card .stat-label { margin: 0; }
 
 .defense-card .field-inline {
   font-family: var(--heading-font); font-size: var(--fs-3xl);
@@ -706,7 +707,7 @@ textarea.field-block {
 
 /* ── SIDE-BY-SIDE SECTION COMBO (e.g. ability scores + defenses) ── */
 .combo-row {
-  display: grid; grid-template-columns: 3fr 2fr;
+  display: grid; grid-template-columns: 3fr 1fr;
   gap: 8px;
   align-items: stretch;
   /* The row stands in for a section in the flow, so it owes the next one the
@@ -721,22 +722,14 @@ textarea.field-block {
   flex: 1; display: flex; flex-direction: column;
 }
 .combo-row .stat-grid    { grid-template-columns: repeat(3, 1fr); flex: 1; grid-auto-rows: 1fr; }
-.combo-row .defense-row  { grid-template-columns: repeat(2, 1fr); flex: 1; grid-auto-rows: 1fr; }
-.combo-row .stat-card,
-.combo-row .defense-card {
+.combo-row .defense-row  { flex: 1; grid-auto-rows: 1fr; }
+.combo-row .stat-card {
   display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 4px 4px; gap: 2px;
 }
-.combo-row .stat-card    { padding: 4px 4px; gap: 2px; }
-.combo-row .defense-card { padding: 6px 4px; gap: 4px; position: relative; }
 .combo-row .defense-card .field-inline {
   font-size: calc(var(--fs-3xl) * 1.2);
   padding: 2px 0;
-}
-/* Out of flow deliberately: in-flow the die stacks under the input, and the
-   `1fr` rows then pad out all ten cards to match. Anchored bottom-right it
-   sits beside the number instead. */
-.combo-row .defense-card .roll-btn {
-  position: absolute; bottom: 4px; right: 2px;
 }
 
 /* ── COMPACT LIST GRIDS (backgrounds / feats wrap multi-column) ──
@@ -790,14 +783,29 @@ textarea.field-block {
   font-family: var(--heading-font); font-weight: 700; font-size: var(--fs-3xl);
 }
 
-/* heart-shaped max HP display + current/temp HP all inline */
+/* Thresholds | current & temp HP | initiative. Each group grows to share out
+   the row and centres its content, so the dividers on their left edges sit
+   midway between. A group that wraps starts its line at the row's edge, where
+   the clip hides its divider. */
 .hp-top-row {
-  display: flex; align-items: center; justify-content: center;
-  gap: 4px; flex-wrap: wrap; margin-bottom: 0;
+  display: flex; flex-wrap: wrap; row-gap: 4px;
+  clip-path: inset(-20px 0);
 }
-.hp-heart-block {
-  display: flex; align-items: center;
+.hp-top-row > * {
+  flex: 1 1 auto; position: relative;
+  justify-content: center; align-items: center;
 }
+.hp-top-row > * + * { padding-left: 3px; }
+.hp-top-row > *:not(:last-child) { padding-right: 3px; }
+.hp-top-row > * + *::before {
+  content: ''; position: absolute;
+  top: 0; bottom: 0; left: -1px;
+}
+.hp-heart-block,
+.hp-now {
+  display: flex;
+}
+.hp-now { gap: 4px; }
 .hp-mid-row {
   display: flex; align-items: center; gap: 6px 6px;
   flex-wrap: wrap; justify-content: center;
@@ -864,13 +872,24 @@ textarea.field-block {
   font-size: var(--fs-xs); color: var(--highlight-dim);
 }
 
-.hp-current-card.hp-temp .field-inline {
+.hp-current-card:is(.hp-temp, .hp-init) .field-inline {
   width: 64px; height: 44px; font-size: var(--fs-3xl);
 }
+/* Not hit points, so none of their highlight. */
+.hp-current-card.hp-init .field-inline { border: 1px solid var(--field-border); color: var(--highlight); }
+.hp-current-card.hp-init .hp-label { color: var(--ink-dim); }
+.hp-init-box { display: flex; align-items: center; gap: 2px; }
 
 .hp-divider {
   border: none; border-top: 1px solid var(--field-border);
 }
+/* Its vertical twin. */
+.sep-v,
+.hp-top-row > * + *::before {
+  width: 1px;
+  background: var(--field-border);
+}
+.sep-v { align-self: stretch; margin: 0 4px; }
 
 .gear-grid .hp-item .field-inline {
   font-size: var(--fs-lg); font-weight: 400;
@@ -1254,14 +1273,6 @@ textarea.field-block {
 .action-btn:focus-visible {
   outline: 2px solid var(--highlight);
   outline-offset: 2px;
-}
-/* Thin divider inside .action-row separating the damage/heal group (which
-   consumes the typed amount) from the rest/recovery buttons (which don't). */
-.action-sep {
-  width: 1px;
-  align-self: stretch;
-  background: var(--field-border);
-  margin: 0 4px;
 }
 
 .remove-btn {
@@ -1656,30 +1667,6 @@ body[data-theme="paladin"] {
 }
 .attack-stats .field-inline.field-grow { min-width: 70px; }
 .gear-row .field-inline.field-grow { min-width: 90px; text-align: left; }
-
-/* ── HP STATUS BADGE (staggered / down / dead) ── */
-.hp-status-badge {
-  display: none;
-  font-family: var(--heading-font);
-  font-size: 11px; font-weight: 700;
-  letter-spacing: 2px; text-transform: uppercase;
-  padding: 3px 10px; border-radius: 999px;
-  border: 1.5px solid currentColor;
-  align-self: center;
-  white-space: nowrap;
-}
-.hp-status-badge.staggered {
-  display: inline-block; color: var(--highlight);
-  animation: status-pulse 2s ease-in-out infinite;
-}
-.hp-status-badge.down {
-  display: inline-block; color: var(--accent);
-  animation: status-pulse 1.2s ease-in-out infinite;
-}
-@keyframes status-pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.45; }
-}
 
 /* ── HP ADJUST (damage / heal quick-apply) ── */
 .hp-adjust { display: inline-flex; align-items: center; gap: 6px; }
@@ -2193,7 +2180,7 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 
 @media (max-width: 600px) {
   .stat-grid { grid-template-columns: repeat(3, 1fr); }
-  .defense-row { grid-template-columns: repeat(2, 1fr); }
+  .defense-row { grid-template-columns: repeat(3, 1fr); }
   .combo-row { grid-template-columns: 1fr; }
   .sheet-container { padding: 12px 12px 12px; }
   /* The 300px floor won't fit beside the tier badge at this width. */
@@ -2292,7 +2279,7 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
     display: flex; flex-direction: column;
   }
   /* Too small to be worth a scrollbar. */
-  body.layout-fixed .zone > .section:is([data-section="abilities"], [data-section="defenses"]) { flex-shrink: 0; }
+  body.layout-fixed .zone > .combo-row { margin-bottom: 0; flex-shrink: 0; }
   body.layout-fixed .zone > .section > .section-head { flex-shrink: 0; }
   /* A list's add button rides in its heading, and stays put while the list
      scrolls. */
@@ -2303,7 +2290,8 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
   /* Padding rather than the usual margin: a scroll box clips at its padding
      edge, and the padlocks sit a few pixels outside the fields they belong
      to. */
-  body.layout-fixed .zone > .section > .section-body {
+  body.layout-fixed .zone > .section > .section-body,
+  body.layout-fixed .zone > .combo-row > .section > .section-body {
     min-height: 0; overflow-y: auto;
     margin: 0; padding: 4px;
   }
@@ -2376,17 +2364,17 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
   body.layout-fixed .zone[data-zone="toolbar"] .class-switch.on .class-switch-knob { left: 15px; }
 
   /* Denser versions of the sections, for the narrower zones. */
-  body.layout-fixed .zone > .section > .section-head { letter-spacing: 2px; white-space: nowrap; overflow: hidden; }
+  body.layout-fixed .zone > .section > .section-head,
+  body.layout-fixed .zone > .combo-row > .section > .section-head { letter-spacing: 2px; white-space: nowrap; overflow: hidden; }
 
-  body.layout-fixed .zone .stat-grid { grid-template-columns: repeat(3, 1fr); }
+  /* A zone is too narrow for three ability cards abreast. */
+  body.layout-fixed .zone > .combo-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  body.layout-fixed .zone .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body.layout-fixed .zone .stat-card {
     display: grid; grid-template-columns: 1fr 1fr; align-items: center;
     padding: 2px 4px;
   }
-  body.layout-fixed .zone .stat-card .stat-label { grid-column: 1 / -1; letter-spacing: 1px; margin: 0; }
-  body.layout-fixed .zone .defense-card .stat-label {
-    font-size: var(--fs-3xs); letter-spacing: 0.5px; white-space: nowrap;
-  }
+  body.layout-fixed .zone .stat-card .stat-label { grid-column: 1 / -1; letter-spacing: 0.5px; margin: 0; }
 
   /* The bonus badges share the top two rows with the title and the weapon,
      so the formula and damage lines get the card's full width. */
