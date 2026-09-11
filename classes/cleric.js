@@ -92,7 +92,7 @@
       /* Sized like the sheet's other dropdowns: room for the native arrow, and
          wide enough for its longest label. */
       select.field-inline.cleric-focus-select {
-        width: auto; padding-right: 16px; cursor: pointer;
+        width: auto; padding-right: 16px;
         font-size: var(--fs-sm);
       }
       .cleric-focus-note { white-space: nowrap; }

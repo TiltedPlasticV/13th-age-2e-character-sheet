@@ -338,6 +338,40 @@
   --card-glow:      0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
+/* ── GREYSCALE — the light sheet with every colour taken out, for printing
+   on a black-and-white printer. Emoji keep their own colours. ── */
+[data-theme="greyscale"] {
+  --bg:             #ffffff;
+  --bg-card:        #ffffff;
+  --bg-card-alt:    #f2f2f2;
+  --ink:            #000;
+  --ink-dim:        #000;
+  --ink-faint:      #4f4f4f;
+  --accent:         #000;
+  --accent-glow:    #222222;
+  --accent-dim:     #e6e6e6;
+  --highlight:      #3a3a3a;
+  --highlight-dim:  #555555;
+  --crit:           #000;
+  --bone:           #0d0d0d;
+  --field-bg:       #ffffff;
+  --field-border:   #838383;
+  --field-focus:    rgba(0,0,0,0.18);
+  --check-active-bg:   #e0e0e0;
+  --check-active-bdr:  #000;
+  --check-active-col:  #000;
+  --header-ornament: '·';
+  --ui-font:        system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --display-font:   system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --heading-font:   system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --body-font:      system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --hairline:        rgba(0,0,0,0.10);
+  --hairline-strong: rgba(0,0,0,0.14);
+  --print-accent:   #333333;
+  --print-card-bg:  #f4f4f4;
+  --card-glow:      0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
 /* ═══════════════════════════════════════════
    TYPOGRAPHIC SCALE — edit these to resize
    all text of a given size in one place
@@ -365,15 +399,15 @@
    ═══════════════════════════════════════════ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* Every theme but one is dark, and the browser can't infer that from CSS
+/* Nearly every theme is dark, and the browser can't infer that from CSS
    variables. Without this it paints every surface it owns — dropdown
    popups, scrollbars, autofill, spinners — on a light system background.
    Print flips back, since the print sheet is white. */
 :root { color-scheme: dark; }
 
-/* The light theme has to flip it back, and the property only does its job on
+/* The light themes have to flip it back, and the property only does its job on
    the root element — the theme attribute lives on <body>, one level down. */
-:root:has(> body[data-theme="light"]) { color-scheme: light; }
+:root:has(> body:is([data-theme="light"], [data-theme="greyscale"])) { color-scheme: light; }
 
 body {
   background: var(--bg);
@@ -403,7 +437,6 @@ body {
   background: var(--bg-card);
   color: var(--ink);
   outline: none;
-  cursor: pointer;
   transition: border-color 0.2s, background 0.4s, color 0.4s;
 }
 
@@ -614,6 +647,7 @@ select option {
   background: var(--bg-card);
   color: var(--ink);
 }
+select { cursor: pointer; }
 
 textarea.field-block {
   display: block;
@@ -854,7 +888,7 @@ textarea.field-block {
    damage die. Sized like the sheet's other dropdowns: room for the native
    arrow, and wide enough for its longest label. */
 .gear-row select.field-inline.field-armor {
-  width: auto; padding-right: 16px; cursor: pointer;
+  width: auto; padding-right: 16px;
   font-size: var(--fs-sm);
 }
 .gear-row .class-switch { align-self: center; }
@@ -1086,7 +1120,7 @@ textarea.field-block {
 /* As the power-header selects: room for the native arrow, sized to the
    widest ability name instead of stretching. */
 .attack-formula select.field-inline.field-ability {
-  width: auto; padding-right: 16px; cursor: pointer;
+  width: auto; padding-right: 16px;
   font-size: var(--fs-sm);
 }
 .attack-formula .field-inline.field-xs { font-size: var(--fs-sm); }
@@ -1272,7 +1306,7 @@ textarea.field-block {
    size to its widest label rather than stretching. */
 .power-header select.field-inline.power-trigger,
 .power-header select.field-inline.power-usage {
-  width: auto; padding-right: 16px; cursor: pointer;
+  width: auto; padding-right: 16px;
 }
 /* "Uses" input sits among the trigger/usage fields, so match their font-size
    (otherwise field-sm inherits the larger default and renders a taller box). */
@@ -1553,24 +1587,28 @@ body[data-theme="paladin"] {
   background: linear-gradient(90deg, rgba(168, 200, 255, 0.10) 0%, var(--bg-card) 40%, var(--bg-card) 60%, rgba(255, 200, 64, 0.08) 100%);
 }
 
-/* ── LIGHT / DARK — no effects by design. These give the sections a card of
-   their own (elsewhere a section body sits on the page ground, which needs to
-   be dark to read as depth), and fix the two places where the shared
+/* ── LIGHT / DARK / GREYSCALE — no effects by design. These give the sections
+   a card of their own (elsewhere a section body sits on the page ground, which
+   needs to be dark to read as depth), and fix the two places where the shared
    stylesheet paints --bone text on a background of the same tone. ── */
 [data-theme="light"] .section,
-[data-theme="dark"] .section {
+[data-theme="dark"] .section,
+[data-theme="greyscale"] .section {
   background: var(--bg-card);
   border-radius: 6px;
 }
 
 [data-theme="light"] .section-head,
-[data-theme="dark"] .section-head {
+[data-theme="dark"] .section-head,
+[data-theme="greyscale"] .section-head {
   background: var(--bg-card-alt);
   border-radius: 5px 5px 0 0;
 }
 
 [data-theme="light"] .toast,
-[data-theme="light"] .toolbar button.primary:hover { color: #ffffff; }
+[data-theme="light"] .toolbar button.primary:hover,
+[data-theme="greyscale"] .toast,
+[data-theme="greyscale"] .toolbar button.primary:hover { color: #ffffff; }
 
 [data-theme="dark"] .toast,
 [data-theme="dark"] .toolbar button.primary:hover { color: #16181c; }
