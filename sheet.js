@@ -760,6 +760,7 @@ function recomputeDerived() {
     if (el && el.value !== newVal) el.value = newVal;
   });
   updateTierBadge();
+  updateHpState();
   renderPotions();
   updateAttackHints();
   updateDefenseHints();
@@ -2818,7 +2819,7 @@ function applyState() {
       const key = input.dataset.field;
       if (key) setLockVisual(toggle, !!state.locks[key]);
     });
-    [renderRecoveries, renderPotions, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderMagicItems, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent].forEach(fn => {
+    [renderRecoveries, renderPotions, renderSkulls, renderBackgrounds, renderIcons, renderKinPowers, renderFeatures, renderTalents, renderPowers, renderSpells, renderMagicItems, renderFeats, renderAdvances, renderConditions, renderEscalation, renderClassContent, updateHpState].forEach(fn => {
       try { fn(); } catch(e) { console.warn(fn.name, e); }
     });
     // After renderClassContent, so a class module's own sections are wired.
@@ -2986,6 +2987,7 @@ function fullHealUp() {
   renderAbilityLists();
   renderIcons();
   classHook('onFullHeal');
+  updateHpState();
   // Read after the ticks are gone, so it is the stock they now have.
   if (potionTicks) {
     const potions = potionSummary();
@@ -2995,6 +2997,26 @@ function fullHealUp() {
   logRest(REST_PLANS.full, done);
   saveNow();
   showToast('Fully healed');
+}
+
+// Staggered, down and dead are read off current HP alone: temp HP sits on
+// top of it and moves no threshold. The card says which it is; what that
+// costs is the player's to know.
+function updateHpState() {
+  const card = document.getElementById('hp-current-card');
+  const label = document.getElementById('hp-current-label');
+  if (!card || !label) return;
+  const cur = intOrNull(state.fields.current_hp);
+  const stag = intOrNull(state.fields.staggered);
+  const dead = intOrNull(state.fields.dead);
+  let cls = '', text = 'Current HP';
+  if (cur !== null) {
+    if (dead !== null && cur <= dead) { cls = 'dead'; text = 'Dead'; }
+    else if (cur <= 0) { cls = 'down'; text = 'Down'; }
+    else if (stag !== null && cur <= stag) { cls = 'staggered'; text = 'Staggered'; }
+  }
+  ['staggered', 'down', 'dead'].forEach(k => card.classList.toggle(k, cls === k));
+  label.textContent = text;
 }
 
 // The reverse of the input listener's sync, for actions that mutate fields
@@ -3033,6 +3055,7 @@ function applyDamage() {
   state.fields.current_hp = String(cur);
   setFieldDom('temp_hp');
   setFieldDom('current_hp');
+  updateHpState();
   logAction('Damage taken',
     (absorbed ? `${absorbed} soaked by temp HP · ` : '') + `HP → ${hpFraction(cur)}`,
     '−' + n);
@@ -3049,6 +3072,7 @@ function applyHeal() {
   if (maxHp !== null && cur > maxHp) cur = maxHp;
   state.fields.current_hp = String(cur);
   setFieldDom('current_hp');
+  updateHpState();
   logAction('Healed', `HP → ${hpFraction(cur)}`, '+' + n);
   saveNow();
   showToast(`+${n} HP`);
@@ -3344,6 +3368,7 @@ function rollRecovery() {
   state.fields.current_hp = String(cur);
   setFieldDom('current_hp');
   renderRecoveries();
+  updateHpState();
   logRoll(`Recovery (${max - slot - 1} left)`,
           `${exprDetail(expr, r)} · HP → ${hpFraction(cur)}`, '+' + r.total);
   saveNow();
@@ -3384,6 +3409,7 @@ function drinkPotion(tier) {
   setFieldDom('current_hp');
   renderPotions();
   renderRecoveries();
+  updateHpState();
   logRoll(`${t.label} potion (${stock - slot - 1} left)`,
           `${exprDetail(expr, rec)} · ${exprDetail(t.bonus, potion)}`
           + (healed < rolled ? ` · capped at ${t.cap}` : '')
@@ -3505,6 +3531,7 @@ document.addEventListener('input', (e) => {
     // Not derived sources, but the autosave below would redraw the battle
     // helper 400ms late.
     if (['current_hp', 'temp_hp', 'staggered', 'dead', 'max_hp'].includes(key)) {
+      updateHpState();
       renderBattleHelperBody();
     }
   }

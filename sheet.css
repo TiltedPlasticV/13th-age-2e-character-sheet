@@ -872,6 +872,20 @@ textarea.field-block {
   font-size: var(--fs-xs); color: var(--highlight-dim);
 }
 
+/* Staggered, down and dead: the label under the box says which — the colour
+   only has to make you look. One hue in three weights rather than a second
+   colour, so it reads the same in the greyscale theme. Temp HP is not part
+   of it; see updateHpState. */
+.hp-current-card.staggered .field-inline {
+  border-style: dashed; color: var(--highlight);
+}
+.hp-current-card:is(.down, .dead) .field-inline {
+  background: var(--highlight); color: var(--bg);
+}
+.hp-current-card:is(.staggered, .down, .dead) .hp-label {
+  color: var(--highlight); font-weight: 700;
+}
+
 .hp-current-card:is(.hp-temp, .hp-init) .field-inline {
   width: 64px; height: 44px; font-size: var(--fs-3xl);
 }
@@ -2477,6 +2491,8 @@ body.no-anim, body.no-anim *, body.no-anim *::before, body.no-anim *::after {
   .field-inline, textarea.field-block {
     border: 1px solid #ccc; background: #fafafa; color: #1a1510;
   }
+  /* The word under the box is the state; a solid block of ink isn't. */
+  .hp-current-card:is(.down, .dead) .field-inline { background: #fafafa; color: #1a1510; }
   .section { border-color: #ccc; }
   .section-head { background: var(--print-card-bg); color: var(--print-accent); }
   .stat-card, .defense-card, .attack-card, .power-block {
