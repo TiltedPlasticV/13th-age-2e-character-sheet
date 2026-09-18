@@ -146,9 +146,10 @@
     const base = host.getBoundingClientRect();
     const a = fromEl.getBoundingClientRect();
     const b = toEl.getBoundingClientRect();
+    const z = host.currentCSSZoom || 1;
     return el('div', {
       class: 'skull-bonus-seg', title: tip,
-      style: `left:${a.left - base.left}px; width:${b.right - a.left}px`
+      style: `left:${(a.left - base.left) / z}px; width:${(b.right - a.left) / z}px`
     }, el('span', { class: 'note skull-bonus-label' },
       el('b', {}, bonus), ' to defenses'));
   }
@@ -186,8 +187,8 @@
   function labelOverlap(host) {
     const [a, b] = host.querySelectorAll('.skull-bonus-label');
     if (!a || !b) return 0;
-    return Math.ceil(a.getBoundingClientRect().right + LABEL_GAP
-                     - b.getBoundingClientRect().left);
+    return Math.ceil((a.getBoundingClientRect().right - b.getBoundingClientRect().left)
+                     / (host.currentCSSZoom || 1) + LABEL_GAP);
   }
 
   function positionSkullBonus() {

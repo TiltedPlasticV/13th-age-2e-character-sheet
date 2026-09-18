@@ -1367,8 +1367,15 @@ function togglePref(key) {
 // and it moves sections rather than just restyling them. The pref is what the
 // player asked for; the body class is what the window allows. The switch
 // shows the latter, so it never reads "on" over a sheet that isn't.
-const FIXED_MIN_W = 1600;
-const FIXED_MIN_H = 850;
+// Below the full size the whole layout is scaled down to fit, as far as
+// FIXED_MIN_ZOOM — any further and the smallest labels stop being legible.
+// The minimum window is what that zoom can still hold: a 1366×768 laptop
+// screen, less the taskbar and the browser's own bars.
+const FIXED_FULL_W = 1600;
+const FIXED_FULL_H = 850;
+const FIXED_MIN_ZOOM = 0.8;
+const FIXED_MIN_W = 1340;
+const FIXED_MIN_H = 600;
 let _fixedActive = false;
 let _printing = false;
 
@@ -1376,6 +1383,10 @@ function fixedLayoutFits() {
   return window.innerWidth >= FIXED_MIN_W && window.innerHeight >= FIXED_MIN_H;
 }
 function fixedLayoutActive() { return _fixedActive; }
+function fixedLayoutZoom() {
+  const z = Math.min(1, window.innerWidth / FIXED_FULL_W, window.innerHeight / FIXED_FULL_H);
+  return Math.max(FIXED_MIN_ZOOM, Math.floor(z * 100) / 100);
+}
 
 // Each section is moved whole and returned to a marker left where it was, so
 // nothing is rebuilt and every input keeps its value, listeners and locks.
@@ -1393,6 +1404,7 @@ function applyLayout() {
     sw.classList.toggle('on', on);
     sw.setAttribute('aria-checked', on ? 'true' : 'false');
   }
+  document.body.style.setProperty('--fixed-zoom', on ? fixedLayoutZoom() : 1);
   if (on === _fixedActive) return;
   _fixedActive = on;
   const focused = document.activeElement;
