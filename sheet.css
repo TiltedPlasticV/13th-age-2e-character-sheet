@@ -700,6 +700,18 @@ textarea.field-block {
 
 .defense-card .stat-label { margin: 0; }
 
+.def-bonus-btn {
+  flex-shrink: 0; width: 16px; height: 16px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; line-height: 1; cursor: pointer;
+  color: var(--ink-faint); background: var(--bg-card);
+  border: 1px solid var(--field-border); border-radius: 50%;
+  opacity: 0.6; transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+}
+.def-bonus-btn:hover,
+.def-bonus-btn:focus-visible,
+.def-bonus-btn.has-bonus { opacity: 1; color: var(--highlight); border-color: var(--highlight-dim); }
+
 .defense-card .field-inline {
   font-family: var(--heading-font); font-size: var(--fs-3xl);
   font-weight: 700; color: var(--highlight); width: 48px; text-align: center;
@@ -2195,6 +2207,7 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 @media (max-width: 600px) {
   .stat-grid { grid-template-columns: repeat(3, 1fr); }
   .defense-row { grid-template-columns: repeat(3, 1fr); }
+  .defense-card { gap: 4px; }
   .combo-row { grid-template-columns: 1fr; }
   .sheet-container { padding: 12px 12px 12px; }
   /* The 300px floor won't fit beside the tier badge at this width. */
@@ -2234,6 +2247,11 @@ body:not(.no-battle-helper) { padding-right: var(--bh-rail); }
 .power-dialog .drag-handle,
 .power-dialog .power-header > .remove-btn { display: none; }
 .power-dialog .power-block textarea.field-block { min-height: 8em; }
+.bonus-dialog { width: min(480px, calc(100vw - 32px)); font-size: var(--fs-md); }
+.bonus-dialog .power-dialog-body { display: flex; flex-direction: column; gap: 6px; }
+.bonus-row { display: flex; align-items: center; gap: 6px; }
+.bonus-row .bonus-source { flex: 1; min-width: 0; }
+.bonus-working { white-space: pre-line; }
 
 /* The name-as-a-button and the one-word summary that stand in for the row's
    name field and dropdowns in the fixed layout. Nowhere else. */
@@ -2486,7 +2504,7 @@ body.no-anim, body.no-anim *, body.no-anim *::before, body.no-anim *::after {
      *records* a value stays. So the padlock goes, but the ✦ prepared mark, the
      class switches and every check-box remain — those are the character. */
   .roll-btn, .hp-adjust, .action-row { display: none; }
-  .add-row-btn, .remove-btn, .drag-handle, .lock-toggle { display: none; }
+  .add-row-btn, .remove-btn, .drag-handle, .lock-toggle, .def-bonus-btn { display: none; }
   /* The number of skulls is already on the page as the number of skulls. */
   .skulls-config { display: none; }
   body::before { display: none; }

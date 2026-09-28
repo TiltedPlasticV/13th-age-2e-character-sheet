@@ -27,6 +27,8 @@ let state = {
   advances: {},
   locks: {},
   activeConditions: {},
+  // Per defense key, the bonuses the formula can't know: { type, value, source }.
+  defenseBonuses: {},
   escalation: 0,
   // Class-module state that isn't a `data-field` input (toggles, counters).
   // Keyed by class and never deleted on a class switch.
@@ -207,8 +209,30 @@ function defenseCalc(f, defenseKey) {
   const lvl = intOrNull(f.level);
   const haveMod = DEFENSE_MODS[defenseKey].some(k => intOrNull(f[k]) !== null);
   if (lvl === null && !haveMod) return '';
-  return ci.defenses[defenseKey] + middleOf(f, defenseKey).mod + intOrZero(f.level);
+  return ci.defenses[defenseKey] + middleOf(f, defenseKey).mod + intOrZero(f.level)
+       + bonusTotal(defenseKey);
 }
+
+// ── DEFENSE BONUSES ──
+// What the formula can't know — a magic item, a level-up's +1, a boon from
+// the GM — listed per defense and added on top, so the rest of the sum stays
+// automatic instead of being locked away.
+const BONUS_TYPES = {
+  magic: { label: 'Magic item',  hint: 'Which item?' },
+  level: { label: 'Level bonus', hint: 'e.g. 4th-level increase' },
+  temp:  { label: 'Temporary',   hint: 'e.g. GM boon' },
+  other: { label: 'Other',       hint: 'Source' },
+};
+const DEFENSE_NAMES = { ac: 'AC', pd: 'PD', md: 'MD' };
+
+function bonusesOf(key) {
+  return (state.defenseBonuses && state.defenseBonuses[key]) || [];
+}
+function bonusTotal(key) {
+  return bonusesOf(key).reduce((n, b) => n + intOrZero(b.value), 0);
+}
+function bonusType(b) { return BONUS_TYPES[b.type] || BONUS_TYPES.other; }
+function bonusLabel(b) { return String(b.source || '').trim() || bonusType(b).label; }
 
 // ── HEALING POTIONS ─────────────────────────────────────
 // 13A 2e allocates potions per arc off level, and they are *replaced* rather
@@ -319,7 +343,7 @@ function acCalc(f) {
   const base = intOrNull(f.base_ac);
   if (base === null) return '';
   return base + intOrZero(f.shield) + intOrZero(f.ac_misc)
-       + middleOf(f, 'ac').mod + intOrZero(f.level);
+       + middleOf(f, 'ac').mod + intOrZero(f.level) + bonusTotal('ac');
 }
 
 // The class's armor table as tooltip text, so picking armor doesn't send
@@ -525,6 +549,10 @@ function defenseWorking(f, key) {
     if (shield) parts.push(calcTerm('Shield', signed(shield)));
     if (misc) parts.push(calcTerm('Misc', signed(misc)));
   }
+  bonusesOf(key).forEach(b => {
+    const v = intOrZero(b.value);
+    if (v) parts.push(calcTerm(bonusLabel(b), signed(v)));
+  });
   // On its own line: it is the one part of the tooltip that isn't a term in
   // the sum, and in brackets it would read as part of the arithmetic.
   return parts.join(' + ') + '\n'
@@ -583,6 +611,119 @@ function updateDefenseHints() {
     const box = document.querySelector(`[data-field="${key}"]`);
     if (box) box.title = defenseWorking(state.fields, key);
   });
+  document.querySelectorAll('[data-bonus]').forEach(btn => {
+    btn.classList.toggle('has-bonus', bonusesOf(btn.dataset.bonus).length > 0);
+  });
+  updateBonusDialogWorking();
+}
+
+// ── DEFENSE BONUS POPUP ──
+let _bonusKey = null;
+
+function openBonusDialog(key) {
+  const dlg = document.getElementById('bonus-dialog');
+  if (!dlg) return;
+  _bonusKey = key;
+  document.getElementById('bonus-dialog-title').textContent = DEFENSE_NAMES[key] + ' Bonuses';
+  renderBonusDialog();
+  if (!dlg.open) dlg.showModal();
+}
+
+function renderBonusDialog() {
+  const body = document.getElementById('bonus-dialog-body');
+  const key = _bonusKey;
+  if (!body || !key) return;
+  body.innerHTML = '';
+  bonusesOf(key).forEach(b => body.appendChild(buildBonusRow(key, b)));
+  body.append(
+    el('button', { class: 'add-row-btn', type: 'button', onclick: () => addBonus(key) }, '+ Add Bonus'),
+    el('div', { class: 'note bonus-working', id: 'bonus-working' })
+  );
+  updateBonusDialogWorking();
+}
+
+function buildBonusRow(key, b) {
+  const source = el('input', {
+    class: 'field-inline bonus-source', value: b.source || '',
+    placeholder: bonusType(b).hint, 'aria-label': 'Source',
+    oninput: e => { b.source = e.target.value; updateDefenseHints(); },
+  });
+  const type = el('select', {
+    class: 'field-inline', 'aria-label': 'Bonus type',
+    onchange: e => {
+      b.type = e.target.value;
+      source.placeholder = bonusType(b).hint;
+      updateDefenseHints();
+      saveNow();
+    },
+  }, Object.entries(BONUS_TYPES).map(([k, t]) => el('option', { value: k }, t.label)));
+  type.value = BONUS_TYPES[b.type] ? b.type : 'other';
+  const value = el('input', {
+    class: 'field-inline field-sm bonus-value', value: b.value || '', placeholder: '+1',
+    'aria-label': 'Bonus',
+    oninput: e => { b.value = e.target.value; recomputeDerived(); },
+  });
+  return el('div', { class: 'bonus-row' },
+    type, value, source,
+    el('button', {
+      class: 'remove-btn', type: 'button', title: 'Remove', 'aria-label': 'Remove bonus',
+      onclick: () => removeBonus(key, b),
+    }, '×')
+  );
+}
+
+function addBonus(key) {
+  if (!state.defenseBonuses[key]) state.defenseBonuses[key] = [];
+  state.defenseBonuses[key].push({ type: 'magic', value: '', source: '' });
+  logAction(DEFENSE_NAMES[key] + ' bonus', 'added');
+  renderBonusDialog();
+  recomputeDerived();
+  saveNow();
+  const values = document.querySelectorAll('#bonus-dialog-body .bonus-value');
+  if (values.length) values[values.length - 1].focus();
+}
+
+function removeBonus(key, b) {
+  const list = bonusesOf(key);
+  const i = list.indexOf(b);
+  if (i < 0) return;
+  list.splice(i, 1);
+  const v = intOrZero(b.value);
+  logAction(DEFENSE_NAMES[key] + ' bonus', 'removed ' + bonusLabel(b) + (v ? ' ' + signed(v) : ''));
+  renderBonusDialog();
+  recomputeDerived();
+  saveNow();
+}
+
+// The sum as it now stands, so a row's effect shows without closing the
+// popup. A locked field ignores the list, and says so.
+function updateBonusDialogWorking() {
+  const box = document.getElementById('bonus-working');
+  const key = _bonusKey;
+  if (!box || !key) return;
+  const name = DEFENSE_NAMES[key];
+  const val = String(state.fields[key] || '');
+  box.textContent = state.locks[key]
+    ? name + ' is set by hand — unlock it to add these bonuses.'
+    : (val ? name + ' ' + val + ' = ' : '') + defenseWorking(state.fields, key);
+}
+
+function closeBonusDialog() {
+  const dlg = document.getElementById('bonus-dialog');
+  _bonusKey = null;
+  if (dlg && dlg.open) dlg.close();
+  document.getElementById('bonus-dialog-body').innerHTML = '';
+}
+
+function wireBonusDialog() {
+  const dlg = document.getElementById('bonus-dialog');
+  if (!dlg) return;
+  document.querySelectorAll('[data-bonus]').forEach(btn => {
+    btn.addEventListener('click', () => openBonusDialog(btn.dataset.bonus));
+  });
+  document.getElementById('bonus-dialog-close').addEventListener('click', closeBonusDialog);
+  dlg.addEventListener('close', () => { if (_bonusKey) closeBonusDialog(); });
+  dlg.addEventListener('click', e => { if (e.target === dlg) closeBonusDialog(); });
 }
 
 // Everything on the attack cards that isn't a field value: the working
@@ -2799,6 +2940,7 @@ function loadFromFile(event) {
       if (!state.advances) state.advances = {};
       if (!state.locks) state.locks = {};
       if (!state.activeConditions) state.activeConditions = {};
+      if (!state.defenseBonuses) state.defenseBonuses = {};
       if (!state.classData) state.classData = {};
       if (typeof state.escalation !== 'number') state.escalation = 0;
       if (!state.theme) state.theme = 'necromancer';
@@ -3522,7 +3664,7 @@ function renderConditions() {
 function resetSheet() {
   if (!confirm('Start a new blank sheet? Any unsaved changes will be lost.')) return;
   // Settings (theme, prefs) survive a reset; only character data is cleared.
-  state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], kinPowers: [], features: [], talents: [], powers: [], spells: [], magicItems: [], feats: [], advances: {}, locks: {}, activeConditions: {}, classData: {}, escalation: 0, theme: state.theme, prefs: state.prefs };
+  state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], kinPowers: [], features: [], talents: [], powers: [], spells: [], magicItems: [], feats: [], advances: {}, locks: {}, activeConditions: {}, defenseBonuses: {}, classData: {}, escalation: 0, theme: state.theme, prefs: state.prefs };
   try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
   applyState();
   showToast('New sheet');
@@ -3594,6 +3736,7 @@ try {
     if (!state.advances) state.advances = {};
     if (!state.locks) state.locks = {};
     if (!state.activeConditions) state.activeConditions = {};
+    if (!state.defenseBonuses) state.defenseBonuses = {};
     if (!state.classData) state.classData = {};
     if (typeof state.escalation !== 'number') state.escalation = 0;
     if (!state.theme) state.theme = 'necromancer';
@@ -3638,6 +3781,7 @@ function wireStaticHandlers() {
   });
   wireDiceTrayWindow();
   wirePowerDialog();
+  wireBonusDialog();
   document.querySelectorAll('[data-action="quick-rest"]').forEach(b => { b.title = restTooltip(REST_PLANS.quick); });
   document.querySelectorAll('[data-action="full-heal"]').forEach(b => { b.title = restTooltip(REST_PLANS.full); });
   document.getElementById('bh-rail').addEventListener('click', toggleBattleHelper);

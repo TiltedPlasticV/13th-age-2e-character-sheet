@@ -68,9 +68,9 @@
       <div class="section-head"><span class="icon">⛊</span> Defenses</div>
       <div class="section-body">
         <div class="defense-row">
-          <div class="defense-card"><div class="stat-label">AC</div><input class="field-inline" data-field="ac" placeholder="—" aria-label="Armor Class"></div>
-          <div class="defense-card"><div class="stat-label">PD</div><input class="field-inline" data-field="pd" placeholder="—" aria-label="Physical Defense"></div>
-          <div class="defense-card"><div class="stat-label">MD</div><input class="field-inline" data-field="md" placeholder="—" aria-label="Mental Defense"></div>
+          <div class="defense-card"><div class="stat-label">AC</div><input class="field-inline" data-field="ac" placeholder="—" aria-label="Armor Class"><button class="def-bonus-btn" data-bonus="ac" title="AC bonuses — magic items, level-ups, temporary boosts" aria-label="AC bonuses">+</button></div>
+          <div class="defense-card"><div class="stat-label">PD</div><input class="field-inline" data-field="pd" placeholder="—" aria-label="Physical Defense"><button class="def-bonus-btn" data-bonus="pd" title="PD bonuses — magic items, level-ups, temporary boosts" aria-label="PD bonuses">+</button></div>
+          <div class="defense-card"><div class="stat-label">MD</div><input class="field-inline" data-field="md" placeholder="—" aria-label="Mental Defense"><button class="def-bonus-btn" data-bonus="md" title="MD bonuses — magic items, level-ups, temporary boosts" aria-label="MD bonuses">+</button></div>
         </div>
       </div>
     </div>
@@ -542,6 +542,14 @@
   <div class="power-dialog-foot">
     <button class="action-btn" id="power-dialog-delete">× Delete</button>
   </div>
+</dialog>
+
+<dialog class="power-dialog bonus-dialog" id="bonus-dialog" aria-label="Defense bonuses">
+  <div class="power-dialog-head">
+    <span class="power-dialog-title" id="bonus-dialog-title"></span>
+    <button class="remove-btn" id="bonus-dialog-close" title="Close" aria-label="Close">×</button>
+  </div>
+  <div class="power-dialog-body" id="bonus-dialog-body"></div>
 </dialog>
 
 <div class="toast" id="toast"></div>
