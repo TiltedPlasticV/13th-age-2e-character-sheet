@@ -1,0 +1,315 @@
+{
+  "fields": {
+    "name": "Grimhilde",
+    "level": "3",
+    "class": "necromancer",
+    "kin": "Human",
+    "description": "Leathery, slipping skin. Twitchy and unsettling. Very long fingernails.",
+    "unique_thing": "I am the last remnant of an ancient necromantic culture, dug out of a bog and displayed for years in a museum.",
+    "str_score": "12",
+    "str_mod": "+1",
+    "dex_score": "13",
+    "dex_mod": "+1",
+    "con_score": "10",
+    "con_mod": "+0",
+    "wis_score": "14",
+    "wis_mod": "+2",
+    "int_score": "19",
+    "int_mod": "+4",
+    "cha_score": "17",
+    "cha_mod": "+3",
+    "ac": "14",
+    "pd": "15",
+    "md": "17",
+    "initiative": "+4",
+    "armor_type": "light",
+    "base_ac": "10",
+    "shield": "0",
+    "max_hp": "30",
+    "current_hp": "30",
+    "staggered": "15",
+    "temp_hp": "",
+    "recovery_dice": "3d6",
+    "recovery_avg": "10",
+    "max_recoveries": "8",
+    "melee_weapon": "Dagger",
+    "melee_damage": "3d4+1",
+    "melee_avg": "8",
+    "melee_miss": "3",
+    "melee_vs_ac": "+4",
+    "ranged_weapon": "Dagger",
+    "ranged_damage": "3d4+1",
+    "ranged_avg": "8",
+    "ranged_miss": "",
+    "ranged_vs_ac_near": "+4",
+    "ranged_vs_ac_far": "N/A",
+    "gear_melee": "Dagger",
+    "gear_ranged": "Dagger",
+    "gold": "",
+    "gear_notes": "Flap of demonic neck skin\nRusty nail / small black stone bottle\nDave's coins with address",
+    "max_magic": "3",
+    "conditions": "",
+    "notes": "",
+    "dead": "-15",
+    "max_skulls": 6,
+    "max_spells": "6",
+    "potions_adventurer": "1",
+    "potions_champion": "1",
+    "potions_epic": "0",
+    "melee_atk_ability": "str",
+    "melee_dmg_ability": "str",
+    "ranged_atk_ability": "dex",
+    "ranged_dmg_ability": "dex",
+    "melee_weapon_die": "d4",
+    "melee_atk_misc": "",
+    "melee_dmg_misc": "",
+    "ranged_weapon_die": "d4",
+    "ranged_atk_misc": "",
+    "ranged_dmg_misc": "",
+    "armor_name": "None",
+    "ac_misc": "",
+    "barb_rs_weapon": "Dagger",
+    "barb_rs_damage": "2d4+1",
+    "barb_rs_avg": "6",
+    "barb_rs_miss": "4",
+    "barb_rs_vs_ac": "+3",
+    "barb_rt_weapon": "Dagger",
+    "barb_rt_damage": "2d4+1",
+    "barb_rt_avg": "6",
+    "barb_rt_miss": "4",
+    "barb_rt_vs_ac_near": "+3",
+    "barb_rt_vs_ac_far": "N/A"
+  },
+  "checkboxes": {},
+  "backgrounds": [
+    {
+      "name": "Feared Myrr Shaman",
+      "bonus": "+5"
+    },
+    {
+      "name": "Displayed in a museum for years",
+      "bonus": "+3"
+    }
+  ],
+  "icons": [
+    {
+      "dice": "2",
+      "mod": "-",
+      "name": "Lich Queen",
+      "used": {},
+      "available": {}
+    },
+    {
+      "dice": "1",
+      "mod": "+",
+      "name": "Shadow Prince",
+      "available": {},
+      "used": {}
+    }
+  ],
+  "powers": [
+    {
+      "name": "",
+      "action": "",
+      "usage": "passive",
+      "desc": "",
+      "max_uses": "",
+      "used": {},
+      "trigger": "standard"
+    }
+  ],
+  "feats": [
+    {
+      "name": "ADV: Cackling Soliloquist"
+    },
+    {
+      "name": "ADV: Redeemer"
+    },
+    {
+      "name": "ADV: Command Undead"
+    },
+    {
+      "name": "ADV: Summoning"
+    }
+  ],
+  "theme": "necromancer",
+  "spells": [
+    {
+      "name": "Chant of Endings (1st lvl+)",
+      "action": "Standard action",
+      "usage": "atwill",
+      "desc": "Ranged spell, Target: The nearby enemy with the fewest hit points (you choose if there’s a tie; you also don’t have to be able to see that enemy)\nAttack: Intelligence + Level vs. MD\nHit: 1d10 + Intelligence necro damage.\n3rd level spell 4d6 damage.\n5th level spell 6d6 damage.\n7th level spell 6d10 damage.\n9th level spell 8d10 damage.",
+      "max_uses": "",
+      "used": {},
+      "prepared": true,
+      "trigger": "standard"
+    },
+    {
+      "name": "Command Undead (1st lvl+)",
+      "action": "Standard action",
+      "usage": "battle",
+      "desc": "Ranged spell, Target: One nearby undead creature with 64 hp or fewer\n3rd level spell Target with 96 hp or fewer.\n5th level spell Target with 160 hp or fewer.\n7th level spell Target with 266 hp or fewer.\n9th level spell Target with 460 hp or fewer.\n\nAttack: Intelligence + Level vs. MD\nHit: The target is confused (hard save ends, 16+).\n<ADV FEAT: Miss does not expend spell>",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true,
+      "trigger": "standard",
+      "desperate": {}
+    },
+    {
+      "name": "Summon Undead (1st lvl+)",
+      "action": "Standard action",
+      "usage": "arc",
+      "desc": "Ranged spell, Effect: You summon a mob of 1d3 + 1 putrid zombie mooks. They fight for you until the end of the battle or until they drop to 0 hp, whichever comes first.\n\nPutrid zombie\n3rd level mook [undead]\nInitiative: +2 / Vulnerability: holy\nAttack: Rotting fist +7 vs. AC <ADV FEAT REDEEMER: First attack gets extra +CHA vs AC> \nDmg: 5 damage <ADV FEAT SUMMONING: +esc die dmg>\nNatural 16+: Both the zombie and its target take 1d6 damage!\nHeadshot: A critical hit against a putrid zombie deals triple damage instead of the normal double damage for a crit.\nAC 18, PD 16, MD 12, HP 16 (mook)\nMook: One mook dies for every 16 damage dealt to the mob\n\n<REDEEMER: On death release CHA holy burst to all engaged>",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true,
+      "trigger": "standard",
+      "desperate": {}
+    },
+    {
+      "name": "The Bones Beneath (3rd lvl+)",
+      "trigger": "standard",
+      "usage": "arc",
+      "desc": "Ranged spell, Target: One nearby mook (and hence, its mob)\nAttack: Intelligence + Level vs. PD\nHit: 4d12 + Intelligence negative energy damage, and each mook in the mob that drops becomes a skeleton mook under your control until the end of the battle.\nMiss: Half damage, and each mook in the mob that drops becomes a skeleton mook under your control until the end of the battle.\n5th level spell 7d12 damage.\n7th level spell 2d6 x 10 damage.\n9th level spell 2d10 x 10 damage.\n\nJust-ripped-free-skeleton-mook\n3rd level mook [undead]\nInitiative: +8 / Vulnerability: holy\nSword or axe or whatever +8 vs. AC—5 damage\nResist weapons 16+: When a weapon attack targets this creature, the attacker must roll a natural 16+ on the attack roll or it only deals half damage.\nAC 18, PD 16, MD 12, HP 11 (mook)\nMook: One mook dies for every 11 damage dealt to the mob",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Circle of Death (3rd lvl+)",
+      "trigger": "standard",
+      "usage": "arc",
+      "desc": "Ranged spell\nSpecial: You can’t cast this spell unless the escalation die is 3+.\nTarget: Each nearby creature (allies and enemies)\nAttack: Intelligence + Level vs. PD\nHit vs. an enemy: 5d12 + Intelligence negative energy damage.\nHit vs. an ally: 1d6 negative energy damage.\nMiss vs. an enemy: Half damage.\nMiss vs. an ally: You take half the damage the ally would have taken on a hit.\n5th level spell 8d12 damage to an enemy 2d6 damage to an ally.\n7th level spell 2d8 x 10 damage to an enemy 3d8 damage to an ally.\n9th level spell 4d6 x 10 damage to an enemy 3d10 damage to an ally",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    },
+    {
+      "name": "Summon Horror (3rd lvl+)",
+      "trigger": "standard",
+      "usage": "arc",
+      "desc": "Ranged spell, Effect: You summon a ghoul, as per the summoning rules on page 11. The summoned ghoul fights for you until the end of the battle or until it drops to 0 hp, whichever comes first. As you cast the spell at higher levels, the creature you summon varies, as shown below. The stats for each creature are shown below.\n5th level spell You can now summon a wight.\n7th level spell You can now summon a barrow wight.\n9th level spell You can now summon a greater wight.\n\nSummoned Ghoul\n3rd level spoiler [undead]\nInitiative: +8\nVulnerability: holy\nAttack: Claws and bite +8 vs. AC <ADV FEAT REDEEMER: First attack gets extra +CHA vs AC> \nHit: 8 damage <ADV FEAT SUMMONING: +esc die>\nNatural even hit: The target is vulnerable (attacks vs. it have crit range expanded by 2) to attacks by undead until the end of the ghoul’s next turn.\nPound of flesh: The ghoul’s claws and bite attack deals +4 damage against vulnerable targets.\nInfected bite: Any creature that is slain by a ghoul and not consumed will rise as a ghoul the next night.\nAC 18, PD 16, MD 12, HP 20",
+      "max_uses": "1",
+      "used": {},
+      "prepared": true
+    }
+  ],
+  "advances": {
+    "max_hp": false,
+    "attunement": false,
+    "pd": false,
+    "md": false,
+    "skill_init": false,
+    "power_spell": false,
+    "ability_mults": false,
+    "ability_scores": false,
+    "talent": false,
+    "class_feature": false,
+    "feat": false
+  },
+  "locks": {
+    "ranged_vs_ac_far": true
+  },
+  "activeConditions": {},
+  "escalation": 0,
+  "features": [
+    {
+      "name": "Wasting Away",
+      "action": "Passive",
+      "usage": "passive",
+      "desc": "You have 6 skulls instead of 5",
+      "max_uses": "",
+      "used": {},
+      "trigger": "standard"
+    },
+    {
+      "name": "Summoning",
+      "action": "Passive",
+      "usage": "passive",
+      "desc": "You are able to summon creatures\n<ADV FEAT: Your summoned creatures can add the escalation die to their attacks>",
+      "max_uses": "",
+      "used": {},
+      "trigger": "standard"
+    }
+  ],
+  "talents": [
+    {
+      "name": "Cackling Soliloquist",
+      "action": "All actions",
+      "usage": "atwill",
+      "desc": "Spend all actions when casting a /arc spell, spell recharges 18+ after battle + invent a slight improvement to spell.\n<ADV FEAT: Also gain 1d6 + LVL + CHA temp HP>",
+      "max_uses": "",
+      "used": {},
+      "trigger": "standard"
+    },
+    {
+      "name": "Redeemer",
+      "action": "Minion atk / death",
+      "usage": "passive",
+      "desc": "Summoned undead are released from service > fight harder for you.\nMooks: On death release CHA holy burst to all engaged\nNon-mooks: On death release CHA x 1d4 (1d8 at 5th level; 2d6 at 8th level) holy burst to all engaged\n<ADV FEAT: The first time each battle an undead creature you have summoned attacks, it gains an attack bonus equal to your Charisma modifier>",
+      "max_uses": "",
+      "used": {},
+      "trigger": "standard"
+    },
+    {
+      "name": "Death Priest",
+      "action": "Out of battle",
+      "usage": "arc",
+      "desc": "Icon connections can be conversations with the dead. Also can use Seance 1/arc when not in battle.\nSeance: Short rite to contact dead related to random non-Lich Queen icon. GM rolls in secret, on 1-2 info is wrong",
+      "max_uses": "1",
+      "used": {},
+      "trigger": "outofbattle",
+      "desperate": {}
+    },
+    {
+      "name": "Stalwart Cloak (ITEM)",
+      "action": "When atk vs my PD hits",
+      "usage": "arc",
+      "desc": "2/arc force reroll whenever an attack vs your PD hits",
+      "max_uses": "2",
+      "used": {},
+      "trigger": "hit",
+      "desperate": {}
+    }
+  ],
+  "kinPowers": [
+    {
+      "name": "Resourceful",
+      "action": "Passive",
+      "usage": "passive",
+      "desc": "You have a bonus feat of the highest tier you qualify for.",
+      "max_uses": "",
+      "used": {},
+      "trigger": "standard"
+    }
+  ],
+  "classData": {},
+  "prefs": {
+    "animations": true,
+    "diceRoller": false,
+    "battleHelper": true,
+    "battleHelperOpen": true,
+    "fixedLayout": true,
+    "collapsed": {
+      "kin-powers": true
+    },
+    "tray": null,
+    "trayOpen": true
+  },
+  "magicItems": [
+    {
+      "name": "Stalwart Cloak (+1 PD)",
+      "desc": "# Stalwart Cloak +1 PD (2/arc force reroll when atk vs your PD hits)",
+      "prepared": true
+    }
+  ],
+  "defenseBonuses": {
+    "pd": [
+      {
+        "type": "magic",
+        "value": "+1",
+        "source": "Stalwart Cloak"
+      }
+    ]
+  }
+}
