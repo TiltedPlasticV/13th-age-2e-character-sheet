@@ -97,7 +97,9 @@
       "mod": "-",
       "name": "Lich Queen",
       "used": {},
-      "available": {}
+      "available": {
+        "0": 2
+      }
     },
     {
       "dice": "1",
@@ -159,7 +161,7 @@
       "name": "Summon Undead (1st lvl+)",
       "action": "Standard action",
       "usage": "arc",
-      "desc": "Ranged spell, Effect: You summon a mob of 1d3 + 1 putrid zombie mooks. They fight for you until the end of the battle or until they drop to 0 hp, whichever comes first.\n\nPutrid zombie\n3rd level mook [undead]\nInitiative: +2 / Vulnerability: holy\nAttack: Rotting fist +7 vs. AC <ADV FEAT REDEEMER: First attack gets extra +CHA vs AC> \nDmg: 5 damage <ADV FEAT SUMMONING: +esc die dmg>\nNatural 16+: Both the zombie and its target take 1d6 damage!\nHeadshot: A critical hit against a putrid zombie deals triple damage instead of the normal double damage for a crit.\nAC 18, PD 16, MD 12, HP 16 (mook)\nMook: One mook dies for every 16 damage dealt to the mob\n\n<REDEEMER: On death release CHA holy burst to all engaged>",
+      "desc": "Ranged spell, Effect: You summon a mob of 1d3 + 1 putrid zombie mooks. They fight for you until the end of the battle or until they drop to 0 hp, whichever comes first.\n\nPutrid zombie\n3rd level mook [undead]\nInitiative: +2 / Vulnerability: holy\nAttack: Rotting fist +7 vs. AC <ADV FEAT REDEEMER: First attack gets extra +CHA vs AC> <ADV FEAT SUMMONING: +esc die vs AC>\nDmg: 5 damage\nNatural 16+: Both the zombie and its target take +1d6 damage!\nHeadshot: A critical hit against a putrid zombie deals triple damage instead of the normal double damage for a crit.\nAC 18, PD 16, MD 12, HP 16 (mook)\nMook: One mook dies for every 16 damage dealt to the mob\n\n<REDEEMER: On death release CHA holy burst to all engaged>",
       "max_uses": "1",
       "used": {},
       "prepared": true,
@@ -170,7 +172,7 @@
       "name": "The Bones Beneath (3rd lvl+)",
       "trigger": "standard",
       "usage": "arc",
-      "desc": "Ranged spell, Target: One nearby mook (and hence, its mob)\nAttack: Intelligence + Level vs. PD\nHit: 4d12 + Intelligence negative energy damage, and each mook in the mob that drops becomes a skeleton mook under your control until the end of the battle.\nMiss: Half damage, and each mook in the mob that drops becomes a skeleton mook under your control until the end of the battle.\n5th level spell 7d12 damage.\n7th level spell 2d6 x 10 damage.\n9th level spell 2d10 x 10 damage.\n\nJust-ripped-free-skeleton-mook\n3rd level mook [undead]\nInitiative: +8 / Vulnerability: holy\nSword or axe or whatever +8 vs. AC—5 damage\nResist weapons 16+: When a weapon attack targets this creature, the attacker must roll a natural 16+ on the attack roll or it only deals half damage.\nAC 18, PD 16, MD 12, HP 11 (mook)\nMook: One mook dies for every 11 damage dealt to the mob",
+      "desc": "Ranged spell, Target: One nearby mook (and hence, its mob)\nAttack: Intelligence + Level vs. PD\nHit: 4d12 + Intelligence negative energy damage, and each mook in the mob that drops becomes a skeleton mook under your control until the end of the battle.\nMiss: Half damage, and each mook in the mob that drops becomes a skeleton mook under your control until the end of the battle.\n5th level spell 7d12 damage.\n7th level spell 2d6 x 10 damage.\n9th level spell 2d10 x 10 damage.\n\nJust-ripped-free-skeleton-mook (doesn't count as summoned creature)\n3rd level mook [undead]\nInitiative: +8 / Vulnerability: holy\nSword or axe or whatever +8 vs. AC—5 damage\nResist weapons 16+: When a weapon attack targets this creature, the attacker must roll a natural 16+ on the attack roll or it only deals half damage.\nAC 18, PD 16, MD 12, HP 11 (mook)\nMook: One mook dies for every 11 damage dealt to the mob",
       "max_uses": "1",
       "used": {},
       "prepared": true
@@ -179,7 +181,7 @@
       "name": "Circle of Death (3rd lvl+)",
       "trigger": "standard",
       "usage": "arc",
-      "desc": "Ranged spell\nSpecial: You can’t cast this spell unless the escalation die is 3+.\nTarget: Each nearby creature (allies and enemies)\nAttack: Intelligence + Level vs. PD\nHit vs. an enemy: 5d12 + Intelligence negative energy damage.\nHit vs. an ally: 1d6 negative energy damage.\nMiss vs. an enemy: Half damage.\nMiss vs. an ally: You take half the damage the ally would have taken on a hit.\n5th level spell 8d12 damage to an enemy 2d6 damage to an ally.\n7th level spell 2d8 x 10 damage to an enemy 3d8 damage to an ally.\n9th level spell 4d6 x 10 damage to an enemy 3d10 damage to an ally",
+      "desc": "Ranged spell, Special: You can’t cast this spell unless the escalation die is 3+.\nTarget: Each nearby creature (allies and enemies)\nAttack: Intelligence + Level vs. PD\nHit vs. an enemy: 5d12 + Intelligence negative energy damage.\nHit vs. an ally: 1d6 negative energy damage.\nMiss vs. an enemy: Half damage.\nMiss vs. an ally: You take half the damage the ally would have taken on a hit.\n5th level spell 8d12 damage to an enemy 2d6 damage to an ally.\n7th level spell 2d8 x 10 damage to an enemy 3d8 damage to an ally.\n9th level spell 4d6 x 10 damage to an enemy 3d10 damage to an ally",
       "max_uses": "1",
       "used": {},
       "prepared": true
@@ -188,7 +190,7 @@
       "name": "Summon Horror (3rd lvl+)",
       "trigger": "standard",
       "usage": "arc",
-      "desc": "Ranged spell, Effect: You summon a ghoul, as per the summoning rules on page 11. The summoned ghoul fights for you until the end of the battle or until it drops to 0 hp, whichever comes first. As you cast the spell at higher levels, the creature you summon varies, as shown below. The stats for each creature are shown below.\n5th level spell You can now summon a wight.\n7th level spell You can now summon a barrow wight.\n9th level spell You can now summon a greater wight.\n\nSummoned Ghoul\n3rd level spoiler [undead]\nInitiative: +8\nVulnerability: holy\nAttack: Claws and bite +8 vs. AC <ADV FEAT REDEEMER: First attack gets extra +CHA vs AC> \nHit: 8 damage <ADV FEAT SUMMONING: +esc die>\nNatural even hit: The target is vulnerable (attacks vs. it have crit range expanded by 2) to attacks by undead until the end of the ghoul’s next turn.\nPound of flesh: The ghoul’s claws and bite attack deals +4 damage against vulnerable targets.\nInfected bite: Any creature that is slain by a ghoul and not consumed will rise as a ghoul the next night.\nAC 18, PD 16, MD 12, HP 20",
+      "desc": "Ranged spell, Effect: You summon a ghoul, as per the summoning rules on page 11. The summoned ghoul fights for you until the end of the battle or until it drops to 0 hp, whichever comes first. As you cast the spell at higher levels, the creature you summon varies, as shown below. The stats for each creature are shown below.\n5th level spell You can now summon a wight.\n7th level spell You can now summon a barrow wight.\n9th level spell You can now summon a greater wight.\n\nSummoned Ghoul\n3rd level spoiler [undead]\nInitiative: +8\nVulnerability: holy\nAttack: Claws and bite +8 vs. AC <ADV FEAT REDEEMER: First attack gets extra +CHA vs AC> <ADV FEAT SUMMONING: +esc die vs AC>\nHit: 8 damage\nNatural even hit: The target is vulnerable to attacks by undead until the end of the ghoul’s next turn.\nPound of flesh: The ghoul’s claws and bite attack deals +4 damage against vulnerable targets.\nInfected bite: Any creature that is slain by a ghoul and not consumed will rise as a ghoul the next night.\nAC 18, PD 16, MD 12, HP 20\n\n<REDEEMER: On death release CHA x 1d4 (1d8 at 5th level; 2d6 at 8th level) holy burst to all engaged>",
       "max_uses": "1",
       "used": {},
       "prepared": true
@@ -246,7 +248,7 @@
       "name": "Redeemer",
       "action": "Minion atk / death",
       "usage": "passive",
-      "desc": "Summoned undead are released from service > fight harder for you.\nMooks: On death release CHA holy burst to all engaged\nNon-mooks: On death release CHA x 1d4 (1d8 at 5th level; 2d6 at 8th level) holy burst to all engaged\n<ADV FEAT: The first time each battle an undead creature you have summoned attacks, it gains an attack bonus equal to your Charisma modifier>",
+      "desc": "Summoned undead are released from service > fight harder for you.\nMooks: On death release CHA holy burst to all engaged\nNon-mooks: On death release CHA x 1d4 (1d8 at 5th level; 2d6 at 8th level) holy burst to all engaged\n<ADV FEAT: The first time each battle your summoned creatures attack, they gain an attack bonus equal to your Charisma modifier>",
       "max_uses": "",
       "used": {},
       "trigger": "standard"
@@ -286,13 +288,11 @@
   "classData": {},
   "prefs": {
     "animations": true,
-    "diceRoller": false,
+    "diceRoller": true,
     "battleHelper": true,
     "battleHelperOpen": true,
-    "fixedLayout": true,
-    "collapsed": {
-      "kin-powers": true
-    },
+    "fixedLayout": false,
+    "collapsed": {},
     "tray": null,
     "trayOpen": true
   },
