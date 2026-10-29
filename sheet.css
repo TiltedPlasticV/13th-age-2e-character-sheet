@@ -979,6 +979,8 @@ textarea.field-block {
   font-size: 22px; color: var(--ink-faint); font-weight: 300;
   display: flex; align-items: center; opacity: 0.4;
 }
+.skulls-row .skull-bracket + .track-annotation { margin-right: 4px; }
+.skull-dead { color: var(--accent); }
 .skulls-config {
   margin-left: 8px;
 }
@@ -1307,7 +1309,7 @@ textarea.field-block {
   border-radius: 50%; display: flex; align-items: center;
   justify-content: center; transition: all 0.15s; flex-shrink: 0;
 }
-.remove-btn:hover { color: var(--accent-glow); background: rgba(100,40,0,0.2); }
+.remove-btn:hover { color: var(--accent-glow); background: var(--accent-dim); }
 
 /* ── POWERS ── */
 .powers-list {
@@ -1439,6 +1441,14 @@ textarea.field-block {
   opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 200;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.has-action.show { pointer-events: auto; }
+.toast-action {
+  margin-left: 10px; padding: 2px 10px;
+  border: 1px solid currentColor; border-radius: 3px;
+  background: none; color: inherit; cursor: pointer;
+  font: inherit; letter-spacing: inherit; text-transform: uppercase;
+}
+.toast-action:hover, .toast-action:focus-visible { background: var(--accent-dim); }
 
 /* ═══════════════════════════════════════════
    THEME-SPECIFIC EFFECTS

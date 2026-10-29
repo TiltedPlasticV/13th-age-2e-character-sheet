@@ -136,7 +136,7 @@
         <div class="hp-adjust">
           <input class="field-inline" id="hp-adjust-amt" placeholder="#" inputmode="numeric" aria-label="Damage or healing amount">
           <button class="action-btn" data-action="hp-damage" title="Apply damage: subtracts from temp HP first, then current HP">🗡 Damage</button>
-          <button class="action-btn" data-action="hp-heal" title="Apply healing to current HP, capped at max HP">✚ Heal</button>
+          <button class="action-btn" data-action="hp-heal" title="Apply healing to current HP, capped at max HP. Below 0, healing starts from 0.">✚ Heal</button>
         </div>
         <span class="sep-v" aria-hidden="true"></span>
         <button class="action-btn" data-action="roll-recovery" title="Spend the next recovery: rolls your recovery dice and adds the result to current HP">🎲 Recovery</button>
@@ -450,7 +450,7 @@
       <button class="primary" id="btn-save">⤓ Save to File</button>
       <button id="btn-load">⤒ Load from File</button>
       <button id="btn-reset">▢ New Sheet</button>
-      <input type="file" id="load-input" accept=".json" style="display:none;">
+      <input type="file" id="load-input" accept=".json" hidden>
     </div>
     <div class="toolbar prefs-row">
       <div class="class-switch on" id="pref-animations" role="switch" tabindex="0" aria-checked="true"

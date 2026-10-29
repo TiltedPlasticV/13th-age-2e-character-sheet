@@ -1429,7 +1429,8 @@ function bhStaggerNode() {
     return el('div', { class: 'note' },
       'Fill in current HP and the staggered value to track this.');
   }
-  const need = stag + 1 - cur;
+  // Healing from below zero starts at zero — see healBy().
+  const need = stag + 1 - Math.max(0, cur);
   if (need <= 0) {
     return el('div', { class: 'bh-status ok' }, '✔ Not staggered — no mandatory healing');
   }
@@ -1448,7 +1449,7 @@ function bhToMaxNode() {
   const cur = intOrNull(state.fields.current_hp);
   const maxHp = intOrNull(state.fields.max_hp);
   if (cur === null || maxHp === null) return null;
-  const gap = maxHp - cur;
+  const gap = maxHp - Math.max(0, cur);
   if (gap <= 0) return null;
   const est = bhRecoveryEstimate(gap);
   return el('div', { class: 'bh-status' },
@@ -1682,12 +1683,37 @@ function applyAbilitySections() {
 // timed out used to be cut short by the first one's pending removal, so the
 // message you were actually meant to read flashed past.
 let _toastTimer = 0;
-function showToast(msg, ms = 2000) {
+// `action` ({ label, run }) adds a button to the toast; a later toast replaces
+// it, so it can only ever act on the moment it was offered for.
+function showToast(msg, ms = 2000, action) {
   const t = document.getElementById('toast');
   t.textContent = msg;
+  t.classList.toggle('has-action', !!action);
+  if (action) {
+    t.append(' ', el('button', {
+      class: 'toast-action', type: 'button',
+      onclick: () => { clearTimeout(_toastTimer); t.classList.remove('show'); action.run(); }
+    }, action.label));
+  }
   t.classList.add('show');
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// Deleting a row is one click on a small ×, so it can be taken back for a
+// few seconds: a stray click must not cost a spell's whole description.
+function removeRow(stateKey, i, rerender) {
+  const [row] = state[stateKey].splice(i, 1);
+  if (!row) return;
+  rerender();
+  saveNow();
+  const name = String(row.name || '').trim();
+  showToast((name || 'Row') + ' removed', 6000, { label: 'Undo', run: () => {
+    const list = state[stateKey];
+    list.splice(Math.min(i, list.length), 0, row);
+    rerender();
+    saveNow();
+  }});
 }
 
 // Textareas grow to fit their text. Measuring `scrollHeight` forces a
@@ -1882,10 +1908,10 @@ function renderSkulls() {
     skulls.push(skull);
     row.appendChild(skull);
     if (lastMiddle && max > 2) {
-      row.insertAdjacentHTML('beforeend', '<span class="skull-bracket">]</span>' + trackAnnotationHtml('battle', { style: 'margin-right:4px' }));
+      row.insertAdjacentHTML('beforeend', '<span class="skull-bracket">]</span>' + trackAnnotationHtml('battle'));
     }
     if (isLast) {
-      row.insertAdjacentHTML('beforeend', '<span class="track-annotation" style="color:var(--accent)">DEAD</span>');
+      row.insertAdjacentHTML('beforeend', '<span class="track-annotation skull-dead">DEAD</span>');
     }
   }
   applySequentialState(skulls, 'skull_');
@@ -1927,13 +1953,13 @@ const TRACK_TYPES = {
   // is here so the battle helper can head its at-will group like the others.
   atwill: { symbol: '∞', title: 'Always available' },
 };
-function trackAnnotation(type, opts = {}) {
+function trackAnnotation(type) {
   const t = TRACK_TYPES[type];
-  return el('span', { class: 'track-annotation', style: opts.style || null, title: t.title }, t.symbol);
+  return el('span', { class: 'track-annotation', title: t.title }, t.symbol);
 }
 // String form for the renderers that build their rows with insertAdjacentHTML.
-function trackAnnotationHtml(type, opts = {}) {
-  return trackAnnotation(type, opts).outerHTML;
+function trackAnnotationHtml(type) {
+  return trackAnnotation(type).outerHTML;
 }
 
 // Shared "use" tracker: N check-boxes backed by state[stateKey][idx][prop][u],
@@ -2019,7 +2045,7 @@ function renderBackgrounds() {
       }, '🎲'),
       el('button', {
         class: 'remove-btn',
-        onclick: () => { state.backgrounds.splice(i, 1); renderBackgrounds(); saveNow(); }
+        onclick: () => removeRow('backgrounds', i, renderBackgrounds)
       }, '×')
     ));
   });
@@ -2063,7 +2089,7 @@ function renderIcons() {
         }, '🎲'),
         el('button', {
           class: 'remove-btn',
-          onclick: () => { state.icons.splice(i, 1); renderIcons(); saveNow(); }
+          onclick: () => removeRow('icons', i, renderIcons)
         }, '×')
       )
     ));
@@ -2257,7 +2283,7 @@ function buildPowerBlock(opts, i, rerender) {
     }) : null,
     el('button', {
       class: 'remove-btn',
-      onclick: () => { state[stateKey].splice(i, 1); rerender(); saveNow(); }
+      onclick: () => removeRow(stateKey, i, rerender)
     }, '×')
   );
   const desc = el('textarea', {
@@ -2378,9 +2404,8 @@ function wirePowerDialog() {
   document.getElementById('power-dialog-delete').addEventListener('click', () => {
     const d = _powerDialog;
     const index = d ? state[d.stateKey].indexOf(d.item) : -1;
-    if (index >= 0) state[d.stateKey].splice(index, 1);
     closePowerDialog();
-    saveNow();
+    if (index >= 0) removeRow(d.stateKey, index, () => renderAbilityList(d.stateKey));
   });
   // Esc closes the dialog natively, without redrawing the list.
   dlg.addEventListener('close', () => { if (_powerDialog) closePowerDialog(); });
@@ -2545,7 +2570,7 @@ function renderFeats() {
       }),
       el('button', {
         class: 'remove-btn',
-        onclick: () => { state.feats.splice(i, 1); renderFeats(); saveNow(); }
+        onclick: () => removeRow('feats', i, renderFeats)
       }, '×')
     ));
   });
@@ -2759,13 +2784,14 @@ function collectState() {
 
 function saveToFile() {
   const data = collectState();
-  const name = (data.fields.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const name = (data.fields.name || 'character').replace(/[^\p{L}\p{N}_-]/gu, '_');
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = name + '.json';
   a.click();
-  URL.revokeObjectURL(a.href);
+  // Revoked in the same task, some browsers cancel the download it started.
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   showToast('Sheet saved');
 }
 
@@ -2915,6 +2941,29 @@ function isSheetData(parsed) {
       && typeof parsed.fields === 'object' && parsed.fields !== null;
 }
 
+// Migrates and fills in a parsed save, shared by both load paths. Works on the
+// object it is given and returns it, so a caller assigns `state` only once
+// this has succeeded — a throw part-way leaves the current sheet untouched.
+function normalizeState(s) {
+  migrateAbilityLists(s);
+  migrateMagicItems(s);
+  ['backgrounds', 'icons', 'kinPowers', 'powers', 'spells', 'feats'].forEach(k => {
+    if (!Array.isArray(s[k])) s[k] = [];
+  });
+  ['checkboxes', 'advances', 'locks', 'activeConditions', 'defenseBonuses', 'classData'].forEach(k => {
+    if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+  });
+  if (typeof s.escalation !== 'number') s.escalation = 0;
+  if (!s.theme) s.theme = 'necromancer';
+  migrateUsage(s);
+  migrateTrigger(s);
+  migrateAttackAutoCalc(s);
+  migrateArmorType(s);
+  pruneState(s);
+  normalizePrefs(s);
+  return s;
+}
+
 function loadFromFile(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -2927,29 +2976,7 @@ function loadFromFile(event) {
         showToast('Not a valid character sheet');
         return;
       }
-      state = parsed;
-      migrateAbilityLists(state);
-      migrateMagicItems(state);
-      if (!state.checkboxes) state.checkboxes = {};
-      if (!state.backgrounds) state.backgrounds = [];
-      if (!state.icons) state.icons = [];
-      if (!state.kinPowers) state.kinPowers = [];
-      if (!state.powers) state.powers = [];
-      if (!state.spells) state.spells = [];
-      if (!state.feats) state.feats = [];
-      if (!state.advances) state.advances = {};
-      if (!state.locks) state.locks = {};
-      if (!state.activeConditions) state.activeConditions = {};
-      if (!state.defenseBonuses) state.defenseBonuses = {};
-      if (!state.classData) state.classData = {};
-      if (typeof state.escalation !== 'number') state.escalation = 0;
-      if (!state.theme) state.theme = 'necromancer';
-      migrateUsage(state);
-      migrateTrigger(state);
-      migrateAttackAutoCalc(state);
-      migrateArmorType(state);
-      pruneState(state);
-      normalizePrefs(state);
+      state = normalizeState(parsed);
       applyState();
       autoSave();
       showToast('Sheet loaded');
@@ -3046,6 +3073,8 @@ const REST_PLANS = {
       'Refreshes every per-battle and per-arc ability',
       'Resets every icon relationship',
       'Restocks potions at your current level',
+      'Clears all conditions and resets the escalation die',
+      'Ends any class effect that stops with the battle',
     ],
   },
 };
@@ -3085,24 +3114,28 @@ function quickRest() {
   if (skulls) done.push(plural(skulls, 'death-save skull', 'death-save skulls') + ' cleared (the first is kept)');
   const refreshed = clearUses(['battle']);
   if (refreshed) done.push(plural(refreshed, 'per-battle ability', 'per-battle abilities') + ' refreshed');
-  // Conditions run out at the end of a battle, which is what a quick rest
-  // marks — not at the end of an arc.
-  const conds = Object.keys(state.activeConditions || {}).length;
-  if (conds) done.push(plural(conds, 'condition', 'conditions') + ' cleared');
-  state.activeConditions = {};
-  // The die climbs within a battle and starts the next one at zero, so it
-  // turns over with the battle rather than with the arc.
-  const escalation = state.escalation || 0;
-  state.escalation = 0;
-  if (escalation) done.push('Escalation die → 0 (was ' + escalation + ')');
+  endBattle(done);
   renderSkulls();
   renderAbilityLists();
-  renderConditions();
-  renderEscalation();
-  classHook('onQuickRest');
   logRest(REST_PLANS.quick, done);
   saveNow();
   showToast('Quick rest');
+}
+
+// What ends with a battle, whichever rest follows it: a heal-up taken
+// straight after a fight ends that fight too.
+function endBattle(done) {
+  // Conditions run out at the end of a battle, not at the end of an arc.
+  const conds = Object.keys(state.activeConditions || {}).length;
+  if (conds) done.push(plural(conds, 'condition', 'conditions') + ' cleared');
+  state.activeConditions = {};
+  // The die climbs within a battle and starts the next one at zero.
+  const escalation = state.escalation || 0;
+  state.escalation = 0;
+  if (escalation) done.push('Escalation die → 0 (was ' + escalation + ')');
+  renderConditions();
+  renderEscalation();
+  classHook('onQuickRest');
 }
 
 function fullHealUp() {
@@ -3135,6 +3168,7 @@ function fullHealUp() {
   if (refreshed) done.push(plural(refreshed, 'ability', 'abilities') + ' refreshed');
   const iconsReset = clearIconTracks();
   if (iconsReset) done.push(plural(iconsReset, 'icon relationship', 'icon relationships') + ' reset');
+  endBattle(done);
   renderSkulls();
   renderRecoveries();
   renderPotions();
@@ -3180,6 +3214,18 @@ function setFieldDom(key) {
   if (node) node.value = state.fields[key] || '';
 }
 
+// 13A: healing a character below 0 counts up from 0, not from the negative.
+// Capped at max HP when there is one. Returns the new current HP.
+function healBy(n) {
+  const maxHp = intOrNull(state.fields.max_hp);
+  let cur = Math.max(0, intOrZero(state.fields.current_hp)) + n;
+  if (maxHp !== null && cur > maxHp) cur = maxHp;
+  state.fields.current_hp = String(cur);
+  setFieldDom('current_hp');
+  updateHpState();
+  return cur;
+}
+
 // ── DAMAGE / HEAL QUICK-APPLY ───────────────────────────────────────
 function hpAdjustAmount() {
   const inp = document.getElementById('hp-adjust-amt');
@@ -3221,12 +3267,7 @@ function applyHeal() {
   const n = hpAdjustAmount();
   if (n === null) return;
   collectState();
-  const maxHp = intOrNull(state.fields.max_hp);
-  let cur = intOrZero(state.fields.current_hp) + n;
-  if (maxHp !== null && cur > maxHp) cur = maxHp;
-  state.fields.current_hp = String(cur);
-  setFieldDom('current_hp');
-  updateHpState();
+  const cur = healBy(n);
   logAction('Healed', `HP → ${hpFraction(cur)}`, '+' + n);
   saveNow();
   showToast(`+${n} HP`);
@@ -3516,13 +3557,8 @@ function rollRecovery() {
   }
   if (slot === -1) { showToast('No recoveries left!'); return; }
   state.checkboxes['rec_' + slot] = true;
-  const maxHp = intOrNull(state.fields.max_hp);
-  let cur = intOrZero(state.fields.current_hp) + r.total;
-  if (maxHp !== null && cur > maxHp) cur = maxHp;
-  state.fields.current_hp = String(cur);
-  setFieldDom('current_hp');
+  const cur = healBy(r.total);
   renderRecoveries();
-  updateHpState();
   logRoll(`Recovery (${max - slot - 1} left)`,
           `${exprDetail(expr, r)} · HP → ${hpFraction(cur)}`, '+' + r.total);
   saveNow();
@@ -3556,14 +3592,9 @@ function drinkPotion(tier) {
   const healed = t.cap === null ? rolled : Math.min(rolled, t.cap);
   state.checkboxes[potionKey(tier, slot)] = true;
   state.checkboxes['rec_' + recSlot] = true;
-  const maxHp = intOrNull(state.fields.max_hp);
-  let cur = intOrZero(state.fields.current_hp) + healed;
-  if (maxHp !== null && cur > maxHp) cur = maxHp;
-  state.fields.current_hp = String(cur);
-  setFieldDom('current_hp');
+  const cur = healBy(healed);
   renderPotions();
   renderRecoveries();
-  updateHpState();
   logRoll(`${t.label} potion (${stock - slot - 1} left)`,
           `${exprDetail(expr, rec)} · ${exprDetail(t.bonus, potion)}`
           + (healed < rolled ? ` · capped at ${t.cap}` : '')
@@ -3667,7 +3698,21 @@ function resetSheet() {
   state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], kinPowers: [], features: [], talents: [], powers: [], spells: [], magicItems: [], feats: [], advances: {}, locks: {}, activeConditions: {}, defenseBonuses: {}, classData: {}, escalation: 0, theme: state.theme, prefs: state.prefs };
   try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
   applyState();
+  seedBlankRows();
   showToast('New sheet');
+}
+
+// An empty list gets one row to type into — two for backgrounds.
+function seedBlankRows() {
+  if (state.backgrounds.length === 0) { addBackground(); addBackground(); }
+  if (state.icons.length === 0) { addIcon(); }
+  if (state.kinPowers.length === 0) { addKinPower(); }
+  if (state.features.length === 0) { addFeature(); }
+  if (state.talents.length === 0) { addTalent(); }
+  if (state.powers.length === 0) { addPower(); }
+  if (state.spells.length === 0) { addSpell(); }
+  if (state.magicItems.length === 0) { addMagicItem(); }
+  if (state.feats.length === 0) { addFeat(); }
 }
 
 
@@ -3722,31 +3767,7 @@ document.addEventListener('change', (e) => {
 try {
   const saved = localStorage.getItem(STORAGE_KEY);
   const parsed = saved ? JSON.parse(saved) : null;
-  if (isSheetData(parsed)) {
-    state = parsed;
-    migrateAbilityLists(state);
-    migrateMagicItems(state);
-    if (!state.checkboxes) state.checkboxes = {};
-    if (!state.backgrounds) state.backgrounds = [];
-    if (!state.icons) state.icons = [];
-    if (!state.kinPowers) state.kinPowers = [];
-    if (!state.powers) state.powers = [];
-    if (!state.feats) state.feats = [];
-    if (!state.spells) state.spells = [];
-    if (!state.advances) state.advances = {};
-    if (!state.locks) state.locks = {};
-    if (!state.activeConditions) state.activeConditions = {};
-    if (!state.defenseBonuses) state.defenseBonuses = {};
-    if (!state.classData) state.classData = {};
-    if (typeof state.escalation !== 'number') state.escalation = 0;
-    if (!state.theme) state.theme = 'necromancer';
-    migrateUsage(state);
-    migrateTrigger(state);
-    migrateAttackAutoCalc(state);
-    migrateArmorType(state);
-    pruneState(state);
-    normalizePrefs(state);
-  }
+  if (isSheetData(parsed)) state = normalizeState(parsed);
 } catch(e) {}
 
 // Wired here rather than with inline onclick, so the markup stays CSP-friendly
@@ -3815,7 +3836,7 @@ const NUMERIC_FIELDS = [
   'level',
   'str_score','dex_score','con_score','wis_score','int_score','cha_score',
   'ac','pd','md',
-  'max_hp','current_hp','temp_hp','staggered',
+  'max_hp','temp_hp','staggered',
   'max_recoveries','recovery_avg',
   'melee_avg','melee_miss','ranged_avg','ranged_miss',
   'max_spells','max_magic','base_ac','shield',
@@ -3837,15 +3858,7 @@ applyInputModes();
 initLocks();
 applyState();
 autoGrowAll();
-if (state.backgrounds.length === 0) { addBackground(); addBackground(); }
-if (state.icons.length === 0) { addIcon(); }
-if (state.kinPowers.length === 0) { addKinPower(); }
-if (state.features.length === 0) { addFeature(); }
-if (state.talents.length === 0) { addTalent(); }
-if (state.powers.length === 0) { addPower(); }
-if (state.spells.length === 0) { addSpell(); }
-if (state.magicItems.length === 0) { addMagicItem(); }
-if (state.feats.length === 0) { addFeat(); }
+seedBlankRows();
 _initializing = false;
 
 // Fallback-font metrics differ enough to mis-wrap text and lock in a too-tall
