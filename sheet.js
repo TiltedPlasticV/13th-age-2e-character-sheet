@@ -8,7 +8,9 @@
 // but that guard — leave it in place.
 var SHEET_JS_LOADED = true;
 
-let state = {
+// The schema: every top-level key, at its empty value. resetSheet() and the
+// initial state both start from it.
+function blankState() { return {
   fields: {},
   checkboxes: {},
   backgrounds: [],
@@ -38,11 +40,12 @@ let state = {
   // `collapsed` holds only the folded sections — absent means open, so one
   // added later opens by default.
   prefs: { animations: true, diceRoller: true, battleHelper: false, battleHelperOpen: true, fixedLayout: false, collapsed: {} }
-};
+}; }
 
-// The literal above is the schema, so pruneState() reads the valid key set off
-// it rather than repeating the list. Captured before anything can load over it.
-const STATE_KEYS = Object.keys(state);
+let state = blankState();
+
+// pruneState() reads the valid key set off the schema rather than repeating it.
+const STATE_KEYS = Object.keys(blankState());
 
 // ── AUTO-DERIVED FIELDS ───────────────────────────────────────────────
 // Each entry: calc(fields) returns the computed value (string), or ''
@@ -270,13 +273,11 @@ function potionStock(tier) {
   if (n === null || n < 0) return 0;
   return Math.min(n, 20);
 }
-function potionKey(tier, i) { return 'potion_' + tier + '_' + i; }
+function potionPrefix(tier) { return 'potion_' + tier + '_'; }
 // Unspent potions of one tier.
 function potionsLeft(tier) {
   const stock = potionStock(tier);
-  let left = 0;
-  for (let i = 0; i < stock; i++) if (!state.checkboxes[potionKey(tier, i)]) left++;
-  return left;
+  return stock - spentCount(potionPrefix(tier), stock);
 }
 // Two numbers and nothing else — the row has to fit beside the magic items.
 function potionEffect(t) {
@@ -790,8 +791,11 @@ function toggleArmorPenalty() {
 
 // Order matters: dependents come after their sources so one pass resolves
 // chains like dex_score → dex_mod → initiative. `sources` lists the fields
-// each calc reads and gates recomputation (typing in `notes` shouldn't walk
-// this table), so keep it in sync with `calc` — that's the contract.
+// each calc reads, so keep it in sync with `calc` — that's the contract. The
+// gate is coarse: an edit to a field in *any* entry's sources recomputes the
+// whole table, and one in none (typing in `notes`) recomputes nothing. So a
+// missing source only goes stale when no other entry lists that field — which
+// is exactly the case nobody notices until it bites.
 const DERIVED_FIELDS = {
   str_mod:      { sources: ['str_score'], calc: f => abilityMod(f.str_score) },
   dex_mod:      { sources: ['dex_score'], calc: f => abilityMod(f.dex_score) },
@@ -1395,9 +1399,7 @@ function buildBhUses() {
 // ceiling, and when you're staggered both are true at once.
 function buildBhStatus() {
   const max = maxRecoveries();
-  let spent = 0;
-  for (let i = 0; i < max; i++) if (state.checkboxes['rec_' + i]) spent++;
-  const left = max - spent;
+  const left = max - spentCount('rec_', max);
   const sec = bhSection('status', 'After the battle', [
     el('div', { class: 'bh-stat' },
       el('span', { class: 'bh-stat-num' + (left ? '' : ' bh-spent') }, String(left)),
@@ -1766,11 +1768,20 @@ function autoGrowAllNow() {
 // boxes are interactive — the first unchecked and the last checked — so no
 // gaps can form. That matches play (you spend the *next* recovery) and keeps
 // Quick Rest's "preserve skull 0, clear the rest" meaningful.
+// The ordered tracks keep their ticks in state.checkboxes as `<prefix><i>`.
+// First unticked index of `count`, or -1 when all are spent.
+function firstUnspent(prefix, count) {
+  for (let i = 0; i < count; i++) if (!state.checkboxes[prefix + i]) return i;
+  return -1;
+}
+function spentCount(prefix, count) {
+  let n = 0;
+  for (let i = 0; i < count; i++) if (state.checkboxes[prefix + i]) n++;
+  return n;
+}
+
 function applySequentialState(boxes, prefix) {
-  let firstUnchecked = -1;
-  for (let i = 0; i < boxes.length; i++) {
-    if (!state.checkboxes[prefix + i]) { firstUnchecked = i; break; }
-  }
+  const firstUnchecked = firstUnspent(prefix, boxes.length);
   // All checked: only the final box is live. None checked: only box 0 is.
   const lastChecked = firstUnchecked === -1 ? boxes.length - 1 : firstUnchecked - 1;
   boxes.forEach((box, i) => {
@@ -1800,31 +1811,40 @@ function renderRecoveries() {
   const label = row.querySelector('.hp-label');
   row.innerHTML = '';
   row.appendChild(label);
-  const max = maxRecoveries();
+  row.append(...sequentialBoxes('rec_', maxRecoveries(), {
+    label: i => `Recovery ${i + 1}`,
+  }), trackAnnotation('arc'));
+}
+
+// One ordered track's boxes, wired, for the caller to place. opts:
+//   label  i → the box's aria-label
+//   cls    box class (default 'check-box')
+//   glyph  what it shows (default '✕')
+function sequentialBoxes(prefix, count, opts) {
   const boxes = [];
-  for (let i = 0; i < max; i++) {
-    const box = document.createElement('div');
-    box.className = 'check-box' + (state.checkboxes['rec_' + i] ? ' checked' : '');
-    box.textContent = '✕';
-    box.setAttribute('role', 'checkbox');
-    box.setAttribute('aria-checked', state.checkboxes['rec_' + i] ? 'true' : 'false');
-    box.setAttribute('aria-label', `Recovery ${i + 1}`);
+  for (let i = 0; i < count; i++) {
+    const key = prefix + i;
+    const box = el('div', {
+      class: (opts.cls || 'check-box') + (state.checkboxes[key] ? ' checked' : ''),
+      role: 'checkbox',
+      'aria-checked': state.checkboxes[key] ? 'true' : 'false',
+      'aria-label': opts.label(i),
+    }, opts.glyph || '✕');
     box.addEventListener('click', () => {
       // The gate for mouse and keyboard both — Space/Enter route via click().
       if (box.classList.contains('disabled')) return;
-      const next = !state.checkboxes['rec_' + i];
-      state.checkboxes['rec_' + i] = next;
+      const next = !state.checkboxes[key];
+      state.checkboxes[key] = next;
       box.classList.toggle('checked', next);
       box.setAttribute('aria-checked', next ? 'true' : 'false');
       // Toggling moves the boundary, so every sibling's state needs reeval.
-      applySequentialState(boxes, 'rec_');
+      applySequentialState(boxes, prefix);
       saveNow();
     });
     boxes.push(box);
-    row.appendChild(box);
   }
-  applySequentialState(boxes, 'rec_');
-  row.insertAdjacentHTML('beforeend', trackAnnotationHtml('arc'));
+  applySequentialState(boxes, prefix);
+  return boxes;
 }
 
 // Draws each tier's tick track from its stock field, and dims a tier the
@@ -1833,7 +1853,7 @@ function renderRecoveries() {
 function renderPotions() {
   const arc = document.getElementById('potions-arc');
   if (!arc) return;
-  arc.innerHTML = trackAnnotationHtml('arc');
+  arc.replaceChildren(trackAnnotation('arc'));
   POTION_TIERS.forEach(t => {
     const row = document.querySelector('.potion-row[data-potion-tier="' + t.key + '"]');
     if (!row) return;
@@ -1843,31 +1863,9 @@ function renderPotions() {
     if (effect) effect.textContent = potionEffect(t);
     const track = row.querySelector('.potion-ticks');
     if (!track) return;
-    track.innerHTML = '';
-    const prefix = 'potion_' + t.key + '_';
-    const boxes = [];
-    for (let i = 0; i < stock; i++) {
-      const key = potionKey(t.key, i);
-      const box = el('div', {
-        class: 'check-box' + (state.checkboxes[key] ? ' checked' : ''),
-        role: 'checkbox',
-        'aria-checked': state.checkboxes[key] ? 'true' : 'false',
-        'aria-label': t.label + ' potion ' + (i + 1),
-      }, '✕');
-      box.addEventListener('click', () => {
-        // The gate for mouse and keyboard both.
-        if (box.classList.contains('disabled')) return;
-        const next = !state.checkboxes[key];
-        state.checkboxes[key] = next;
-        box.classList.toggle('checked', next);
-        box.setAttribute('aria-checked', next ? 'true' : 'false');
-        applySequentialState(boxes, prefix);
-        saveNow();
-      });
-      boxes.push(box);
-      track.appendChild(box);
-    }
-    applySequentialState(boxes, prefix);
+    track.replaceChildren(...sequentialBoxes(potionPrefix(t.key), stock, {
+      label: i => t.label + ' potion ' + (i + 1),
+    }));
   });
 }
 
@@ -1878,43 +1876,15 @@ function renderSkulls() {
   if (isNaN(max) || max < 5) max = 5;
   if (max > 8) max = 8;
   state.fields.max_skulls = max;
-  const skulls = [];
-  for (let i = 0; i < max; i++) {
-    const isFirst = i === 0;
-    const isLast = i === max - 1;
-    const firstMiddle = i === 1;
-    const lastMiddle = i === max - 2;
-    if (isFirst) {
-      row.insertAdjacentHTML('beforeend', trackAnnotationHtml('arc'));
-    }
-    if (firstMiddle) {
-      row.insertAdjacentHTML('beforeend', '<span class="skull-bracket">[</span>');
-    }
-    const skull = document.createElement('div');
-    skull.className = 'skull-box' + (state.checkboxes['skull_' + i] ? ' checked' : '');
-    skull.textContent = '💀';
-    skull.setAttribute('role', 'checkbox');
-    skull.setAttribute('aria-checked', state.checkboxes['skull_' + i] ? 'true' : 'false');
-    skull.setAttribute('aria-label', `Failed death save ${i + 1}`);
-    skull.addEventListener('click', () => {
-      if (skull.classList.contains('disabled')) return;
-      const next = !state.checkboxes['skull_' + i];
-      state.checkboxes['skull_' + i] = next;
-      skull.classList.toggle('checked', next);
-      skull.setAttribute('aria-checked', next ? 'true' : 'false');
-      applySequentialState(skulls, 'skull_');
-      saveNow();
-    });
-    skulls.push(skull);
-    row.appendChild(skull);
-    if (lastMiddle && max > 2) {
-      row.insertAdjacentHTML('beforeend', '<span class="skull-bracket">]</span>' + trackAnnotationHtml('battle'));
-    }
-    if (isLast) {
-      row.insertAdjacentHTML('beforeend', '<span class="track-annotation skull-dead">DEAD</span>');
-    }
-  }
-  applySequentialState(skulls, 'skull_');
+  // The first skull is a lasting wound and the last is death, so the ones
+  // between are bracketed as the per-battle part of the track.
+  const skulls = sequentialBoxes('skull_', max, {
+    cls: 'skull-box', glyph: '💀', label: i => `Failed death save ${i + 1}`,
+  });
+  row.append(trackAnnotation('arc'), skulls[0],
+    el('span', { class: 'skull-bracket' }, '['), ...skulls.slice(1, -1),
+    el('span', { class: 'skull-bracket' }, ']'), trackAnnotation('battle'),
+    skulls[max - 1], el('span', { class: 'track-annotation skull-dead' }, 'DEAD'));
   const cfg = el('span', { class: 'skulls-config' },
     el('input', {
       class: 'field-inline', value: max,
@@ -1956,10 +1926,6 @@ const TRACK_TYPES = {
 function trackAnnotation(type) {
   const t = TRACK_TYPES[type];
   return el('span', { class: 'track-annotation', title: t.title }, t.symbol);
-}
-// String form for the renderers that build their rows with insertAdjacentHTML.
-function trackAnnotationHtml(type) {
-  return trackAnnotation(type).outerHTML;
 }
 
 // Shared "use" tracker: N check-boxes backed by state[stateKey][idx][prop][u],
@@ -2947,14 +2913,16 @@ function isSheetData(parsed) {
 function normalizeState(s) {
   migrateAbilityLists(s);
   migrateMagicItems(s);
-  ['backgrounds', 'icons', 'kinPowers', 'powers', 'spells', 'feats'].forEach(k => {
-    if (!Array.isArray(s[k])) s[k] = [];
+  // Anything missing or of the wrong shape takes the schema's empty value, so
+  // a key added to blankState() needs nothing here. `prefs` has its own.
+  Object.entries(blankState()).forEach(([k, empty]) => {
+    if (k === 'prefs') return;
+    const v = s[k];
+    const ok = Array.isArray(empty) ? Array.isArray(v)
+             : typeof empty === 'object' ? !!v && typeof v === 'object' && !Array.isArray(v)
+             : typeof v === typeof empty && v !== '';
+    if (!ok) s[k] = empty;
   });
-  ['checkboxes', 'advances', 'locks', 'activeConditions', 'defenseBonuses', 'classData'].forEach(k => {
-    if (!s[k] || typeof s[k] !== 'object') s[k] = {};
-  });
-  if (typeof s.escalation !== 'number') s.escalation = 0;
-  if (!s.theme) s.theme = 'necromancer';
   migrateUsage(s);
   migrateTrigger(s);
   migrateAttackAutoCalc(s);
@@ -3551,10 +3519,7 @@ function rollRecovery() {
   const r = rollExpr(expr);
   if (!r) { showToast('Set Recovery Dice (e.g. "3d8+2") first'); return; }
   const max = maxRecoveries();
-  let slot = -1;
-  for (let i = 0; i < max; i++) {
-    if (!state.checkboxes['rec_' + i]) { slot = i; break; }
-  }
+  const slot = firstUnspent('rec_', max);
   if (slot === -1) { showToast('No recoveries left!'); return; }
   state.checkboxes['rec_' + slot] = true;
   const cur = healBy(r.total);
@@ -3576,21 +3541,15 @@ function drinkPotion(tier) {
   const rec = rollExpr(expr);
   if (!rec) { showToast('Set Recovery Dice (e.g. "3d8+2") first'); return; }
   const stock = potionStock(tier);
-  let slot = -1;
-  for (let i = 0; i < stock; i++) {
-    if (!state.checkboxes[potionKey(tier, i)]) { slot = i; break; }
-  }
+  const slot = firstUnspent(potionPrefix(tier), stock);
   if (slot === -1) { showToast('No ' + t.label.toLowerCase() + ' potions left!'); return; }
   const maxRec = maxRecoveries();
-  let recSlot = -1;
-  for (let i = 0; i < maxRec; i++) {
-    if (!state.checkboxes['rec_' + i]) { recSlot = i; break; }
-  }
+  const recSlot = firstUnspent('rec_', maxRec);
   if (recSlot === -1) { showToast('No recoveries left — a potion spends one'); return; }
   const potion = rollExpr(t.bonus);
   const rolled = rec.total + potion.total;
   const healed = t.cap === null ? rolled : Math.min(rolled, t.cap);
-  state.checkboxes[potionKey(tier, slot)] = true;
+  state.checkboxes[potionPrefix(tier) + slot] = true;
   state.checkboxes['rec_' + recSlot] = true;
   const cur = healBy(healed);
   renderPotions();
@@ -3695,7 +3654,7 @@ function renderConditions() {
 function resetSheet() {
   if (!confirm('Start a new blank sheet? Any unsaved changes will be lost.')) return;
   // Settings (theme, prefs) survive a reset; only character data is cleared.
-  state = { fields: {}, checkboxes: {}, backgrounds: [], icons: [], kinPowers: [], features: [], talents: [], powers: [], spells: [], magicItems: [], feats: [], advances: {}, locks: {}, activeConditions: {}, defenseBonuses: {}, classData: {}, escalation: 0, theme: state.theme, prefs: state.prefs };
+  state = Object.assign(blankState(), { theme: state.theme, prefs: state.prefs });
   try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
   applyState();
   seedBlankRows();
